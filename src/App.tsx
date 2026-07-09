@@ -3,7 +3,7 @@ import { AppRouter } from './app/AppRouter';
 
 export function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AppRouter />
     </BrowserRouter>
   );
