@@ -104,3 +104,11 @@
 - 최종 전체 리뷰(별도 에이전트) 판정: READY. Critical 0, Important 0, Minor 3(모두 의도된 설계 또는 후속 과제).
 - 최종 상태: 테스트 10파일 56개 통과, typecheck 0오류, 프로덕션 빌드·verify-dist 통과.
 - Minor 관찰: 금지표현 테스트는 src/data·src/pages만 스캔(컴포넌트 카피 추가 시 주의).
+
+## 2026-07-09 커밋·배포
+
+- GitHub 저장소: https://github.com/sngbusa100-stack/jm-office-homepage (master)
+- 공개 URL: https://sngbusa100-stack.github.io/jm-office-homepage/ (GitHub Pages, gh-pages 브랜치)
+- Pages 배포 방식: `npm run build -- --base=/jm-office-homepage/` → dist에 404.html(SPA 폴백)·.nojekyll 추가 → gh-pages 브랜치로 강제 푸시. 재배포 시 같은 절차 반복.
+- App.tsx의 BrowserRouter에 `basename={import.meta.env.BASE_URL}` 적용(루트 배포 시 영향 없음).
+- 향후 도메인 구매·Vercel 이전 시: vercel.json이 이미 있으므로 저장소 연결만 하면 됨. 그때 --base 없이 빌드(기본 '/').
