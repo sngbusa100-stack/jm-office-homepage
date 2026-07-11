@@ -112,3 +112,13 @@
 - Pages 배포 방식: `npm run build -- --base=/jm-office-homepage/` → dist에 404.html(SPA 폴백)·.nojekyll 추가 → gh-pages 브랜치로 강제 푸시. 재배포 시 같은 절차 반복.
 - App.tsx의 BrowserRouter에 `basename={import.meta.env.BASE_URL}` 적용(루트 배포 시 영향 없음).
 - 향후 도메인 구매·Vercel 이전 시: vercel.json이 이미 있으므로 저장소 연결만 하면 됨. 그때 --base 없이 빌드(기본 '/').
+
+## 2026-07-11 상담 접수→텔레그램 연동 및 보안 점검
+
+- Vercel 프로젝트 jm-office-homepage: 사이트+api/consult(서버리스) 프로덕션 배포. https://jm-office-homepage.vercel.app
+- 접수 흐름: 폼 → /api/consult(검증·허니팟·CORS) → 사무소 텔레그램 알림. 실수신 확인 완료.
+- 비밀값 보관: TELEGRAM_BOT_TOKEN·TELEGRAM_CHAT_ID는 Vercel 환경변수(Production, 암호화)에만 존재. 코드·저장소에 없음.
+- 보안 점검 결과: 전체 git 이력에 토큰·API키 패턴 0건, .env/.vercel 미추적, 프런트 번들에 비밀값 0건, API 오류 응답에 내부정보 미노출, 텔레그램 전송은 parse_mode 없는 일반 텍스트(주입 무해화).
+- 조치 1건: 설계 문서에 있던 챗 ID를 제거하고 커밋 amend + force-push로 공개 이력에서 삭제(재검사 0건).
+- 잔여 위험(수용): CORS는 브라우저 차단용이라 curl 직접 호출은 가능 — 허니팟·입력 상한·주제 화이트리스트로 완화. 스팸 발생 시 Vercel 방화벽/간단한 IP 제한 추가 예정.
+- GitHub Pages(gh-pages)도 동일 코드로 재배포 완료. 개업 시: office.json 실데이터+isOpen true → vercel deploy --prod 한 번.
