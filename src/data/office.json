@@ -5,5 +5,5 @@
   "address": null,
   "registrationNumber": null,
   "businessNumber": null,
-  "formEndpoint": null
+  "formEndpoint": "https://jm-office-homepage.vercel.app/api/consult"
 }

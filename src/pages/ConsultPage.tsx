@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { office, isAcceptingRequests } from '../data/office';
 import { safeSessionGet } from '../lib/browserStorage';
+import { submitConsult } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
 
 const LEVEL_LABEL: Record<ResultLevel, string> = {
@@ -26,6 +27,23 @@ function buildPrefill(): string {
 export function ConsultPage() {
   const accepting = isAcceptingRequests(office);
   const [message, setMessage] = useState(buildPrefill);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!accepting || !office.formEndpoint || status === 'sending') return;
+    const form = new FormData(event.currentTarget);
+    setStatus('sending');
+    const result = await submitConsult(office.formEndpoint, {
+      name: String(form.get('name') ?? ''),
+      phone: String(form.get('phone') ?? ''),
+      topic: String(form.get('topic') ?? ''),
+      message,
+      consent: form.get('consent') === 'on',
+      company: String(form.get('company') ?? ''),
+    });
+    setStatus(result);
+  }
 
   return (
     <div className="page-shell section narrow-page">
@@ -65,13 +83,9 @@ export function ConsultPage() {
         </div>
       </section>
 
-      <form
-        className="card consult-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-        }}
-      >
+      <form className="card consult-form" onSubmit={handleSubmit}>
         <h2>상담 신청</h2>
+        <input type="text" name="company" className="sr-only" tabIndex={-1} autoComplete="off" aria-hidden="true" />
         <label>성함<input type="text" name="name" required disabled={!accepting} /></label>
         <label>연락처<input type="tel" name="phone" required disabled={!accepting} /></label>
         <label>분야
@@ -94,12 +108,18 @@ export function ConsultPage() {
           />
         </label>
         <label className="agree">
-          <input type="checkbox" required disabled={!accepting} />
+          <input type="checkbox" name="consent" required disabled={!accepting} />
           개인정보 수집·이용에 동의합니다 (상담 회신 목적, 회신 후 파기)
         </label>
-        <button className="button button--accent" type="submit" disabled={!accepting}>
-          상담 신청하기
+        <button className="button button--accent" type="submit" disabled={!accepting || status === 'sending'}>
+          {status === 'sending' ? '전송 중...' : '상담 신청하기'}
         </button>
+        {status === 'sent' && (
+          <p className="note" role="status">상담 신청이 접수되었습니다. 확인 후 남겨주신 연락처로 연락드리겠습니다.</p>
+        )}
+        {status === 'error' && (
+          <p className="note" role="alert">전송에 실패했습니다. 잠시 후 다시 시도하시거나 전화·카카오톡으로 문의해 주세요.</p>
+        )}
         {!accepting && <p className="note">개업 전에는 신청이 접수되지 않습니다. 상담·수임 접수는 개업 후 시작됩니다.</p>}
       </form>
 
