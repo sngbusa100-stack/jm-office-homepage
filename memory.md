@@ -132,3 +132,5 @@
 - 개인정보처리방침에 보관(접근 제한 DB)·위탁(Upstash 추가)·파기(통계 필드만 잔존) 갱신.
 - 검증: 테스트 15파일 96개 통과, typecheck 0오류, 빌드·verify-dist 통과.
 - **배포 전 필요 설정(사용자)**: Vercel Storage에서 Upstash Redis 생성·연결(환경변수 자동 주입) + `ADMIN_TOKEN` 환경변수 추가 + 재배포. 설정 전에도 기존 알림 흐름은 그대로 동작.
+- **배포 완료(2026-07-17)**: Upstash Redis(upstash-kv-coquelicot-book, Free, Washington D.C., Eviction OFF) 생성·연결, `KV_REST_API_*` 자동 주입, `ADMIN_TOKEN`(Production, Sensitive) 설정. master 푸시로 Vercel 자동 배포(Production이 master 추적 — git 연동 확인됨). 실환경 검증: 테스트 접수 JM-20260717-XKG8 → 저장·텔레그램 알림·/admin 목록·상태 변경·파기 전부 정상. 파기 후 통계 스텁 1건 잔존(완전 삭제는 Upstash CLI에서 DEL/ZREM).
+- GitHub Pages(gh-pages)는 아직 이전 버전 — 접수 API·관리 페이지는 vercel.app이 본체라 무방, 필요 시 재배포.
