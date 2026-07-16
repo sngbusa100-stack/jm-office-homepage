@@ -10,6 +10,7 @@ import { CheckResultPage } from '../pages/CheckResultPage';
 import { ConsultPage } from '../pages/ConsultPage';
 import { PrivacyPage } from '../pages/PrivacyPage';
 import { DisclaimerPage } from '../pages/DisclaimerPage';
+import { AdminPage } from '../pages/AdminPage';
 
 export function AppRouter() {
   return (
@@ -24,6 +25,7 @@ export function AppRouter() {
         <Route path="/consult" element={<ConsultPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/disclaimer" element={<DisclaimerPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Layout>

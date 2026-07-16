@@ -12,6 +12,7 @@ const TITLES: Record<string, string> = {
   '/consult': '상담 안내 | 정명 행정사사무소',
   '/privacy': '개인정보처리방침 | 정명 행정사사무소',
   '/disclaimer': '면책 고지 | 정명 행정사사무소',
+  '/admin': '접수 관리 | 정명 행정사사무소',
 };
 
 export function Layout({ children }: { children: ReactNode }) {

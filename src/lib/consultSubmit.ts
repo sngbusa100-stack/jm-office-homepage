@@ -8,7 +8,7 @@ export interface ConsultPayload {
   company: string;
 }
 
-export type SubmitResult = 'sent' | 'error';
+export type SubmitResult = { status: 'sent'; id?: string } | { status: 'error' };
 
 export async function submitConsult(endpoint: string, payload: ConsultPayload): Promise<SubmitResult> {
   try {
@@ -17,8 +17,18 @@ export async function submitConsult(endpoint: string, payload: ConsultPayload): 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    return response.ok ? 'sent' : 'error';
+    if (!response.ok) return { status: 'error' };
+    let id: string | undefined;
+    try {
+      const data: unknown = typeof response.json === 'function' ? await response.json() : null;
+      if (data && typeof data === 'object' && typeof (data as { id?: unknown }).id === 'string') {
+        id = (data as { id: string }).id;
+      }
+    } catch {
+      // 본문 없는 성공 응답도 접수 성공으로 취급한다.
+    }
+    return { status: 'sent', id };
   } catch {
-    return 'error';
+    return { status: 'error' };
   }
 }

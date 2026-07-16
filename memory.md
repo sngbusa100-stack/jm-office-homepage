@@ -122,3 +122,13 @@
 - 조치 1건: 설계 문서에 있던 챗 ID를 제거하고 커밋 amend + force-push로 공개 이력에서 삭제(재검사 0건).
 - 잔여 위험(수용): CORS는 브라우저 차단용이라 curl 직접 호출은 가능 — 허니팟·입력 상한·주제 화이트리스트로 완화. 스팸 발생 시 Vercel 방화벽/간단한 IP 제한 추가 예정.
 - GitHub Pages(gh-pages)도 동일 코드로 재배포 완료. 개업 시: office.json 실데이터+isOpen true → vercel deploy --prod 한 번.
+
+## 2026-07-17 접수 데이터 축적·체계적 응답 시스템
+
+- 설계: `docs/superpowers/specs/2026-07-17-inquiry-management-design.md`
+- 접수 흐름 확장: 접수번호(JM-YYYYMMDD-XXXX) 발급 → Upstash Redis 저장(inquiry:<id> + inquiry:index) → 텔레그램 알림에 접수번호 포함 → 방문자 성공 안내에 접수번호 표시. 저장소 미설정·장애 시에도 알림은 발송(fail-open, 알림·저장 모두 실패 시에만 접수 실패).
+- 관리자: `/admin` 페이지 + `api/admin.js` (ADMIN_TOKEN Bearer, sha256 상수시간 비교). 접수 목록·통계(상태/분야/월별)·상태 변경(신규/진행 중/완료/보류)·처리 메모·분야별 회신문 템플릿 생성(확인 질문 포함)·개인정보 파기(통계 필드만 보존).
+- 답변 템플릿: `src/data/replyTemplates.ts` — 6개 분야별 첫 회신문+확인 질문. 방문자 자동 응답 챗봇 없음(2026-07-11 결정 유지, 회신은 항상 사람).
+- 개인정보처리방침에 보관(접근 제한 DB)·위탁(Upstash 추가)·파기(통계 필드만 잔존) 갱신.
+- 검증: 테스트 15파일 96개 통과, typecheck 0오류, 빌드·verify-dist 통과.
+- **배포 전 필요 설정(사용자)**: Vercel Storage에서 Upstash Redis 생성·연결(환경변수 자동 주입) + `ADMIN_TOKEN` 환경변수 추가 + 재배포. 설정 전에도 기존 알림 흐름은 그대로 동작.

@@ -55,6 +55,22 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(body.company).toBe('');
   });
 
+  it('서버가 접수번호를 주면 성공 안내에 함께 보여준다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, id: 'JM-20260717-AB12' }) }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText(/성함/), '홍길동');
+    await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('JM-20260717-AB12');
+  });
+
   it('전송 실패 시 대체 채널 안내를 보여준다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
     const user = userEvent.setup();

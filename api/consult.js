@@ -1,30 +1,11 @@
 import { validateConsultPayload, formatTelegramMessage } from './_validate.mjs';
-
-const DEFAULT_ALLOWED_ORIGINS = [
-  'https://sngbusa100-stack.github.io',
-  'https://jm-office-homepage.vercel.app',
-  'http://localhost:5173',
-];
-
-function allowedOrigins() {
-  const extra = (process.env.ALLOWED_ORIGINS ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return [...DEFAULT_ALLOWED_ORIGINS, ...extra];
-}
+import { buildInquiryRecord, createInquiryStore, redisConfig } from './_store.mjs';
+import { applyCors } from './_cors.mjs';
 
 export default async function handler(req, res) {
   const origin = req.headers.origin ?? '';
-  const allowed = allowedOrigins();
-  res.setHeader('Access-Control-Allow-Origin', allowed.includes(origin) ? origin : allowed[0]);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (applyCors(req, res, { methods: 'POST, OPTIONS' })) return;
 
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
-  }
   if (req.method !== 'POST') {
     res.status(405).json({ ok: false, error: 'method_not_allowed' });
     return;
@@ -48,16 +29,34 @@ export default async function handler(req, res) {
     return;
   }
 
-  const text = formatTelegramMessage(result.value, { origin });
+  // 접수 기록 저장 (저장소 미설정·장애 시에도 텔레그램 알림은 계속 발송)
+  const cfg = redisConfig();
+  const record = buildInquiryRecord(result.value, { origin });
+  let stored = false;
+  if (cfg) {
+    try {
+      await createInquiryStore(cfg).save(record);
+      stored = true;
+    } catch {
+      stored = false;
+    }
+  }
+
+  const text = formatTelegramMessage(result.value, {
+    origin,
+    inquiryId: record.id,
+    storeError: Boolean(cfg) && !stored,
+  });
   const tgResponse = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text }),
   });
 
-  if (!tgResponse.ok) {
+  if (!tgResponse.ok && !stored) {
+    // 알림·저장 모두 실패한 경우에만 실패로 응답 (한쪽이라도 기록되면 접수 성공)
     res.status(502).json({ ok: false, error: 'notify_failed' });
     return;
   }
-  res.status(200).json({ ok: true });
+  res.status(200).json({ ok: true, id: record.id });
 }

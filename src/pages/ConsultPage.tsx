@@ -28,6 +28,7 @@ export function ConsultPage() {
   const accepting = isAcceptingRequests(office);
   const [message, setMessage] = useState(buildPrefill);
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [inquiryId, setInquiryId] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,7 +43,8 @@ export function ConsultPage() {
       consent: form.get('consent') === 'on',
       company: String(form.get('company') ?? ''),
     });
-    setStatus(result);
+    setStatus(result.status);
+    setInquiryId(result.status === 'sent' ? (result.id ?? null) : null);
   }
 
   return (
@@ -115,7 +117,10 @@ export function ConsultPage() {
           {status === 'sending' ? '전송 중...' : '상담 신청하기'}
         </button>
         {status === 'sent' && (
-          <p className="note" role="status">상담 신청이 접수되었습니다. 확인 후 남겨주신 연락처로 연락드리겠습니다.</p>
+          <p className="note" role="status">
+            상담 신청이 접수되었습니다.{inquiryId ? ` 접수번호는 ${inquiryId}입니다.` : ''} 확인 후
+            남겨주신 연락처로 연락드리겠습니다.
+          </p>
         )}
         {status === 'error' && (
           <p className="note" role="alert">전송에 실패했습니다. 잠시 후 다시 시도하시거나 전화·카카오톡으로 문의해 주세요.</p>

@@ -33,10 +33,14 @@ export function validateConsultPayload(body) {
 export function formatTelegramMessage(value, meta = {}) {
   const lines = [
     '📥 새 상담 신청 (홈페이지)',
+    ...(meta.inquiryId ? [`접수번호: ${meta.inquiryId}`] : []),
     `이름: ${value.name}`,
     `연락처: ${value.phone}`,
     `분야: ${value.topic}`,
   ];
+  if (meta.storeError) {
+    lines.push('⚠ 접수 저장 실패 — 이 알림이 유일한 기록입니다.');
+  }
   if (value.message) {
     lines.push('', '상담 내용:', value.message);
   }

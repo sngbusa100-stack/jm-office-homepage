@@ -59,4 +59,19 @@ describe('텔레그램 메시지 포맷', () => {
     const text = formatTelegramMessage({ name: 'a', phone: 'b', topic: 'c', message: '' });
     expect(text).not.toContain('상담 내용');
   });
+
+  it('접수번호를 포함하고, 저장 실패 시 경고 줄을 넣는다', () => {
+    const ok = formatTelegramMessage(
+      { name: 'a', phone: 'b', topic: 'c', message: '' },
+      { inquiryId: 'JM-20260717-AB12' },
+    );
+    expect(ok).toContain('접수번호: JM-20260717-AB12');
+    expect(ok).not.toContain('저장 실패');
+
+    const failed = formatTelegramMessage(
+      { name: 'a', phone: 'b', topic: 'c', message: '' },
+      { inquiryId: 'JM-20260717-AB12', storeError: true },
+    );
+    expect(failed).toContain('저장 실패');
+  });
 });
