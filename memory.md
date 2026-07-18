@@ -198,3 +198,11 @@
 - 관리 화면에 `localCaseId`(행정심판 등록 사건번호) 표시.
 - `CONNECTOR_TOKEN` Vercel Production 등록(CLI) + 행정심판 `.env`에 동일 값·`CONNECTOR_BASE_URL` 보관.
 - 검증: 테스트 33파일 231개 통과(연동기 핸들러·ACK 멱등·이메일 검증 신규 9개).
+
+## 2026-07-19 D2·D3·D4(부분) — 통합 파이프라인 가동
+
+- D1 connector API 운영 검증 완료(무토큰 401, 토큰 200). 행정심판 쪽 연동기(D2)가 실환경 왕복 성공: JM-20260718-D4CP pull→로컬 대기함 적재(driver_license 라우팅)→ACK→원격 목록 0건→재실행 멱등. `JM_Homepage_Pull` 30분 스케줄 가동(LastResult=0).
+- D3: 행정심판 관리자 UI 접수 탭에 홈페이지 대기함 섹션(진단 상세·사건 전환·수임 확정 시 connector DELETE로 클라우드 파기). 비심판 분야 회신은 이 프로젝트 /admin 회신 템플릿 활용.
+- D4(메인 측): `/consult?topic=슬러그` 프리셀렉트 추가(dui·suspension·permit·visa·veterans·land) — 비자 사이트가 `…/consult?topic=visa&utm_source=visa_site` 링크 한 줄로 접수함에 합류 가능. utm은 Layout이 세션 캡처.
+- D4 잔여(다음 세션): 비자 사이트에 상담 CTA 추가 + 최초 배포(신규 Vercel 프로젝트 — 주인님 확인 후) + 메인 "준비중" 링크 교체.
+- 검증: 테스트 33파일 233개 통과.

@@ -75,5 +75,5 @@
 
 - [x] GPT 교차검증 반영 1차 보완 8건 배포 (`3cffcb1`) — 개업 게이트·요청 제한·트랜잭션 저장·120일 스윕·X-Robots-Tag·테스트 함수 제거
 - [x] D1: `api/connector.js` — pull/ACK/파기 API + 이메일 선택 필드 (2026-07-19 배포)
-- [ ] D4: 비자진단 홈페이지 공통 상담 API 연결
+- [x] D4(메인 측): /consult?topic= 프리셀렉트 — 비자 사이트 링크 연동 관문 (잔여: 비자 사이트 CTA·최초 배포·링크 교체)
 - [ ] 3차 보안 보완 (보류 — 통합 후, 개업 전 필수): cron 일일 파기, 멱등성 키, read-back, done→done doneAt 유지, /admin(/.*) 헤더, 세션 정리, consult 핸들러 테스트

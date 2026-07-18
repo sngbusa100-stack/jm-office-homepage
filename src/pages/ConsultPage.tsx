@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { office, isAcceptingRequests } from '../data/office';
 import { safeSessionGet } from '../lib/browserStorage';
 import { submitConsult } from '../lib/consultSubmit';
@@ -10,6 +11,16 @@ const LEVEL_LABEL: Record<ResultLevel, string> = {
 };
 
 const LEVEL_KEYS: ResultLevel[] = ['urgent', 'documents', 'official', 'ready'];
+
+/** 외부 사이트(비자 진단 등)에서 ?topic=슬러그로 분야를 미리 선택해 진입할 수 있다. */
+const TOPIC_SLUGS: Record<string, string> = {
+  dui: '음주운전 면허 구제',
+  suspension: '영업정지 · 행정심판',
+  permit: '인허가',
+  visa: '출입국 · 비자',
+  veterans: '국가보훈',
+  land: '토지보상 · 내용증명 · 계약서',
+};
 
 /** 진단 결과 페이지에서 저장해 둔 진단 상세를 읽는다. 없거나 손상되면 무시한다. */
 function readDiagnosis(): ConsultDiagnosis | undefined {
@@ -42,6 +53,8 @@ function buildPrefill(): string {
 
 export function ConsultPage() {
   const accepting = isAcceptingRequests(office);
+  const [searchParams] = useSearchParams();
+  const presetTopic = TOPIC_SLUGS[searchParams.get('topic') ?? ''];
   const [message, setMessage] = useState(buildPrefill);
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
@@ -115,7 +128,7 @@ export function ConsultPage() {
           <input type="email" name="email" disabled={!accepting} />
         </label>
         <label>분야
-          <select name="topic" disabled={!accepting}>
+          <select name="topic" defaultValue={presetTopic} disabled={!accepting}>
             <option>음주운전 면허 구제</option>
             <option>영업정지 · 행정심판</option>
             <option>인허가</option>

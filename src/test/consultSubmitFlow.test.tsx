@@ -18,9 +18,9 @@ vi.mock('../data/office', () => ({
 
 import { ConsultPage } from '../pages/ConsultPage';
 
-function renderPage() {
+function renderPage(initialEntry = '/consult') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <ConsultPage />
     </MemoryRouter>,
   );
@@ -30,6 +30,18 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
   beforeEach(() => {
     sessionStorage.clear();
     vi.restoreAllMocks();
+  });
+
+  it('?topic= 슬러그로 분야를 미리 선택한다 (외부 사이트 연동용)', () => {
+    renderPage('/consult?topic=visa');
+    const select = screen.getByLabelText('분야') as HTMLSelectElement;
+    expect(select.value).toBe('출입국 · 비자');
+  });
+
+  it('알 수 없는 topic 슬러그는 무시하고 기본값을 유지한다', () => {
+    renderPage('/consult?topic=weird');
+    const select = screen.getByLabelText('분야') as HTMLSelectElement;
+    expect(select.value).toBe('음주운전 면허 구제');
   });
 
   it('입력값을 formEndpoint로 POST하고 성공 안내를 보여준다', async () => {
