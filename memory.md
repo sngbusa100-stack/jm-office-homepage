@@ -217,3 +217,13 @@
 - 비자 진단센터 운영 URL `https://jm-visa-precheck.vercel.app`을 출입국 서비스 페이지에 연결했다. 저장 실패 텔레그램 폴백의 수동 로컬 등록·확인·메시지 삭제 절차는 `docs/OPERATIONS_CONSULT_FALLBACK.md`에 기록했다.
 - 최종 검증: 36파일 257테스트, 타입 검사, 프로덕션 빌드, 산출물 검증, diff check 통과. 독립 리뷰 최종 P0/P1 없음·배포 가능 판정.
 - 운영 배포: `e0131c6` push 후 Vercel Production Ready. 실환경에서 `CONSULT_OPEN=false`에 따른 POST 503, `/api/cron-purge` 무인증 401, `/admin`과 `/admin/*`의 `X-Robots-Tag: noindex, nofollow`, robots.txt text/plain, 비자 운영 링크 번들 포함을 확인했다. `CRON_SECRET`은 Production Sensitive로 존재해 로컬에서 원문을 다시 꺼낼 수 없으며 첫 예약 실행 로그는 다음 03:00 KST에 확인한다.
+
+## 2026-07-19 셀프 리허설 — 로컬 시험환경 전 구간 검증 완료
+
+- 시험환경(운영 완전 분리): 로컬 Redis REST 셧(127.0.0.1:8079) + `vercel dev`(API, :3300) + vite(:5173, /api 프록시) + 임시 SQLite. 시험 데이터는 서버 종료로 소멸, office.json 임시 오버라이드는 원복.
+- **발견·수정 1건**: `vercel dev` 단독 실행 시 vercel.json SPA rewrite가 vite 모듈 경로(/src/main.tsx)를 가로채 React가 마운트되지 않음(운영 무관, 로컬 한정). → `vite.config.ts`에 `/api` 프록시 추가로 해결·커밋. 이후 로컬 시험 표준 절차: `npx vercel dev --listen 3300` + `npm run dev` 병행.
+- 브라우저 실클릭 검증(가짜 고객): 진단 10문항 → 결과 → 상담 프리필 → 접수 `JM-20260719-P5FK`(이메일·진단 상세·동의 v2026-07-19 포함) → 접수 후 세션 정리 확인.
+- API 검증: 서버 urgent 재계산(10답변→긴급1), 멱등성(같은 submissionId 재제출=같은 접수번호·duplicate:true, 5연발에도 레코드 1건), 요청 제한(분당 5회, 6번째 429), cron-purge 인증·스캔, connector DELETE 파기(통계만 잔존).
+- /admin 검증: 목록·진단 상세(문항·답변 한글 라벨 10건)·회신문 자동 생성(이름·접수번호·확인질문 삽입)·파기 버튼.
+- 행정심판 연동 검증(임시 DB): pull 3건 적재·라우팅(음주운전→driver_license) → 사건 전환 `CASE-2026-0001`(유효마감 D-25 자동계산) → 자동 진단(준비도 46점 risk·경고 3건·증거 체크리스트 11항목, 필수 5건 미비 식별) → 대기함-사건 연결.
+- **미검증(환경 필요)**: LLM 문서 생성(HWPX — LM Studio/Gemini 필요), notify 이메일 실발송(SMTP 설정), 실기기(스마트폰) UX. 개업 전 확인 항목으로 이관.
