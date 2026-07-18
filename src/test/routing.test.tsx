@@ -23,4 +23,9 @@ describe('라우팅', () => {
     expect(screen.getByText(/페이지를 찾을 수 없습니다/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /홈으로/ })).toHaveAttribute('href', '/');
   });
+
+  it('객체 프로토타입 이름을 진단 도메인으로 오인하지 않는다', () => {
+    renderAt('/check/toString');
+    expect(screen.getByText(/페이지를 찾을 수 없습니다/)).toBeInTheDocument();
+  });
 });

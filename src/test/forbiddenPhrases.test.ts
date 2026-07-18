@@ -1,7 +1,10 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const FORBIDDEN = ['100%', '１００％', '보장합니다', '보장해', '확실히 구제', '무조건', '성공률', '반드시 구제', '전액 환불'];
+const FORBIDDEN = [
+  '100%', '１００％', '보장합니다', '보장해', '확실히 구제', '무조건', '성공률',
+  '반드시 구제', '전액 환불', '기한이 지나면 다툴 수 없습니다', '다툴 방법 자체가 사라집니다',
+];
 
 function collectFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -12,7 +15,7 @@ function collectFiles(dir: string): string[] {
 }
 
 describe('금지 표현 검사 (행정사법 §21의2, 표시광고법)', () => {
-  const targets = [join(__dirname, '../data'), join(__dirname, '../pages')]
+  const targets = [join(__dirname, '../components'), join(__dirname, '../data'), join(__dirname, '../pages')]
     .filter((dir) => existsSync(dir))
     .flatMap((dir) => collectFiles(dir));
 

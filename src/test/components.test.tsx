@@ -22,6 +22,7 @@ describe('공통 레이아웃', () => {
     renderLayout();
     expect(screen.getByText('본문으로 건너뛰기')).toHaveAttribute('href', '#main');
     expect(screen.getByRole('link', { name: '셀프 진단' })).toHaveAttribute('href', '/check');
+    expect(screen.getByRole('link', { name: '업무분야' })).toHaveAttribute('href', '/services');
     expect(screen.getByRole('link', { name: '상담 안내' })).toHaveAttribute('href', '/consult');
   });
 

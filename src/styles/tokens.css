@@ -1,7 +1,9 @@
 :root {
   --primary: #14284b;
   --primary-dark: #0c1a33;
-  --accent: #b98a2f;
+  --accent: #86601d;
+  --accent-soft: #f6eddd;
+  --accent-dark: #684710;
   --bg: #fafaf8;
   --surface: #ffffff;
   --surface-muted: #f3f5f8;
@@ -13,8 +15,8 @@
   --warning: #9a6200;
   --success: #1f6b4f;
   --radius-sm: 8px;
-  --radius-md: 12px;
+  --radius-md: 14px;
   --radius-lg: 20px;
-  --shadow-sm: 0 1px 2px rgb(15 26 42 / 8%);
-  --shadow-md: 0 16px 40px -24px rgb(15 26 42 / 35%);
+  --shadow-sm: 0 6px 22px -18px rgb(15 26 42 / 45%);
+  --shadow-md: 0 24px 56px -30px rgb(15 26 42 / 42%);
 }

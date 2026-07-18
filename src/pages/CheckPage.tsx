@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { checks } from '../data/checks';
-import type { CheckDomain } from '../types/content';
+import { findCheck } from '../data/checks';
 import { safeSessionSet } from '../lib/browserStorage';
 import { NotFoundPage } from './NotFoundPage';
 
@@ -11,7 +10,7 @@ export function CheckPage() {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const definition = domain && domain in checks ? checks[domain as CheckDomain] : undefined;
+  const definition = findCheck(domain);
   if (!definition) return <NotFoundPage />;
 
   const question = definition.questions[index];
