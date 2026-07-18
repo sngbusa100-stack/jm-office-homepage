@@ -175,3 +175,4 @@
   - **파기 정합**: purge 시 diagnosis·consent도 함께 파기(통계용 sourcePath·utmSource·schemaVersion만 잔존). 개인정보처리방침을 실동작(텔레그램 개인정보 미포함·저장 장애 예외, 진단 결과 수집 항목)과 일치하게 갱신.
 - 검증: `npm run check` 테스트 32파일 214개 통과(신규 10개), typecheck 0, 빌드·verify-dist 통과. 실브라우저: 진단→결과→상담 이동 시 diagnosis(답변 6·urgent 1) 저장·프리필 정상, `/admin` noindex·토큰 게이트 정상, 콘솔 오류 0건.
 - **미해결(push 전 결정 필요)**: ① Upstash Redis가 미국 워싱턴 D.C. 리전 — 국내(또는 아시아) 리전 재생성 여부는 주인님 결정 필요(재생성 시 함수 리전도 함께 지정). ② master push 시 Vercel Production 자동 배포 — push는 별도 승인 후. ③ 자동 보존기간(완료 후 N일 자동 파기)은 다음 단계.
+- **운영 배포 완료(2026-07-18)**: master push(`5f9640c`) → Vercel Production 자동 배포 Ready 확인. 실환경 검증: `/robots.txt` 200 text/plain, `/sitemap.xml` 200 application/xml(admin 미포함) — HTML 반환 버그 해결. `/admin` 실브라우저에서 `noindex, nofollow`·canonical 정상. 접수 API 테스트 `JM-20260718-D4CP`(진단 상세·urgent 포함, utm=deploy_verification) 정상 접수 — 텔레그램 알림은 접수번호·긴급 표시만 포함(개인정보 미포함) 확인 대상. 테스트 접수는 /admin에서 파기 예정.
