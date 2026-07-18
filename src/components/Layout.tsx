@@ -4,23 +4,41 @@ import { useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { PreOpeningNotice } from './PreOpeningNotice';
+import { getPageMeta } from '../lib/pageMeta';
 
-const TITLES: Record<string, string> = {
-  '/': '정명 행정사사무소 | 정확함으로 길을 밝히다',
-  '/why': '행정사가 필요한 이유 | 정명 행정사사무소',
-  '/check': '셀프 진단 | 정명 행정사사무소',
-  '/consult': '상담 안내 | 정명 행정사사무소',
-  '/privacy': '개인정보처리방침 | 정명 행정사사무소',
-  '/disclaimer': '면책 고지 | 정명 행정사사무소',
-  '/admin': '접수 관리 | 정명 행정사사무소',
-};
+function setMeta(selector: string, attribute: 'name' | 'property', key: string, content: string) {
+  let element = document.head.querySelector<HTMLMetaElement>(selector);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attribute, key);
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
+}
+
+function setCanonical(href: string) {
+  let element = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!element) {
+    element = document.createElement('link');
+    element.rel = 'canonical';
+    document.head.appendChild(element);
+  }
+  element.href = href;
+}
 
 export function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    document.title = TITLES[pathname] ?? '정명 행정사사무소';
+    const meta = getPageMeta(pathname);
+    document.title = meta.title;
+    setMeta('meta[name="description"]', 'name', 'description', meta.description);
+    setMeta('meta[name="robots"]', 'name', 'robots', meta.robots);
+    setMeta('meta[property="og:title"]', 'property', 'og:title', meta.title);
+    setMeta('meta[property="og:description"]', 'property', 'og:description', meta.description);
+    setMeta('meta[property="og:url"]', 'property', 'og:url', meta.canonical);
+    setCanonical(meta.canonical);
     mainRef.current?.focus();
     window.scrollTo(0, 0);
   }, [pathname]);

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 export function ConsultCta({
-  message = '기한이 지나면 다툴 방법 자체가 사라집니다. 내 상황부터 확인해 보세요.',
+  message = '법정 기한이 지나면 불복 절차가 제한될 수 있습니다. 내 상황부터 확인해 보세요.',
 }: {
   message?: string;
 }) {

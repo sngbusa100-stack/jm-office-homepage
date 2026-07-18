@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { checks } from '../data/checks';
-import type { CheckDomain, ResultLevel } from '../types/content';
+import { findCheck } from '../data/checks';
+import type { ResultLevel } from '../types/content';
 import { classifyAnswers, summarize, LEVEL_ORDER } from '../domain/diagnosis';
 import { safeSessionGet, safeSessionSet } from '../lib/browserStorage';
 import { NotFoundPage } from './NotFoundPage';
@@ -14,7 +14,7 @@ const LEVEL_LABEL: Record<ResultLevel, string> = {
 
 export function CheckResultPage() {
   const { domain } = useParams();
-  const definition = domain && domain in checks ? checks[domain as CheckDomain] : undefined;
+  const definition = findCheck(domain);
   if (!definition) return <NotFoundPage />;
 
   const raw = safeSessionGet(`check:${definition.domain}`);
