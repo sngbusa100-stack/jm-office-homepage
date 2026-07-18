@@ -41,8 +41,7 @@ function mockRes() {
 
 /** Redis REST 흉내: 명령을 해석해 메모리 Map에 반영한다. */
 function stubRedis(data = new Map(), index = []) {
-  const fetchMock = vi.fn().mockImplementation(async (_url, options) => {
-    const cmd = JSON.parse(options.body);
+  function apply(cmd) {
     let result = null;
     if (cmd[0] === 'GET') result = data.get(cmd[1]) ?? null;
     if (cmd[0] === 'SET') {
@@ -55,7 +54,19 @@ function stubRedis(data = new Map(), index = []) {
     }
     if (cmd[0] === 'ZRANGE') result = [...index].reverse();
     if (cmd[0] === 'MGET') result = cmd.slice(1).map((k) => data.get(k) ?? null);
-    return { ok: true, json: async () => ({ result }) };
+    if (cmd[0] === 'INCR') result = 1;
+    if (cmd[0] === 'EXPIRE') result = 1;
+    return result;
+  }
+
+  const fetchMock = vi.fn().mockImplementation(async (url, options) => {
+    const body = JSON.parse(options.body);
+    // multi-exec 트랜잭션: 명령 배열을 순서대로 반영하고 결과 배열을 돌려준다.
+    if (String(url).endsWith('/multi-exec')) {
+      const results = body.map((cmd) => ({ result: apply(cmd) }));
+      return { ok: true, json: async () => results };
+    }
+    return { ok: true, json: async () => ({ result: apply(body) }) };
   });
   vi.stubGlobal('fetch', fetchMock);
   return { data, index, fetchMock };
@@ -93,6 +104,40 @@ describe('관리자 API 핸들러', () => {
     await handler({ method: 'GET', headers: AUTH }, res);
     expect(res.statusCode).toBe(500);
     expect(res.body.error).toBe('storage_not_configured');
+  });
+
+  it('GET은 완료 후 120일 지난 접수를 자동 파기해 돌려준다', async () => {
+    const old = buildInquiryRecord(
+      { name: '홍길동', phone: '010-1234-5678', topic: '인허가', message: '민감 내용' },
+      {},
+      { id: 'JM-20260101-OLDD', now: new Date('2026-01-01T03:00:00Z') },
+    );
+    old.status = 'done';
+    old.doneAt = '2026-01-05T03:00:00.000Z'; // 오늘(7-18) 기준 120일 초과
+    const recent = buildInquiryRecord(
+      { name: '김최근', phone: '010-2222-3333', topic: '국가보훈', message: '최근 문의' },
+      {},
+      { id: 'JM-20260717-NEWW', now: new Date('2026-07-17T03:00:00Z') },
+    );
+    const { data, index } = stubRedis();
+    data.set('inquiry:JM-20260101-OLDD', JSON.stringify(old));
+    data.set('inquiry:JM-20260717-NEWW', JSON.stringify(recent));
+    index.push('JM-20260101-OLDD', 'JM-20260717-NEWW');
+
+    const res = mockRes();
+    await handler({ method: 'GET', headers: AUTH }, res);
+    expect(res.statusCode).toBe(200);
+
+    const oldItem = res.body.items.find((i) => i.id === 'JM-20260101-OLDD');
+    expect(oldItem.purged).toBe(true);
+    expect(oldItem.name).toBeUndefined();
+    const savedOld = JSON.parse(data.get('inquiry:JM-20260101-OLDD'));
+    expect(savedOld.purged).toBe(true);
+    expect(savedOld.phone).toBeUndefined();
+
+    const newItem = res.body.items.find((i) => i.id === 'JM-20260717-NEWW');
+    expect(newItem.purged).toBeUndefined();
+    expect(newItem.name).toBe('김최근');
   });
 
   it('GET은 접수 목록을 돌려준다', async () => {

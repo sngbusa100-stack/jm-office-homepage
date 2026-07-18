@@ -3,8 +3,10 @@ import {
   STATUSES,
   applyInquiryPatch,
   buildInquiryRecord,
+  checkRateLimit,
   createInquiryStore,
   generateInquiryId,
+  isRetentionExpired,
   purgeInquiryRecord,
   redisConfig,
 } from './_store.mjs';
@@ -114,7 +116,6 @@ describe('개인정보 파기', () => {
       receivedAt: record.receivedAt,
       topic: record.topic,
       status: 'new',
-      origin: 'o',
       memoCount: 1,
       purged: true,
       purgedAt: NOW.toISOString(),
@@ -124,22 +125,84 @@ describe('개인정보 파기', () => {
     expect(purged.message).toBeUndefined();
   });
 
-  it('진단 상세·동의 기록도 파기하고 유입경로 통계는 남긴다', () => {
+  it('진단·동의·origin·유입경로(식별값 가능)까지 모두 파기한다', () => {
     const record = buildInquiryRecord(
       {
         ...value,
         diagnosis: { domain: 'dui', answers: { q1: 'a' }, counts: { urgent: 1 } },
         sourcePath: '/check/dui/result',
-        utmSource: 'naver_blog',
+        utmSource: 'email_고객번호123',
       },
-      {},
+      { origin: 'https://example.test' },
       { now: NOW },
     );
     const purged = purgeInquiryRecord(record, NOW);
     expect(purged.diagnosis).toBeUndefined();
     expect(purged.consent).toBeUndefined();
-    expect(purged.sourcePath).toBe('/check/dui/result');
-    expect(purged.utmSource).toBe('naver_blog');
+    expect(purged.origin).toBeUndefined();
+    expect(purged.sourcePath).toBeUndefined();
+    expect(purged.utmSource).toBeUndefined();
+  });
+});
+
+describe('완료 시각과 보존기간(120일) 자동 파기 판정', () => {
+  const base = buildInquiryRecord(value, {}, { now: NOW });
+
+  it('done 전환 시 doneAt을 기록하고, 완료가 풀리면 지운다', () => {
+    const done = applyInquiryPatch(base, { status: 'done' }, NOW);
+    expect(done.value.doneAt).toBe(NOW.toISOString());
+    const reopened = applyInquiryPatch(done.value, { status: 'in_progress' }, NOW);
+    expect(reopened.value.doneAt).toBeUndefined();
+  });
+
+  it('완료 후 120일이 지나면 파기 대상이다', () => {
+    const done = applyInquiryPatch(base, { status: 'done' }, NOW).value;
+    const day119 = new Date(NOW.getTime() + 119 * 24 * 60 * 60 * 1000);
+    const day121 = new Date(NOW.getTime() + 121 * 24 * 60 * 60 * 1000);
+    expect(isRetentionExpired(done, day119)).toBe(false);
+    expect(isRetentionExpired(done, day121)).toBe(true);
+  });
+
+  it('완료가 아니거나 이미 파기된 레코드는 대상이 아니다', () => {
+    const far = new Date(NOW.getTime() + 500 * 24 * 60 * 60 * 1000);
+    expect(isRetentionExpired(base, far)).toBe(false); // status: new
+    const done = applyInquiryPatch(base, { status: 'done' }, NOW).value;
+    const purged = purgeInquiryRecord(done, NOW);
+    expect(isRetentionExpired(purged, far)).toBe(false);
+  });
+
+  it('doneAt이 없는 과거 레코드는 updatedAt·receivedAt을 기산점으로 쓴다', () => {
+    const legacy = { ...buildInquiryRecord(value, {}, { now: NOW }), status: 'done' };
+    delete legacy.doneAt;
+    const day121 = new Date(NOW.getTime() + 121 * 24 * 60 * 60 * 1000);
+    expect(isRetentionExpired(legacy, day121)).toBe(true); // receivedAt 기준
+  });
+});
+
+describe('요청 제한', () => {
+  const cfg = { url: 'https://redis.test', token: 'secret' };
+
+  function limiterFetch(count) {
+    return vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ result: count }, { result: 1 }],
+    });
+  }
+
+  it('한도 이내면 허용하고 초과하면 거부한다', async () => {
+    expect(await checkRateLimit(cfg, 'ratelimit:consult:1.2.3.4', {}, limiterFetch(5))).toBe(true);
+    expect(await checkRateLimit(cfg, 'ratelimit:consult:1.2.3.4', {}, limiterFetch(6))).toBe(false);
+  });
+
+  it('INCR과 EXPIRE NX를 한 트랜잭션으로 보낸다', async () => {
+    const fetchMock = limiterFetch(1);
+    await checkRateLimit(cfg, 'ratelimit:consult:1.2.3.4', { windowSec: 60 }, fetchMock);
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://redis.test/multi-exec');
+    expect(JSON.parse(options.body)).toEqual([
+      ['INCR', 'ratelimit:consult:1.2.3.4'],
+      ['EXPIRE', 'ratelimit:consult:1.2.3.4', '60', 'NX'],
+    ]);
   });
 });
 
@@ -167,16 +230,19 @@ describe('Redis REST 저장소', () => {
     }));
   }
 
-  it('save는 SET과 ZADD(접수시각 점수)를 호출한다', async () => {
-    const fetchMock = fetchReturning(['OK', 1]);
+  it('save는 SET과 ZADD를 하나의 트랜잭션(multi-exec)으로 원자 실행한다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ result: 'OK' }, { result: 1 }],
+    });
     const store = createInquiryStore(cfg, fetchMock);
     const record = buildInquiryRecord(value, {}, { now: NOW, id: 'JM-20260717-TEST' });
     await store.save(record);
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    const [setCall, zaddCall] = fetchMock.mock.calls.map(([, options]) =>
-      JSON.parse(options.body),
-    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://redis.test/multi-exec');
+    const [setCall, zaddCall] = JSON.parse(options.body);
     expect(setCall[0]).toBe('SET');
     expect(setCall[1]).toBe('inquiry:JM-20260717-TEST');
     expect(JSON.parse(setCall[2]).name).toBe('홍길동');
@@ -186,8 +252,17 @@ describe('Redis REST 저장소', () => {
       String(NOW.getTime()),
       'JM-20260717-TEST',
     ]);
-    const [, options] = fetchMock.mock.calls[0];
     expect(options.headers.Authorization).toBe('Bearer secret');
+  });
+
+  it('save 트랜잭션의 일부 명령이 실패하면 예외를 던진다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ result: 'OK' }, { error: 'ERR something' }],
+    });
+    const store = createInquiryStore(cfg, fetchMock);
+    const record = buildInquiryRecord(value, {}, { now: NOW, id: 'JM-20260717-TEST' });
+    await expect(store.save(record)).rejects.toThrow('redis_ERR something');
   });
 
   it('list는 인덱스 최신순 조회 후 MGET으로 레코드를 복원한다', async () => {

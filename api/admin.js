@@ -6,6 +6,7 @@ import { applyCors } from './_cors.mjs';
 import {
   applyInquiryPatch,
   createInquiryStore,
+  isRetentionExpired,
   purgeInquiryRecord,
   redisConfig,
 } from './_store.mjs';
@@ -38,7 +39,24 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const items = await store.list();
-      res.status(200).json({ ok: true, items });
+      // 보존기간 자동 파기 스윕: 완료 후 120일이 지난 레코드는 목록 조회 시점에 파기한다.
+      // 스윕 실패가 목록 조회를 막지 않도록 개별 try로 감싼다.
+      const now = new Date();
+      const swept = [];
+      for (const item of items) {
+        if (isRetentionExpired(item, now)) {
+          try {
+            const purged = purgeInquiryRecord(item, now);
+            await store.save(purged);
+            swept.push(purged);
+            continue;
+          } catch {
+            // 파기 실패 시 원본을 그대로 두고 다음 조회에서 재시도한다.
+          }
+        }
+        swept.push(item);
+      }
+      res.status(200).json({ ok: true, items: swept });
       return;
     }
 

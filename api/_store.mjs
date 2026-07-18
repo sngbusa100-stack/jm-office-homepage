@@ -10,6 +10,9 @@ export const SCHEMA_VERSION = 2;
 /** 개인정보 수집 동의 문구 버전 — 개인정보처리방침 개정일과 맞춘다. */
 export const CONSENT_VERSION = '2026-07-18';
 
+/** 처리 완료(done) 후 개인정보 보존 일수 — 행정심판 청구기간(90일)과 후속 절차 대응을 고려해 120일. */
+export const RETENTION_DAYS = 120;
+
 const KEY_PREFIX = 'inquiry:';
 const INDEX_KEY = 'inquiry:index';
 
@@ -56,8 +59,14 @@ export function applyInquiryPatch(record, patch = {}, now = new Date()) {
   const next = { ...record, memos: [...(record.memos ?? [])] };
 
   if (patch.status !== undefined) {
-    if (STATUSES.includes(patch.status)) next.status = patch.status;
-    else errors.push('status');
+    if (STATUSES.includes(patch.status)) {
+      next.status = patch.status;
+      // 자동 파기 기산점: 완료로 바뀌면 완료 시각을 기록하고, 완료가 풀리면 지운다.
+      if (patch.status === 'done') next.doneAt = now.toISOString();
+      else delete next.doneAt;
+    } else {
+      errors.push('status');
+    }
   }
   if (patch.memo !== undefined) {
     const text = typeof patch.memo === 'string' ? patch.memo.trim() : '';
@@ -72,8 +81,9 @@ export function applyInquiryPatch(record, patch = {}, now = new Date()) {
 }
 
 /**
- * 개인정보 파기: 이름·연락처·상담 내용·메모를 제거하고
- * 통계용 필드(접수번호·접수일·분야·상태)만 남긴다.
+ * 개인정보 파기: 처리방침("상담 분야·접수일만 남는다")과 일치하도록
+ * 이름·연락처·상담 내용·메모·진단·동의 기록은 물론 origin·유입경로(임의
+ * 문자열이라 식별값이 실릴 수 있음)까지 제거하고 통계 필드만 남긴다.
  */
 export function purgeInquiryRecord(record, now = new Date()) {
   return {
@@ -82,13 +92,22 @@ export function purgeInquiryRecord(record, now = new Date()) {
     receivedAt: record.receivedAt,
     topic: record.topic,
     status: record.status,
-    origin: record.origin ?? '',
-    ...(record.sourcePath ? { sourcePath: record.sourcePath } : {}),
-    ...(record.utmSource ? { utmSource: record.utmSource } : {}),
     memoCount: (record.memos ?? []).length,
     purged: true,
     purgedAt: now.toISOString(),
   };
+}
+
+/**
+ * 자동 파기 대상 판정: 완료(done) 후 보존기간(RETENTION_DAYS)이 지난 미파기 레코드.
+ * 과거(v1) 레코드에 doneAt이 없으면 updatedAt, 그것도 없으면 receivedAt을 기산점으로 쓴다.
+ */
+export function isRetentionExpired(record, now = new Date(), retentionDays = RETENTION_DAYS) {
+  if (!record || record.purged || record.status !== 'done') return false;
+  const baseIso = record.doneAt ?? record.updatedAt ?? record.receivedAt;
+  const base = Date.parse(baseIso ?? '');
+  if (!Number.isFinite(base)) return false;
+  return now.getTime() - base > retentionDays * 24 * 60 * 60 * 1000;
 }
 
 /** Vercel KV(구) 또는 Upstash 통합이 주입하는 환경변수를 읽는다. 미설정이면 null. */
@@ -111,15 +130,54 @@ async function command(cfg, cmd, fetchImpl) {
   return data.result;
 }
 
+/**
+ * 여러 명령을 Upstash 트랜잭션(MULTI/EXEC)으로 원자 실행한다.
+ * SET(본문)과 ZADD(목록 인덱스)가 따로 실패해 목록에 안 보이는 고아 레코드가
+ * 생기는 것을 막는다.
+ */
+async function transaction(cfg, cmds, fetchImpl) {
+  const response = await fetchImpl(`${cfg.url}/multi-exec`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${cfg.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(cmds),
+  });
+  if (!response.ok) throw new Error(`redis_http_${response.status}`);
+  const data = await response.json();
+  if (!Array.isArray(data)) throw new Error(`redis_${data?.error ?? 'tx_bad_response'}`);
+  for (const item of data) {
+    if (item && item.error) throw new Error(`redis_${item.error}`);
+  }
+  return data.map((item) => item?.result);
+}
+
+/**
+ * IP 단위 요청 제한. windowSec 동안 limit회를 넘으면 false.
+ * 제한기 자체의 장애로 접수를 막지 않도록 호출부에서 fail-open으로 감싼다.
+ */
+export async function checkRateLimit(cfg, key, { limit = 5, windowSec = 60 } = {}, fetchImpl = fetch) {
+  const results = await transaction(
+    cfg,
+    [
+      ['INCR', key],
+      ['EXPIRE', key, String(windowSec), 'NX'],
+    ],
+    fetchImpl,
+  );
+  const count = Number(results[0]);
+  return Number.isFinite(count) ? count <= limit : true;
+}
+
 /** Upstash Redis REST 기반 접수 저장소. fetchImpl 주입으로 테스트한다. */
 export function createInquiryStore(cfg, fetchImpl = fetch) {
   const key = (id) => `${KEY_PREFIX}${id}`;
   return {
     async save(record) {
-      await command(cfg, ['SET', key(record.id), JSON.stringify(record)], fetchImpl);
-      await command(
+      await transaction(
         cfg,
-        ['ZADD', INDEX_KEY, String(Date.parse(record.receivedAt)), record.id],
+        [
+          ['SET', key(record.id), JSON.stringify(record)],
+          ['ZADD', INDEX_KEY, String(Date.parse(record.receivedAt)), record.id],
+        ],
         fetchImpl,
       );
     },

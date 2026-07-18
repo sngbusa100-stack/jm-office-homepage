@@ -176,3 +176,11 @@
 - 검증: `npm run check` 테스트 32파일 214개 통과(신규 10개), typecheck 0, 빌드·verify-dist 통과. 실브라우저: 진단→결과→상담 이동 시 diagnosis(답변 6·urgent 1) 저장·프리필 정상, `/admin` noindex·토큰 게이트 정상, 콘솔 오류 0건.
 - **미해결(push 전 결정 필요)**: ① Upstash Redis가 미국 워싱턴 D.C. 리전 — 국내(또는 아시아) 리전 재생성 여부는 주인님 결정 필요(재생성 시 함수 리전도 함께 지정). ② master push 시 Vercel Production 자동 배포 — push는 별도 승인 후. ③ 자동 보존기간(완료 후 N일 자동 파기)은 다음 단계.
 - **운영 배포 완료(2026-07-18)**: master push(`5f9640c`) → Vercel Production 자동 배포 Ready 확인. 실환경 검증: `/robots.txt` 200 text/plain, `/sitemap.xml` 200 application/xml(admin 미포함) — HTML 반환 버그 해결. `/admin` 실브라우저에서 `noindex, nofollow`·canonical 정상. 접수 API 테스트 `JM-20260718-D4CP`(진단 상세·urgent 포함, utm=deploy_verification) 정상 접수 — 텔레그램 알림은 접수번호·긴급 표시만 포함(개인정보 미포함) 확인 대상. 테스트 접수는 /admin에서 파기 예정.
+
+## 2026-07-18 GPT 교차검증 지적 보완 (접수 보안·개인정보 1차)
+
+- 사용자 결정: 저장 실패 시 텔레그램 전체 폴백은 **현행 유지**(재연락 대응 목적, 방침에 고지됨). 개인정보 보존기간은 **처리 완료 후 120일**(행정심판 90일+후속 소송·변호사 연계 대응) 후 자동 파기.
+- 구현: ① 텔레그램 fetch try/catch — 저장 성공 시 알림 예외가 500·중복 접수로 번지지 않음 ② 개업 게이트 — `CONSULT_OPEN=true` 환경변수 없으면 `/api/consult` 503 (개업 시 Vercel에서 설정) ③ SET+ZADD를 Upstash `multi-exec` 트랜잭션으로 원자화(고아 레코드 방지) ④ IP 요청 제한(분당 5회, INCR+EXPIRE NX, 제한기 장애 시 fail-open) ⑤ 파기 시 origin·sourcePath·utmSource까지 제거(방침 문구와 일치) ⑥ done 전환 시 `doneAt` 기록, 관리자 GET에서 120일 경과 건 자동 파기 스윕 ⑦ `/admin`에 `X-Robots-Tag: noindex, nofollow` 헤더(vercel.json) ⑧ `api/admin.test.mjs` → `api/_admin.test.mjs` 이름 변경으로 서버리스 함수 노출 제거.
+- 방침·동의 문구를 120일 보관으로 갱신(처리방침 보관·파기 조항, 상담 폼 동의 라벨).
+- 검증: 테스트 32파일 222개 통과(신규 8: 트랜잭션·부분실패·파기필드·doneAt·보존판정·레거시 기산점·요청제한 2), typecheck 0, 빌드·verify-dist 통과.
+- 잔여(2차): 진단 정의 src/api 공유 JSON + 서버측 counts 재계산, 500건 초과 페이지네이션, 개업 전 방침의 국외이전 상세 고지(보호법 제28조의8) 전문 검토, Upstash 리전 이전 여부.

@@ -131,7 +131,7 @@ export function ConsultPage() {
         </label>
         <label className="agree">
           <input type="checkbox" name="consent" required disabled={!accepting} />
-          개인정보 수집·이용에 동의합니다 (상담 회신 목적, 회신 후 파기)
+          개인정보 수집·이용에 동의합니다 (상담 회신 목적, 처리 완료 후 120일 보관 뒤 파기)
         </label>
         <button className="button button--accent" type="submit" disabled={!accepting || status === 'sending'}>
           {status === 'sending' ? '전송 중...' : '상담 신청하기'}
