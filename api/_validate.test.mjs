@@ -59,6 +59,19 @@ describe('상담 접수 검증', () => {
     expect(without.value).not.toHaveProperty('utmSource');
   });
 
+  it('이메일은 선택이며, 입력 시 형식 오류를 잡고 정상이면 담는다', () => {
+    expect(validateConsultPayload(valid).ok).toBe(true); // 이메일 없이 유효
+    expect(validateConsultPayload(valid).value).not.toHaveProperty('email');
+
+    const withEmail = validateConsultPayload({ ...valid, email: 'a@b.co' });
+    expect(withEmail.ok).toBe(true);
+    expect(withEmail.value.email).toBe('a@b.co');
+
+    const bad = validateConsultPayload({ ...valid, email: '이상한값' });
+    expect(bad.ok).toBe(false);
+    expect(bad.errors).toContain('email');
+  });
+
   it('손상된 진단 데이터는 접수를 막지 않고 제외한다', () => {
     const result = validateConsultPayload({ ...valid, diagnosis: '이상한 값' });
     expect(result.ok).toBe(true);

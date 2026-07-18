@@ -36,6 +36,7 @@ export function buildInquiryRecord(value, meta = {}, { id, now = new Date() } = 
     receivedAt: now.toISOString(),
     name: value.name,
     phone: value.phone,
+    ...(value.email ? { email: value.email } : {}),
     topic: value.topic,
     message: value.message ?? '',
     ...(value.diagnosis ? { diagnosis: value.diagnosis } : {}),
@@ -78,6 +79,27 @@ export function applyInquiryPatch(record, patch = {}, now = new Date()) {
   if (errors.length > 0) return { ok: false, errors };
   next.updatedAt = now.toISOString();
   return { ok: true, value: next };
+}
+
+/**
+ * 로컬 연동기 ACK: 행정심판 시스템이 이 접수를 가져가 사건으로 등록했음을 표시한다.
+ * 이미 ACK된 레코드는 변경 없이 그대로 돌려준다(멱등 — 연동기 재시도 안전).
+ */
+export function applyConnectorAck(record, localCaseId, now = new Date()) {
+  if (!record || typeof record !== 'object') return { ok: false, errors: ['not_found'] };
+  if (record.purged) return { ok: false, errors: ['purged'] };
+  if (record.pulledAt) return { ok: true, value: record, already: true };
+  const caseId = typeof localCaseId === 'string' ? localCaseId.trim().slice(0, 40) : '';
+  if (!caseId) return { ok: false, errors: ['local_case_id'] };
+  return {
+    ok: true,
+    value: {
+      ...record,
+      pulledAt: now.toISOString(),
+      localCaseId: caseId,
+      updatedAt: now.toISOString(),
+    },
+  };
 }
 
 /**

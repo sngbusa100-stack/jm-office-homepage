@@ -74,6 +74,6 @@
 기준 문서: `D:\행정사\1-행정심판\docs\2026-07-19-통합-마스터플랜.md`
 
 - [x] GPT 교차검증 반영 1차 보완 8건 배포 (`3cffcb1`) — 개업 게이트·요청 제한·트랜잭션 저장·120일 스윕·X-Robots-Tag·테스트 함수 제거
-- [ ] D1: `api/connector.js` — 로컬 연동기용 pull/ACK API (CONNECTOR_TOKEN 인증)
+- [x] D1: `api/connector.js` — pull/ACK/파기 API + 이메일 선택 필드 (2026-07-19 배포)
 - [ ] D4: 비자진단 홈페이지 공통 상담 API 연결
 - [ ] 3차 보안 보완 (보류 — 통합 후, 개업 전 필수): cron 일일 파기, 멱등성 키, read-back, done→done doneAt 유지, /admin(/.*) 헤더, 세션 정리, consult 핸들러 테스트

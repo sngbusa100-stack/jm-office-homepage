@@ -56,6 +56,7 @@ export function ConsultPage() {
     const result = await submitConsult(office.formEndpoint, {
       name: String(form.get('name') ?? ''),
       phone: String(form.get('phone') ?? ''),
+      email: String(form.get('email') ?? ''),
       topic: String(form.get('topic') ?? ''),
       message,
       consent: form.get('consent') === 'on',
@@ -110,6 +111,9 @@ export function ConsultPage() {
         <input type="text" name="company" className="sr-only" tabIndex={-1} autoComplete="off" aria-hidden="true" />
         <label>성함<input type="text" name="name" required disabled={!accepting} /></label>
         <label>연락처<input type="tel" name="phone" required disabled={!accepting} /></label>
+        <label>이메일 (선택 — 서면 답변을 원하시면 입력해 주세요)
+          <input type="email" name="email" disabled={!accepting} />
+        </label>
         <label>분야
           <select name="topic" disabled={!accepting}>
             <option>음주운전 면허 구제</option>

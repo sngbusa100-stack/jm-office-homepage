@@ -23,7 +23,10 @@ export interface InquiryRecord {
   origin?: string;
   name?: string;
   phone?: string;
+  email?: string;
   message?: string;
+  pulledAt?: string;
+  localCaseId?: string;
   diagnosis?: InquiryDiagnosis;
   sourcePath?: string;
   utmSource?: string;

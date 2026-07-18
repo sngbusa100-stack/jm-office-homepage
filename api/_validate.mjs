@@ -42,6 +42,7 @@ export function validateConsultPayload(body) {
   const data = typeof body === 'object' && body !== null ? body : {};
   const name = typeof data.name === 'string' ? data.name.trim() : '';
   const phone = typeof data.phone === 'string' ? data.phone.trim() : '';
+  const email = typeof data.email === 'string' ? data.email.trim() : '';
   const topic = typeof data.topic === 'string' ? data.topic.trim() : '';
   const message = typeof data.message === 'string' ? data.message.trim() : '';
   const consent = data.consent === true;
@@ -54,6 +55,8 @@ export function validateConsultPayload(body) {
   if (honeypot) errors.push('spam');
   if (name.length < 1 || name.length > 50) errors.push('name');
   if (!/^[0-9+\-\s()]{9,20}$/.test(phone)) errors.push('phone');
+  // 이메일은 선택 — 입력했는데 형식이 틀리면 오타 방지를 위해 오류로 잡는다.
+  if (email && (email.length > 100 || !/^\S+@\S+\.\S+$/.test(email))) errors.push('email');
   if (!TOPICS.includes(topic)) errors.push('topic');
   if (message.length > 2000) errors.push('message');
   if (!consent) errors.push('consent');
@@ -64,6 +67,7 @@ export function validateConsultPayload(body) {
     value: {
       name,
       phone,
+      ...(email ? { email } : {}),
       topic,
       message,
       ...(diagnosis ? { diagnosis } : {}),
@@ -86,6 +90,7 @@ export function formatTelegramMessage(value, meta = {}) {
       ...(meta.inquiryId ? [`접수번호: ${meta.inquiryId}`] : []),
       `이름: ${value.name}`,
       `연락처: ${value.phone}`,
+      ...(value.email ? [`이메일: ${value.email}`] : []),
       `분야: ${value.topic}`,
     ];
     if (value.message) {

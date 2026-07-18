@@ -260,7 +260,15 @@ export function AdminPage() {
               <>
                 <p>
                   연락처: <a href={`tel:${item.phone}`}>{item.phone}</a>
+                  {item.email && (
+                    <>
+                      {' · '}이메일: <a href={`mailto:${item.email}`}>{item.email}</a>
+                    </>
+                  )}
                 </p>
+                {item.localCaseId && (
+                  <p className="note">행정심판 시스템 등록: {item.localCaseId}</p>
+                )}
                 {item.message && <p className="admin-message">{item.message}</p>}
 
                 {item.diagnosis && (

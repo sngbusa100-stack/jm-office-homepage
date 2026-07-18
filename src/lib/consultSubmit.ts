@@ -9,6 +9,8 @@ export interface ConsultDiagnosis {
 export interface ConsultPayload {
   name: string;
   phone: string;
+  /** 선택 — 서면 답변 희망 시 */
+  email?: string;
   topic: string;
   message: string;
   consent: boolean;

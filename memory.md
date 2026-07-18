@@ -190,3 +190,11 @@
 - 주인님 지시로 우선순위 확정: **시스템 연동(자동 수임 파이프라인)이 최우선**, 3차 보안 보완은 통합 후·개업 전 필수로 보류. 기준 문서는 `D:\행정사\1-행정심판\docs\2026-07-19-통합-마스터플랜.md`.
 - 이 프로젝트의 다음 작업은 D1(`api/connector.js` pull/ACK API). 접수 레코드 v2 스키마(diagnosis·consent·sourcePath·utmSource)는 `api/_store.mjs` 기준.
 - GPT 재검증 결과 기록: 1차 보완 중 "자동 파기"는 정확히는 관리자 조회 시 스윕(스케줄러 아님·500건 한도), multi-exec는 네트워크 부분실패만 제거(런타임 오류 롤백 없음), 중복 방지는 텔레그램 예외 경로만 차단. 정확한 해결(cron·멱등성·read-back)은 3차에서.
+
+## 2026-07-19 D1 — 연동기 API 구현·배포
+
+- `api/connector.js` 신규: `CONNECTOR_TOKEN` Bearer 인증(ADMIN_TOKEN과 별개, 상수시간 비교 재사용). GET=미pull·미파기 접수 목록, PATCH=ACK(`pulledAt`·`localCaseId` 기록, 재시도 멱등·최초 값 유지), DELETE=수임 이관 후 파기(멱등). 로컬 스크립트 전용이라 CORS 미적용.
+- 이메일(선택) 필드 추가: 폼→검증(형식 오류 시 error)→레코드→관리 화면(mailto 링크)→저장실패 폴백 알림→방침 수집 항목. D3 이메일 답변 발송의 전제.
+- 관리 화면에 `localCaseId`(행정심판 등록 사건번호) 표시.
+- `CONNECTOR_TOKEN` Vercel Production 등록(CLI) + 행정심판 `.env`에 동일 값·`CONNECTOR_BASE_URL` 보관.
+- 검증: 테스트 33파일 231개 통과(연동기 핸들러·ACK 멱등·이메일 검증 신규 9개).
