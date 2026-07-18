@@ -5,6 +5,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { applyCors } from './_cors.mjs';
 import {
   applyInquiryPatch,
+  checkRateLimit,
   createInquiryStore,
   isRetentionExpired,
   purgeInquiryRecord,
@@ -25,6 +26,23 @@ export default async function handler(req, res) {
   if (applyCors(req, res, { methods: 'GET, PATCH, DELETE, OPTIONS' })) return;
 
   if (!isAuthorized(req.headers.authorization, process.env.ADMIN_TOKEN)) {
+    // 무차별 대입 방지: 인증 "실패"만 IP당 5분에 10회로 제한한다 (정상 사용은 계수 안 함).
+    const limiterCfg = redisConfig();
+    if (limiterCfg) {
+      const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+      try {
+        const allowed = await checkRateLimit(limiterCfg, `ratelimit:adminauth:${ip}`, {
+          limit: 10,
+          windowSec: 300,
+        });
+        if (!allowed) {
+          res.status(429).json({ ok: false, error: 'rate_limited' });
+          return;
+        }
+      } catch {
+        // 제한기 장애는 무시하고 401로 진행한다.
+      }
+    }
     res.status(401).json({ ok: false, error: 'unauthorized' });
     return;
   }

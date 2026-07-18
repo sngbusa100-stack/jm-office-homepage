@@ -1,4 +1,5 @@
 // 상담 접수 검증·포맷 (api/consult.js에서 사용, _접두사라 엔드포인트로 노출되지 않음)
+import CHECK_LEVELS from './_check-levels.mjs';
 
 export const TOPICS = [
   '음주운전 면허 구제',
@@ -9,30 +10,30 @@ export const TOPICS = [
   '토지보상 · 내용증명 · 계약서',
 ];
 
+// 진단 정의(도메인→문항→선택지→등급). scripts/gen-check-levels.ts로 생성 —
+// src/data/checks와의 동기화는 src/test/checkLevels.sync.test.ts가 보증한다.
 /**
- * 셀프 진단 첨부 데이터를 정리한다. 형식이 어긋나면 접수를 막지 않고
- * null을 돌려 조용히 제외한다(진단 없이도 접수는 유효).
+ * 셀프 진단 첨부 데이터를 실제 진단 정의와 대조해 정리한다.
+ * - 존재하지 않는 도메인이면 진단 전체를 제외(null) — 접수는 막지 않는다.
+ * - 존재하지 않는 문항·선택지는 버린다.
+ * - counts는 클라이언트 값을 믿지 않고 검증된 답변의 등급으로 서버가 재계산한다
+ *   (긴급 표시 위조 방지).
  */
 export function sanitizeDiagnosis(input) {
   if (typeof input !== 'object' || input === null) return null;
-  const domain = typeof input.domain === 'string' ? input.domain.trim().slice(0, 40) : '';
-  if (!domain) return null;
+  const domain = typeof input.domain === 'string' ? input.domain.trim() : '';
+  const questions = CHECK_LEVELS[domain];
+  if (!questions) return null;
 
   const answersIn = typeof input.answers === 'object' && input.answers !== null ? input.answers : {};
   const answers = {};
-  let count = 0;
-  for (const [key, val] of Object.entries(answersIn)) {
-    if (typeof val !== 'string') continue;
-    if (count >= 40) break;
-    answers[String(key).slice(0, 60)] = val.slice(0, 60);
-    count += 1;
-  }
-
-  const countsIn = typeof input.counts === 'object' && input.counts !== null ? input.counts : {};
   const counts = {};
-  for (const level of ['urgent', 'documents', 'official', 'ready']) {
-    const n = countsIn[level];
-    if (typeof n === 'number' && Number.isFinite(n) && n >= 0) counts[level] = Math.min(Math.floor(n), 99);
+  for (const [questionId, optionId] of Object.entries(answersIn)) {
+    if (typeof optionId !== 'string') continue;
+    const level = questions[questionId]?.[optionId];
+    if (!level) continue;
+    answers[questionId] = optionId;
+    counts[level] = (counts[level] ?? 0) + 1;
   }
 
   return { domain, answers, counts };
@@ -50,6 +51,9 @@ export function validateConsultPayload(body) {
   const diagnosis = sanitizeDiagnosis(data.diagnosis);
   const sourcePath = typeof data.sourcePath === 'string' ? data.sourcePath.trim().slice(0, 120) : '';
   const utmSource = typeof data.utmSource === 'string' ? data.utmSource.trim().slice(0, 80) : '';
+  // 멱등성 키 — 응답 유실 후 재제출을 같은 접수로 묶는다. 형식이 틀리면 무시(선택 값).
+  const rawSubmissionId = typeof data.submissionId === 'string' ? data.submissionId.trim() : '';
+  const submissionId = /^[A-Za-z0-9-]{8,64}$/.test(rawSubmissionId) ? rawSubmissionId : '';
 
   const errors = [];
   if (honeypot) errors.push('spam');
@@ -73,6 +77,7 @@ export function validateConsultPayload(body) {
       ...(diagnosis ? { diagnosis } : {}),
       ...(sourcePath ? { sourcePath } : {}),
       ...(utmSource ? { utmSource } : {}),
+      ...(submissionId ? { submissionId } : {}),
     },
   };
 }
@@ -105,6 +110,7 @@ export function formatTelegramMessage(value, meta = {}) {
   const lines = ['📥 새 상담 접수'];
   if (meta.inquiryId) lines.push(`접수번호: ${meta.inquiryId}`);
   if (meta.urgent) lines.push('⏰ 기한 관련 긴급 확인 항목 포함');
+  if (meta.indexWarning) lines.push('⚠ 접수 목록 인덱스 확인 필요');
   lines.push('상세는 관리자 화면(/admin)에서 확인하세요.');
   return lines.join('\n');
 }

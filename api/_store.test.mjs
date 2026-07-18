@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   STATUSES,
+  acquireSubmissionProcessing,
   applyInquiryPatch,
   buildInquiryRecord,
   checkRateLimit,
@@ -155,6 +156,14 @@ describe('완료 시각과 보존기간(120일) 자동 파기 판정', () => {
     expect(reopened.value.doneAt).toBeUndefined();
   });
 
+  it('이미 done인 레코드에 다시 done을 보내도 doneAt이 연장되지 않는다', () => {
+    const done = applyInquiryPatch(base, { status: 'done' }, NOW);
+    const later = new Date(NOW.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const again = applyInquiryPatch(done.value, { status: 'done' }, later);
+    expect(again.ok).toBe(true);
+    expect(again.value.doneAt).toBe(NOW.toISOString()); // 최초 완료 시각 유지
+  });
+
   it('완료 후 120일이 지나면 파기 대상이다', () => {
     const done = applyInquiryPatch(base, { status: 'done' }, NOW).value;
     const day119 = new Date(NOW.getTime() + 119 * 24 * 60 * 60 * 1000);
@@ -176,6 +185,43 @@ describe('완료 시각과 보존기간(120일) 자동 파기 판정', () => {
     delete legacy.doneAt;
     const day121 = new Date(NOW.getTime() + 121 * 24 * 60 * 60 * 1000);
     expect(isRetentionExpired(legacy, day121)).toBe(true); // receivedAt 기준
+  });
+});
+
+describe('멱등성 키 선점', () => {
+  const cfg = { url: 'https://redis.test', token: 'secret' };
+
+  it('최초 선점은 claimed=true, 재선점은 기존 접수번호를 돌려준다', async () => {
+    const first = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ result: 'OK' }) });
+    const { claimSubmission } = await import('./_store.mjs');
+    expect(await claimSubmission(cfg, 'sub-1', 'JM-NEW', first)).toEqual({ claimed: true });
+    const [, options] = first.mock.calls[0];
+    expect(JSON.parse(options.body)).toEqual([
+      'SET', 'dedup:submission:sub-1', 'JM-NEW', 'NX', 'EX', '86400',
+    ]);
+
+    let call = 0;
+    const dup = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      json: async () => ({ result: call++ === 0 ? null : 'JM-OLD' }),
+    }));
+    expect(await claimSubmission(cfg, 'sub-1', 'JM-NEW', dup)).toEqual({
+      claimed: false,
+      existingId: 'JM-OLD',
+    });
+  });
+});
+
+describe('동시 제출 처리 잠금', () => {
+  it('SET NX EX 30으로 처리권을 획득하고 충돌 시 false를 반환한다', async () => {
+    const cfg = { url: 'https://redis.test', token: 't' };
+    const yes = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ result: 'OK' }) });
+    const no = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ result: null }) });
+    expect(await acquireSubmissionProcessing(cfg, 'submission-1', {}, yes)).toBe(true);
+    expect(await acquireSubmissionProcessing(cfg, 'submission-1', {}, no)).toBe(false);
+    expect(JSON.parse(yes.mock.calls[0][1].body)).toEqual([
+      'SET', 'dedup:processing:submission-1', '1', 'NX', 'EX', '30',
+    ]);
   });
 });
 
@@ -230,7 +276,7 @@ describe('Redis REST 저장소', () => {
     }));
   }
 
-  it('save는 SET과 ZADD를 하나의 트랜잭션(multi-exec)으로 원자 실행한다', async () => {
+  it('save는 SET과 ZADD를 하나의 MULTI/EXEC 요청으로 실행한다', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => [{ result: 'OK' }, { result: 1 }],
@@ -284,6 +330,31 @@ describe('Redis REST 저장소', () => {
     const store = createInquiryStore(cfg, fetchMock);
     expect(await store.list()).toEqual([]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('ensureIndexed는 저장 본문의 목록 인덱스를 멱등 재등록한다', async () => {
+    const fetchMock = fetchReturning([1]);
+    const store = createInquiryStore(cfg, fetchMock);
+    const record = buildInquiryRecord(value, {}, { now: NOW, id: 'JM-RECOVER' });
+    await store.ensureIndexed(record);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual([
+      'ZADD', 'inquiry:index', String(NOW.getTime()), 'JM-RECOVER',
+    ]);
+  });
+
+  it('listAll은 상한 없이 페이지를 끝까지 읽고 본문 유실 항목만 건너뛴다', async () => {
+    const a = JSON.stringify({ id: 'A' });
+    const b = JSON.stringify({ id: 'B' });
+    const c = JSON.stringify({ id: 'C' });
+    const fetchMock = fetchReturning([
+      ['A', 'B'], [a, b],
+      ['C'], [c],
+    ]);
+    const items = await createInquiryStore(cfg, fetchMock).listAll(2);
+    expect(items).toEqual([{ id: 'A' }, { id: 'B' }, { id: 'C' }]);
+    const commands = fetchMock.mock.calls.map(([, options]) => JSON.parse(options.body));
+    expect(commands[0]).toEqual(['ZRANGE', 'inquiry:index', '0', '1', 'REV']);
+    expect(commands[2]).toEqual(['ZRANGE', 'inquiry:index', '2', '3', 'REV']);
   });
 
   it('HTTP 오류·Redis 오류를 예외로 올린다', async () => {

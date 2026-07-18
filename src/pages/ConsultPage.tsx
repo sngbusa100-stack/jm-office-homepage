@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { office, isAcceptingRequests } from '../data/office';
-import { safeSessionGet } from '../lib/browserStorage';
+import { removeStorage, safeSessionGet, safeSessionSet } from '../lib/browserStorage';
 import { submitConsult } from '../lib/consultSubmit';
 import type { ConsultDiagnosis } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
@@ -58,6 +58,8 @@ export function ConsultPage() {
   const [message, setMessage] = useState(buildPrefill);
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
+  // 새로고침 뒤에도 실패한 제출은 같은 키를 써서 중복 등록을 막는다.
+  const [submissionId] = useState<string>(readOrCreateSubmissionId);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,9 +78,17 @@ export function ConsultPage() {
       company: String(form.get('company') ?? ''),
       ...(diagnosis ? { diagnosis, sourcePath: `/check/${diagnosis.domain}/result` } : {}),
       ...(utmSource ? { utmSource } : {}),
+      submissionId,
     });
     setStatus(result.status);
     setInquiryId(result.status === 'sent' ? (result.id ?? null) : null);
+    if (result.status === 'sent') {
+      // 접수 완료된 개인 데이터와 제출 키를 브라우저 세션에서 즉시 정리한다.
+      removeStorage('sessionStorage', 'consult:diagnosis');
+      removeStorage('sessionStorage', 'consult:summary');
+      removeStorage('sessionStorage', 'consult:utm');
+      removeStorage('sessionStorage', 'consult:submission');
+    }
   }
 
   return (
@@ -150,7 +160,7 @@ export function ConsultPage() {
           <input type="checkbox" name="consent" required disabled={!accepting} />
           개인정보 수집·이용에 동의합니다 (상담 회신 목적, 처리 완료 후 120일 보관 뒤 파기)
         </label>
-        <button className="button button--accent" type="submit" disabled={!accepting || status === 'sending'}>
+        <button className="button button--accent" type="submit" disabled={!accepting || status === 'sending' || status === 'sent'}>
           {status === 'sending' ? '전송 중...' : '상담 신청하기'}
         </button>
         {status === 'sent' && (
@@ -174,4 +184,19 @@ export function ConsultPage() {
       </section>
     </div>
   );
+}
+
+function createSubmissionId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
+}
+
+function readOrCreateSubmissionId(): string {
+  const existing = safeSessionGet('consult:submission');
+  if (existing && /^[A-Za-z0-9-]{8,64}$/.test(existing)) return existing;
+  const created = createSubmissionId();
+  safeSessionSet('consult:submission', created);
+  return created;
 }

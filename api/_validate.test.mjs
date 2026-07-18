@@ -43,12 +43,16 @@ describe('상담 접수 검증', () => {
   it('진단·유입경로가 있으면 정리해 담고, 없으면 필드를 만들지 않는다', () => {
     const withExtras = validateConsultPayload({
       ...valid,
-      diagnosis: { domain: 'dui', answers: { q1: 'a' }, counts: { urgent: 1 } },
+      diagnosis: { domain: 'dui', answers: { 'dui-elapsed': 'd60to90' }, counts: { urgent: 1 } },
       sourcePath: '/check/dui/result',
       utmSource: 'naver_blog',
     });
     expect(withExtras.ok).toBe(true);
-    expect(withExtras.value.diagnosis).toEqual({ domain: 'dui', answers: { q1: 'a' }, counts: { urgent: 1 } });
+    expect(withExtras.value.diagnosis).toEqual({
+      domain: 'dui',
+      answers: { 'dui-elapsed': 'd60to90' },
+      counts: { urgent: 1 },
+    });
     expect(withExtras.value.sourcePath).toBe('/check/dui/result');
     expect(withExtras.value.utmSource).toBe('naver_blog');
 
@@ -57,6 +61,14 @@ describe('상담 접수 검증', () => {
     expect(without.value).not.toHaveProperty('diagnosis');
     expect(without.value).not.toHaveProperty('sourcePath');
     expect(without.value).not.toHaveProperty('utmSource');
+  });
+
+  it('멱등성 키(submissionId)는 형식이 맞을 때만 담는다', () => {
+    const good = validateConsultPayload({ ...valid, submissionId: 'abc-123-DEF-456' });
+    expect(good.value.submissionId).toBe('abc-123-DEF-456');
+    const bad = validateConsultPayload({ ...valid, submissionId: '너무 이상한 값!!' });
+    expect(bad.ok).toBe(true);
+    expect(bad.value).not.toHaveProperty('submissionId');
   });
 
   it('이메일은 선택이며, 입력 시 형식 오류를 잡고 정상이면 담는다', () => {
@@ -79,34 +91,42 @@ describe('상담 접수 검증', () => {
   });
 });
 
-describe('진단 데이터 정리', () => {
-  it('도메인 없는 입력은 null이다', () => {
+describe('진단 데이터 정리 (진단 정의 대조·등급 재계산)', () => {
+  it('없는 도메인은 진단 전체를 제외한다', () => {
     expect(sanitizeDiagnosis(null)).toBeNull();
     expect(sanitizeDiagnosis({})).toBeNull();
-    expect(sanitizeDiagnosis({ answers: { q: 'a' } })).toBeNull();
+    expect(sanitizeDiagnosis({ domain: '없는도메인', answers: { q: 'a' } })).toBeNull();
   });
 
-  it('답변 40개·문자열 60자 상한을 적용한다', () => {
-    const answers = Object.fromEntries(
-      Array.from({ length: 50 }, (_, i) => [`q${i}`, 'x'.repeat(100)]),
-    );
-    const result = sanitizeDiagnosis({ domain: 'dui', answers, counts: {} });
-    expect(Object.keys(result.answers)).toHaveLength(40);
-    expect(Object.values(result.answers)[0]).toHaveLength(60);
-  });
-
-  it('counts는 알려진 등급의 유한 음이 아닌 수만 남긴다', () => {
+  it('없는 문항·선택지는 버리고 실제 정의만 남긴다', () => {
     const result = sanitizeDiagnosis({
       domain: 'dui',
-      answers: {},
-      counts: { urgent: 2, documents: -1, official: Infinity, ready: 3.7, weird: 5 },
+      answers: { 'dui-elapsed': 'd60to90', '가짜문항': 'x', 'dui-bac': '가짜선택지' },
     });
-    expect(result.counts).toEqual({ urgent: 2, ready: 3 });
+    expect(result.answers).toEqual({ 'dui-elapsed': 'd60to90' });
+  });
+
+  it('counts는 클라이언트 값을 무시하고 서버가 재계산한다 (긴급 위조 차단)', () => {
+    const forged = sanitizeDiagnosis({
+      domain: 'dui',
+      answers: { 'dui-disposition': 'suspend' }, // ready 등급 1개
+      counts: { urgent: 99 },
+    });
+    expect(forged.counts).toEqual({ ready: 1 });
+
+    const realUrgent = sanitizeDiagnosis({
+      domain: 'dui',
+      answers: { 'dui-elapsed': 'd60to90' }, // urgent 등급
+    });
+    expect(realUrgent.counts).toEqual({ urgent: 1 });
   });
 
   it('문자열이 아닌 답변 값은 건너뛴다', () => {
-    const result = sanitizeDiagnosis({ domain: 'dui', answers: { q1: 'ok', q2: 7, q3: null } });
-    expect(result.answers).toEqual({ q1: 'ok' });
+    const result = sanitizeDiagnosis({
+      domain: 'dui',
+      answers: { 'dui-elapsed': 7, 'dui-disposition': 'suspend' },
+    });
+    expect(result.answers).toEqual({ 'dui-disposition': 'suspend' });
   });
 });
 

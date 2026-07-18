@@ -8,7 +8,7 @@ export const STATUSES = ['new', 'in_progress', 'done', 'on_hold'];
 export const SCHEMA_VERSION = 2;
 
 /** 개인정보 수집 동의 문구 버전 — 개인정보처리방침 개정일과 맞춘다. */
-export const CONSENT_VERSION = '2026-07-18';
+export const CONSENT_VERSION = '2026-07-19';
 
 /** 처리 완료(done) 후 개인정보 보존 일수 — 행정심판 청구기간(90일)과 후속 절차 대응을 고려해 120일. */
 export const RETENTION_DAYS = 120;
@@ -62,9 +62,14 @@ export function applyInquiryPatch(record, patch = {}, now = new Date()) {
   if (patch.status !== undefined) {
     if (STATUSES.includes(patch.status)) {
       next.status = patch.status;
-      // 자동 파기 기산점: 완료로 바뀌면 완료 시각을 기록하고, 완료가 풀리면 지운다.
-      if (patch.status === 'done') next.doneAt = now.toISOString();
-      else delete next.doneAt;
+      // 자동 파기 기산점: 완료로 처음 바뀔 때만 기록(중복 done 요청이 보존기간을
+      // 연장하지 않도록), 완료가 풀리면 지운다.
+      if (patch.status === 'done') {
+        if (record.status !== 'done') next.doneAt = now.toISOString();
+        else if (!record.doneAt) next.doneAt = record.updatedAt ?? record.receivedAt ?? now.toISOString();
+      } else {
+        delete next.doneAt;
+      }
     } else {
       errors.push('status');
     }
@@ -153,9 +158,9 @@ async function command(cfg, cmd, fetchImpl) {
 }
 
 /**
- * 여러 명령을 Upstash 트랜잭션(MULTI/EXEC)으로 원자 실행한다.
- * SET(본문)과 ZADD(목록 인덱스)가 따로 실패해 목록에 안 보이는 고아 레코드가
- * 생기는 것을 막는다.
+ * 여러 명령을 Upstash MULTI/EXEC로 순서가 섞이지 않게 실행한다.
+ * Redis의 런타임 명령 오류는 롤백되지 않으므로 호출부가 본문 read-back과
+ * 인덱스 재등록으로 결과를 확인해야 한다.
  */
 async function transaction(cfg, cmds, fetchImpl) {
   const response = await fetchImpl(`${cfg.url}/multi-exec`, {
@@ -170,6 +175,37 @@ async function transaction(cfg, cmds, fetchImpl) {
     if (item && item.error) throw new Error(`redis_${item.error}`);
   }
   return data.map((item) => item?.result);
+}
+
+/**
+ * 멱등성 키 선점: SET NX로 submissionId → 접수번호를 24시간 기록한다.
+ * 이미 선점돼 있으면(응답 유실 후 재제출) 기존 접수번호를 돌려준다.
+ */
+export async function claimSubmission(cfg, submissionId, inquiryId, fetchImpl = fetch) {
+  const key = `dedup:submission:${submissionId}`;
+  const result = await command(cfg, ['SET', key, inquiryId, 'NX', 'EX', '86400'], fetchImpl);
+  if (result === 'OK') return { claimed: true };
+  let existingId;
+  try {
+    existingId = await command(cfg, ['GET', key], fetchImpl);
+  } catch (cause) {
+    const error = new Error('submission_lookup_failed', { cause });
+    error.code = 'SUBMISSION_LOOKUP_FAILED';
+    throw error;
+  }
+  return { claimed: false, existingId: typeof existingId === 'string' ? existingId : null };
+}
+
+/** 같은 submissionId를 처리하는 동시 요청을 30초 동안 하나로 제한한다. */
+export async function acquireSubmissionProcessing(
+  cfg,
+  submissionId,
+  { ttlSec = 30 } = {},
+  fetchImpl = fetch,
+) {
+  const key = `dedup:processing:${submissionId}`;
+  const result = await command(cfg, ['SET', key, '1', 'NX', 'EX', String(ttlSec)], fetchImpl);
+  return result === 'OK';
 }
 
 /**
@@ -207,6 +243,14 @@ export function createInquiryStore(cfg, fetchImpl = fetch) {
       const raw = await command(cfg, ['GET', key(id)], fetchImpl);
       return raw ? JSON.parse(raw) : null;
     },
+    /** 본문 저장 후 목록 인덱스가 빠진 경우 재등록한다(멱등). */
+    async ensureIndexed(record) {
+      await command(
+        cfg,
+        ['ZADD', INDEX_KEY, String(Date.parse(record.receivedAt)), record.id],
+        fetchImpl,
+      );
+    },
     /** 최신순 목록. limit 기본 500건 (저용량 사무소 규모 가정). */
     async list(limit = 500) {
       const ids = await command(
@@ -217,6 +261,23 @@ export function createInquiryStore(cfg, fetchImpl = fetch) {
       if (!Array.isArray(ids) || ids.length === 0) return [];
       const raws = await command(cfg, ['MGET', ...ids.map(key)], fetchImpl);
       return raws.filter(Boolean).map((raw) => JSON.parse(raw));
+    },
+    /** cron 전량 파기용 전체 목록. ID와 본문을 작은 묶음으로 읽는다. */
+    async listAll(batchSize = 100) {
+      const size = Math.max(1, Math.min(Math.floor(batchSize) || 100, 500));
+      const records = [];
+      for (let start = 0; ; start += size) {
+        const ids = await command(
+          cfg,
+          ['ZRANGE', INDEX_KEY, String(start), String(start + size - 1), 'REV'],
+          fetchImpl,
+        );
+        if (!Array.isArray(ids) || ids.length === 0) break;
+        const raws = await command(cfg, ['MGET', ...ids.map(key)], fetchImpl);
+        records.push(...raws.filter(Boolean).map((raw) => JSON.parse(raw)));
+        if (ids.length < size) break;
+      }
+      return records;
     },
   };
 }

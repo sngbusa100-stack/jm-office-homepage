@@ -19,6 +19,8 @@ export interface ConsultPayload {
   diagnosis?: ConsultDiagnosis;
   sourcePath?: string;
   utmSource?: string;
+  /** 응답 유실 후 같은 제출을 하나의 접수로 식별하는 브라우저 생성 키. */
+  submissionId?: string;
 }
 
 export type SubmitResult = { status: 'sent'; id?: string } | { status: 'error' };

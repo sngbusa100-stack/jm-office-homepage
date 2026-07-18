@@ -30,6 +30,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
   beforeEach(() => {
     sessionStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('?topic= 슬러그로 분야를 미리 선택한다 (외부 사이트 연동용)', () => {
@@ -65,6 +66,9 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(body.phone).toBe('01012345678');
     expect(body.consent).toBe(true);
     expect(body.company).toBe('');
+    expect(body.submissionId).toMatch(/^[A-Za-z0-9-]{8,64}$/);
+    expect(sessionStorage.getItem('consult:submission')).toBeNull();
+    expect(screen.getByRole('button', { name: /상담 신청하기/ })).toBeDisabled();
   });
 
   it('서버가 접수번호를 주면 성공 안내에 함께 보여준다', async () => {
@@ -94,5 +98,15 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('전송에 실패');
+    expect(sessionStorage.getItem('consult:submission')).toMatch(/^[A-Za-z0-9-]{8,64}$/);
+  });
+
+  it('새로고침에 해당하는 재마운트 뒤에도 미완료 제출 키를 유지한다', () => {
+    const first = renderPage();
+    const submissionId = sessionStorage.getItem('consult:submission');
+    expect(submissionId).toMatch(/^[A-Za-z0-9-]{8,64}$/);
+    first.unmount();
+    renderPage();
+    expect(sessionStorage.getItem('consult:submission')).toBe(submissionId);
   });
 });

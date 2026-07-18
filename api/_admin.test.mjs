@@ -54,7 +54,10 @@ function stubRedis(data = new Map(), index = []) {
     }
     if (cmd[0] === 'ZRANGE') result = [...index].reverse();
     if (cmd[0] === 'MGET') result = cmd.slice(1).map((k) => data.get(k) ?? null);
-    if (cmd[0] === 'INCR') result = 1;
+    if (cmd[0] === 'INCR') {
+      result = Number(data.get(cmd[1]) ?? 0) + 1;
+      data.set(cmd[1], String(result));
+    }
     if (cmd[0] === 'EXPIRE') result = 1;
     return result;
   }
@@ -95,6 +98,35 @@ describe('관리자 API 핸들러', () => {
     const res2 = mockRes();
     await handler({ method: 'GET', headers: { authorization: 'Bearer nope', origin: '' } }, res2);
     expect(res2.statusCode).toBe(401);
+  });
+
+  it('같은 IP의 11번째 인증 실패는 429이고 정상 토큰은 제한 대상이 아니다', async () => {
+    stubRedis();
+    for (let attempt = 1; attempt <= 10; attempt += 1) {
+      const res = mockRes();
+      await handler(
+        { method: 'GET', headers: { origin: '', authorization: 'Bearer wrong', 'x-forwarded-for': '1.2.3.4' } },
+        res,
+      );
+      expect(res.statusCode).toBe(401);
+    }
+    const limited = mockRes();
+    await handler(
+      { method: 'GET', headers: { origin: '', authorization: 'Bearer wrong', 'x-forwarded-for': '1.2.3.4' } },
+      limited,
+    );
+    expect(limited.statusCode).toBe(429);
+
+    const authorized = mockRes();
+    await handler({ method: 'GET', headers: { ...AUTH, 'x-forwarded-for': '1.2.3.4' } }, authorized);
+    expect(authorized.statusCode).toBe(200);
+  });
+
+  it('인증 제한 저장소가 장애여도 틀린 토큰은 401로 거부한다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    const res = mockRes();
+    await handler({ method: 'GET', headers: { origin: '', authorization: 'Bearer wrong' } }, res);
+    expect(res.statusCode).toBe(401);
   });
 
   it('저장소 미설정이면 500', async () => {

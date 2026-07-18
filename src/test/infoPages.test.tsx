@@ -40,8 +40,11 @@ describe('정보 페이지', () => {
     renderAt('/services/dui');
     expect(screen.getByRole('link', { name: /내 상황 셀프 진단하기/ })).toHaveAttribute('href', '/check/dui');
     renderAt('/services/immigration');
-    expect(screen.getByText(/비자 진단센터는 공개 준비 중/)).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /비자 진단센터/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/비자 진단센터는 공개 준비 중/)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /정명 비자 진단센터 열기/ })).toHaveAttribute(
+      'href',
+      'https://jm-visa-precheck.vercel.app',
+    );
   });
 
   it('없는 분야 slug는 404를 보여준다', () => {
