@@ -42,8 +42,16 @@ export function CheckResultPage() {
     items: result.items.filter((i) => i.level === level),
   })).filter((g) => g.items.length > 0);
 
+  // 상담 접수에 함께 전달할 진단 상세 (도메인·답변·등급별 개수)
+  const diagnosisPayload = JSON.stringify({
+    domain: definition.domain,
+    answers,
+    counts: summary.counts,
+  });
+
   function saveSummaryForConsult() {
     safeSessionSet('consult:summary', JSON.stringify(summary));
+    safeSessionSet('consult:diagnosis', diagnosisPayload);
   }
 
   return (

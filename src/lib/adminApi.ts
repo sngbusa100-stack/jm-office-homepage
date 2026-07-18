@@ -7,8 +7,16 @@ export interface InquiryMemo {
   text: string;
 }
 
+export interface InquiryDiagnosis {
+  domain: string;
+  /** questionId → optionId */
+  answers: Record<string, string>;
+  counts: Record<string, number>;
+}
+
 export interface InquiryRecord {
   id: string;
+  schemaVersion?: number;
   receivedAt: string;
   topic: string;
   status: 'new' | 'in_progress' | 'done' | 'on_hold';
@@ -16,6 +24,10 @@ export interface InquiryRecord {
   name?: string;
   phone?: string;
   message?: string;
+  diagnosis?: InquiryDiagnosis;
+  sourcePath?: string;
+  utmSource?: string;
+  consent?: { version: string; at: string };
   memos?: InquiryMemo[];
   updatedAt?: string;
   purged?: boolean;

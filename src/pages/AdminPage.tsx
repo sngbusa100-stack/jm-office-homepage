@@ -6,8 +6,9 @@ import {
   purgeInquiry,
   summarizeInquiries,
 } from '../lib/adminApi';
-import type { InquiryRecord } from '../lib/adminApi';
+import type { InquiryDiagnosis, InquiryRecord } from '../lib/adminApi';
 import { buildReply, findReplyTemplate } from '../data/replyTemplates';
+import { findCheck } from '../data/checks';
 
 const TOKEN_KEY = 'admin:token';
 
@@ -19,6 +20,20 @@ const STATUS_LABEL: Record<InquiryRecord['status'], string> = {
   done: '완료',
   on_hold: '보류',
 };
+
+/** 진단 답변(questionId→optionId)을 진단 정의와 대조해 사람이 읽을 문항·답변으로 변환한다. */
+function describeDiagnosis(diagnosis: InquiryDiagnosis): { key: string; question: string; answer: string }[] {
+  const definition = findCheck(diagnosis.domain);
+  return Object.entries(diagnosis.answers ?? {}).map(([questionId, optionId]) => {
+    const question = definition?.questions.find((q) => q.id === questionId);
+    const option = question?.options.find((o) => o.id === optionId);
+    return {
+      key: questionId,
+      question: question?.text ?? questionId,
+      answer: option?.label ?? optionId,
+    };
+  });
+}
 
 function formatDateTime(iso: string): string {
   try {
@@ -247,6 +262,28 @@ export function AdminPage() {
                   연락처: <a href={`tel:${item.phone}`}>{item.phone}</a>
                 </p>
                 {item.message && <p className="admin-message">{item.message}</p>}
+
+                {item.diagnosis && (
+                  <details className="admin-item">
+                    <summary>
+                      셀프 진단 상세 ({findCheck(item.diagnosis.domain)?.title ?? item.diagnosis.domain}
+                      {item.diagnosis.counts?.urgent ? ' · 긴급 항목 있음' : ''})
+                    </summary>
+                    <ul className="admin-stat-list">
+                      {describeDiagnosis(item.diagnosis).map((entry) => (
+                        <li key={entry.key}>
+                          {entry.question} — <strong>{entry.answer}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+                {(item.sourcePath || item.utmSource) && (
+                  <p className="note">
+                    유입: {item.sourcePath ?? '-'}
+                    {item.utmSource ? ` (utm: ${item.utmSource})` : ''}
+                  </p>
+                )}
 
                 <div className="admin-actions" role="group" aria-label={`${item.id} 상태 변경`}>
                   {STATUS_KEYS.filter((key) => key !== item.status).map((key) => (

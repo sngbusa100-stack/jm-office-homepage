@@ -162,3 +162,16 @@
 - 리뷰 에이전트가 발견한 robots/noindex 충돌, 진행 절차 번호 CSS 덮어쓰기, 프로토타입 경로 오류, 잘못된 결과 경로 메타 불일치를 모두 수정하고 회귀 테스트를 추가했다. 최종 독립 리뷰 판정은 READY(Critical 0, Important 0, Minor 0).
 - 최종 `npm run check`: 테스트 14파일 80개 통과, TypeScript 오류 0건, 프로덕션 빌드와 `verify-dist` 통과. `npm audit --audit-level=high` 취약점 0건, `git diff --check` 통과.
 - 실제 브라우저 검증: 모바일·데스크톱 가로 넘침 없음, 모바일 메뉴 열기·업무분야 이동 후 자동 닫힘, `/services` 카드 6개, 비자 링크 0개, 경로별 title/canonical, 브라우저 경고·오류 0건을 확인했다. GitHub Pages 하위 경로 빌드에서도 파비콘·스크립트·로고 경로가 정상 생성됐다.
+
+## 2026-07-18 로컬·원격 통합과 접수 개인정보 보강 (A·B단계)
+
+- 배경: 로컬에는 7-12 보완계획 구현 28건이 미커밋, 원격에는 7-17 접수 시스템 2커밋이 앞서 있었다. GPT 교차 검토와 합의된 계획에 따라 진행했다.
+- A단계(안전 병합): 로컬 작업을 `local-work-0718` 브랜치에 커밋해 보존 → master를 origin/master로 fast-forward → 병합. 충돌 4파일 중 `Layout.tsx`만 실질 충돌(구 TITLES ↔ pageMeta) — pageMeta 방식을 채택하고 `/admin`을 `noindex, nofollow`로 등록. app.css·memory.md는 양쪽 추가분 보존, AppRouter는 자동 병합(/services + /admin 공존).
+- B단계(배포 전 개인정보·데이터 보강):
+  - **텔레그램 탈개인정보화**: 정상 저장 시 알림은 접수번호(+긴급 여부)만 담고 이름·연락처·분야·상담 내용은 싣지 않는다. 저장 실패 시에만 유실 방지를 위해 전체 내용 폴백(경고 줄 포함). `consult.js`의 storeError 판정을 `!stored`로 바꿔 저장소 미설정 시에도 폴백이 동작한다.
+  - **접수 레코드 v2**: `schemaVersion: 2`, `consent: {version, at}`(동의 문구 버전 `CONSENT_VERSION`), 셀프 진단 상세(`diagnosis: {domain, answers, counts}`), `sourcePath`, `utmSource` 추가. 서버 `sanitizeDiagnosis`가 상한(답변 40개·60자, counts 등급 화이트리스트)을 강제하고, 손상된 진단은 접수를 막지 않고 제외한다.
+  - **진단→상담 연결**: 진단 결과에서 상담 이동 시 `consult:diagnosis` 세션 저장 → 접수 payload에 포함. 등급 요약만 넘어가던 기존 문제 해결. `Layout`이 `utm_source` 쿼리를 세션에 보관해 유입경로를 접수에 붙인다.
+  - **관리 화면**: 접수 상세에 셀프 진단 답변(문항·답변 라벨로 변환 표시)·유입경로 표시 추가.
+  - **파기 정합**: purge 시 diagnosis·consent도 함께 파기(통계용 sourcePath·utmSource·schemaVersion만 잔존). 개인정보처리방침을 실동작(텔레그램 개인정보 미포함·저장 장애 예외, 진단 결과 수집 항목)과 일치하게 갱신.
+- 검증: `npm run check` 테스트 32파일 214개 통과(신규 10개), typecheck 0, 빌드·verify-dist 통과. 실브라우저: 진단→결과→상담 이동 시 diagnosis(답변 6·urgent 1) 저장·프리필 정상, `/admin` noindex·토큰 게이트 정상, 콘솔 오류 0건.
+- **미해결(push 전 결정 필요)**: ① Upstash Redis가 미국 워싱턴 D.C. 리전 — 국내(또는 아시아) 리전 재생성 여부는 주인님 결정 필요(재생성 시 함수 리전도 함께 지정). ② master push 시 Vercel Production 자동 배포 — push는 별도 승인 후. ③ 자동 보존기간(완료 후 N일 자동 파기)은 다음 단계.

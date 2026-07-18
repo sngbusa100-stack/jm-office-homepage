@@ -1,3 +1,11 @@
+/** 진단 결과에서 상담으로 이동할 때 함께 전달되는 셀프 진단 상세. */
+export interface ConsultDiagnosis {
+  domain: string;
+  /** questionId → optionId */
+  answers: Record<string, string>;
+  counts: Record<string, number>;
+}
+
 export interface ConsultPayload {
   name: string;
   phone: string;
@@ -6,6 +14,9 @@ export interface ConsultPayload {
   consent: boolean;
   /** 허니팟 — 사람은 비워 두고, 스팸 봇이 채우면 서버가 폐기한다. */
   company: string;
+  diagnosis?: ConsultDiagnosis;
+  sourcePath?: string;
+  utmSource?: string;
 }
 
 export type SubmitResult = { status: 'sent'; id?: string } | { status: 'error' };

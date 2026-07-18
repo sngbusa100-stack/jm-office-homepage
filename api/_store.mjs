@@ -4,6 +4,12 @@
 
 export const STATUSES = ['new', 'in_progress', 'done', 'on_hold'];
 
+/** 접수 레코드 구조 버전. 필드가 바뀌면 올린다 (v1: 07-17 최초, v2: 진단·동의·유입경로 추가). */
+export const SCHEMA_VERSION = 2;
+
+/** 개인정보 수집 동의 문구 버전 — 개인정보처리방침 개정일과 맞춘다. */
+export const CONSENT_VERSION = '2026-07-18';
+
 const KEY_PREFIX = 'inquiry:';
 const INDEX_KEY = 'inquiry:index';
 
@@ -23,11 +29,16 @@ export function generateInquiryId(now = new Date(), random = Math.random) {
 export function buildInquiryRecord(value, meta = {}, { id, now = new Date() } = {}) {
   return {
     id: id ?? generateInquiryId(now),
+    schemaVersion: SCHEMA_VERSION,
     receivedAt: now.toISOString(),
     name: value.name,
     phone: value.phone,
     topic: value.topic,
     message: value.message ?? '',
+    ...(value.diagnosis ? { diagnosis: value.diagnosis } : {}),
+    ...(value.sourcePath ? { sourcePath: value.sourcePath } : {}),
+    ...(value.utmSource ? { utmSource: value.utmSource } : {}),
+    consent: { version: CONSENT_VERSION, at: now.toISOString() },
     origin: meta.origin ?? '',
     status: 'new',
     memos: [],
@@ -67,10 +78,13 @@ export function applyInquiryPatch(record, patch = {}, now = new Date()) {
 export function purgeInquiryRecord(record, now = new Date()) {
   return {
     id: record.id,
+    schemaVersion: record.schemaVersion ?? 1,
     receivedAt: record.receivedAt,
     topic: record.topic,
     status: record.status,
     origin: record.origin ?? '',
+    ...(record.sourcePath ? { sourcePath: record.sourcePath } : {}),
+    ...(record.utmSource ? { utmSource: record.utmSource } : {}),
     memoCount: (record.memos ?? []).length,
     purged: true,
     purgedAt: now.toISOString(),

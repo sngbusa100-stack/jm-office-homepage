@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { office, isAcceptingRequests } from '../data/office';
 import { safeSessionGet } from '../lib/browserStorage';
 import { submitConsult } from '../lib/consultSubmit';
+import type { ConsultDiagnosis } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
 
 const LEVEL_LABEL: Record<ResultLevel, string> = {
@@ -9,6 +10,21 @@ const LEVEL_LABEL: Record<ResultLevel, string> = {
 };
 
 const LEVEL_KEYS: ResultLevel[] = ['urgent', 'documents', 'official', 'ready'];
+
+/** 진단 결과 페이지에서 저장해 둔 진단 상세를 읽는다. 없거나 손상되면 무시한다. */
+function readDiagnosis(): ConsultDiagnosis | undefined {
+  const raw = safeSessionGet('consult:diagnosis');
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as ConsultDiagnosis;
+    if (typeof parsed.domain === 'string' && parsed.answers && typeof parsed.answers === 'object') {
+      return parsed;
+    }
+  } catch {
+    // 손상된 저장값은 진단 없이 접수한다.
+  }
+  return undefined;
+}
 
 function buildPrefill(): string {
   const raw = safeSessionGet('consult:summary');
@@ -35,6 +51,8 @@ export function ConsultPage() {
     if (!accepting || !office.formEndpoint || status === 'sending') return;
     const form = new FormData(event.currentTarget);
     setStatus('sending');
+    const diagnosis = readDiagnosis();
+    const utmSource = safeSessionGet('consult:utm') ?? undefined;
     const result = await submitConsult(office.formEndpoint, {
       name: String(form.get('name') ?? ''),
       phone: String(form.get('phone') ?? ''),
@@ -42,6 +60,8 @@ export function ConsultPage() {
       message,
       consent: form.get('consent') === 'on',
       company: String(form.get('company') ?? ''),
+      ...(diagnosis ? { diagnosis, sourcePath: `/check/${diagnosis.domain}/result` } : {}),
+      ...(utmSource ? { utmSource } : {}),
     });
     setStatus(result.status);
     setInquiryId(result.status === 'sent' ? (result.id ?? null) : null);

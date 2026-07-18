@@ -43,6 +43,34 @@ describe('접수 레코드 생성', () => {
     expect(record.receivedAt).toBe(NOW.toISOString());
     expect(record.id).toMatch(/^JM-/);
   });
+
+  it('스키마 버전과 동의 기록(버전·시각)을 담는다', () => {
+    const record = buildInquiryRecord(value, {}, { now: NOW });
+    expect(record.schemaVersion).toBeGreaterThanOrEqual(2);
+    expect(record.consent.version).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(record.consent.at).toBe(NOW.toISOString());
+  });
+
+  it('진단·유입경로가 있으면 담고, 없으면 필드를 만들지 않는다', () => {
+    const withExtras = buildInquiryRecord(
+      {
+        ...value,
+        diagnosis: { domain: 'dui', answers: { q1: 'a' }, counts: { urgent: 1 } },
+        sourcePath: '/check/dui/result',
+        utmSource: 'naver_blog',
+      },
+      {},
+      { now: NOW },
+    );
+    expect(withExtras.diagnosis.domain).toBe('dui');
+    expect(withExtras.sourcePath).toBe('/check/dui/result');
+    expect(withExtras.utmSource).toBe('naver_blog');
+
+    const without = buildInquiryRecord(value, {}, { now: NOW });
+    expect(without).not.toHaveProperty('diagnosis');
+    expect(without).not.toHaveProperty('sourcePath');
+    expect(without).not.toHaveProperty('utmSource');
+  });
 });
 
 describe('접수 패치(상태·메모)', () => {
@@ -82,6 +110,7 @@ describe('개인정보 파기', () => {
     const purged = purgeInquiryRecord(record, NOW);
     expect(purged).toEqual({
       id: record.id,
+      schemaVersion: record.schemaVersion,
       receivedAt: record.receivedAt,
       topic: record.topic,
       status: 'new',
@@ -93,6 +122,24 @@ describe('개인정보 파기', () => {
     expect(purged.name).toBeUndefined();
     expect(purged.phone).toBeUndefined();
     expect(purged.message).toBeUndefined();
+  });
+
+  it('진단 상세·동의 기록도 파기하고 유입경로 통계는 남긴다', () => {
+    const record = buildInquiryRecord(
+      {
+        ...value,
+        diagnosis: { domain: 'dui', answers: { q1: 'a' }, counts: { urgent: 1 } },
+        sourcePath: '/check/dui/result',
+        utmSource: 'naver_blog',
+      },
+      {},
+      { now: NOW },
+    );
+    const purged = purgeInquiryRecord(record, NOW);
+    expect(purged.diagnosis).toBeUndefined();
+    expect(purged.consent).toBeUndefined();
+    expect(purged.sourcePath).toBe('/check/dui/result');
+    expect(purged.utmSource).toBe('naver_blog');
   });
 });
 

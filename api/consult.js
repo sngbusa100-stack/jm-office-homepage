@@ -42,10 +42,12 @@ export default async function handler(req, res) {
     }
   }
 
+  // 저장에 실패하면(미설정 포함) 알림이 유일한 기록이므로 전체 내용 폴백을 쓴다.
   const text = formatTelegramMessage(result.value, {
     origin,
     inquiryId: record.id,
-    storeError: Boolean(cfg) && !stored,
+    storeError: !stored,
+    urgent: Boolean(record.diagnosis?.counts?.urgent),
   });
   const tgResponse = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: 'POST',
