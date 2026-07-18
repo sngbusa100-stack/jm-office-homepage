@@ -216,3 +216,4 @@
 - 브라우저 제출 키는 sessionStorage에 유지해 새로고침 재시도를 묶고, 성공 시 진단·유입·제출 키를 삭제하며 성공 상태에서 재제출 버튼을 막는다.
 - 비자 진단센터 운영 URL `https://jm-visa-precheck.vercel.app`을 출입국 서비스 페이지에 연결했다. 저장 실패 텔레그램 폴백의 수동 로컬 등록·확인·메시지 삭제 절차는 `docs/OPERATIONS_CONSULT_FALLBACK.md`에 기록했다.
 - 최종 검증: 36파일 257테스트, 타입 검사, 프로덕션 빌드, 산출물 검증, diff check 통과. 독립 리뷰 최종 P0/P1 없음·배포 가능 판정.
+- 운영 배포: `e0131c6` push 후 Vercel Production Ready. 실환경에서 `CONSULT_OPEN=false`에 따른 POST 503, `/api/cron-purge` 무인증 401, `/admin`과 `/admin/*`의 `X-Robots-Tag: noindex, nofollow`, robots.txt text/plain, 비자 운영 링크 번들 포함을 확인했다. `CRON_SECRET`은 Production Sensitive로 존재해 로컬에서 원문을 다시 꺼낼 수 없으며 첫 예약 실행 로그는 다음 03:00 KST에 확인한다.
