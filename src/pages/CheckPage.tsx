@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { findCheck } from '../data/checks';
 import { safeSessionSet } from '../lib/browserStorage';
 import { NotFoundPage } from './NotFoundPage';
+import { trackFunnelEvent } from '../lib/funnel';
 
 export function CheckPage() {
   const { domain } = useParams();
@@ -11,6 +12,16 @@ export function CheckPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const definition = findCheck(domain);
+
+  useEffect(() => {
+    if (!definition) return;
+    void trackFunnelEvent({
+      event: 'diagnosis_start',
+      domain: definition.domain,
+      path: `/check/${definition.domain}`,
+    });
+  }, [definition]);
+
   if (!definition) return <NotFoundPage />;
 
   const question = definition.questions[index];
@@ -22,6 +33,11 @@ export function CheckPage() {
     if (!selected || !definition) return;
     if (isLast) {
       safeSessionSet(`check:${definition.domain}`, JSON.stringify(answers));
+      void trackFunnelEvent({
+        event: 'diagnosis_complete',
+        domain: definition.domain,
+        path: `/check/${definition.domain}`,
+      });
       navigate(`/check/${definition.domain}/result`);
     } else {
       setIndex((i) => i + 1);

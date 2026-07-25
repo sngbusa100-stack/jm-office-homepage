@@ -41,4 +41,17 @@ describe('검색 노출 기반', () => {
     expect(html).toContain('property="og:description"');
     expect(html).toContain('application/ld+json');
   });
+
+  it('진단 결과는 응답 헤더에서도 색인을 차단한다', () => {
+    const config = JSON.parse(
+      readFileSync(join(__dirname, '../../vercel.json'), 'utf8'),
+    ) as { headers?: Array<{ source: string; headers: Array<{ key: string; value: string }> }> };
+    const resultHeader = config.headers?.find(
+      (entry) => entry.source === '/check/:domain/result',
+    );
+    expect(resultHeader?.headers).toContainEqual({
+      key: 'X-Robots-Tag',
+      value: 'noindex, nofollow',
+    });
+  });
 });

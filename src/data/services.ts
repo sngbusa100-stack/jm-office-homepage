@@ -1,6 +1,10 @@
 import type { CheckDomain } from '../types/content';
+import type { FunnelDomain } from '../lib/funnel';
 
 export interface ServiceFaq { q: string; a: string }
+export interface ServiceQuickCheck { label: string; value: string; note?: string }
+export interface ServiceSource { label: string; url: string; checkedAt: string }
+export interface ServiceLink { label: string; url: string }
 
 export interface Service {
   slug: string;
@@ -12,6 +16,13 @@ export interface Service {
   deadlines?: string[];        // 법정 기한 (근거 조항 포함 문자열)
   documents: string[];         // 필요 서류 예시
   faqs: ServiceFaq[];
+  quickChecks: ServiceQuickCheck[];
+  officialSources: ServiceSource[];
+  selfService: string[];
+  professionalReview: string[];
+  funnelDomain: FunnelDomain;
+  consultTopic: string;
+  relatedLinks?: ServiceLink[];
   checkDomain?: CheckDomain;   // 연결된 셀프 진단
   externalLink?: { label: string; url: string };  // 출입국 → 비자진단 사이트
   comingSoon?: { title: string; description: string };
@@ -32,6 +43,20 @@ export const services: Service[] = [
       { q: '행정심판을 하면 결과가 나올 때까지 운전할 수 있나요?', a: '아닙니다. 청구만으로 처분 효력이 멈추지 않습니다. 사안에 따라 집행정지 신청을 함께 검토합니다(행정심판법 제30조).' },
       { q: '감경되면 어느 정도로 줄어드나요?', a: '취소 처분이 정지 처분으로 변경되는 사례도 있지만, 적용 기준과 결과는 위반 내용과 개별 사정에 따라 달라집니다. 구체적인 결과를 미리 단정할 수 없습니다.' },
     ],
+    quickChecks: [
+      { label: '받은 문서', value: '취소·정지 결정통지서', note: '사전통지서와 결정통지서는 대응 단계가 다릅니다.' },
+      { label: '이의신청 기준', value: '처분을 받은 날부터 60일 이내', note: '도로교통법 제94조의 일반 기준입니다.' },
+      { label: '행정심판 기준', value: '처분을 안 날부터 90일 이내', note: '처분일부터 180일 기준도 함께 확인합니다.' },
+      { label: '핵심 자료', value: '운전 필요성·위반 경위·재발방지 자료' },
+    ],
+    officialSources: [
+      { label: '도로교통법 제94조 — 운전면허 처분 이의신청', url: 'https://www.law.go.kr/lsLawLinkInfo.do?chrClsCd=010202&lsJoLnkSeq=1000561335', checkedAt: '2026-07-25' },
+      { label: '행정심판법 제27조 — 심판청구 기간', url: 'https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1018377597', checkedAt: '2026-07-25' },
+    ],
+    selfService: ['결정통지서의 처분일·수령일 표시', '운전이 필요한 이유와 소득·부양 자료 모으기', '재발방지 교육·실천 자료 정리'],
+    professionalReview: ['감경 배제 사유와 적용 기준 대조', '이의신청·행정심판 중 적합한 절차 판단', '주장과 증거의 연결 및 집행정지 필요성 검토'],
+    funnelDomain: 'dui',
+    consultTopic: 'dui',
     checkDomain: 'dui',
   },
   {
@@ -48,6 +73,20 @@ export const services: Service[] = [
       { q: '영업정지 대신 과징금으로 바꿀 수 있다고 들었습니다.', a: '업종과 위반 유형에 따라 과징금 전환이 가능한 경우가 있습니다. 근거 법령마다 요건이 달라 개별 확인이 필요합니다.' },
       { q: '정지 기간에 영업하면 어떻게 되나요?', a: '정지 기간 중 영업은 허가 취소 등 훨씬 무거운 처분 사유가 됩니다. 반드시 집행정지 등 적법한 절차로 대응해야 합니다.' },
     ],
+    quickChecks: [
+      { label: '현재 단계', value: '사전통지 / 처분 확정', note: '의견제출과 행정심판은 준비 문서가 다릅니다.' },
+      { label: '의견제출 기한', value: '사전통지서에 적힌 날까지' },
+      { label: '행정심판 기준', value: '처분을 안 날부터 90일 이내' },
+      { label: '긴급 검토', value: '영업 중단 전 집행정지 필요성' },
+    ],
+    officialSources: [
+      { label: '행정절차법 제27조 — 의견제출', url: 'https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1016108513', checkedAt: '2026-07-25' },
+      { label: '행정심판법 제27조 — 심판청구 기간', url: 'https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1018377597', checkedAt: '2026-07-25' },
+    ],
+    selfService: ['사전통지서·처분서와 봉투까지 보관', 'CCTV·신분 확인 기록·직원 진술 확보', '월 매출·임대료·직원 급여 등 영업중단 영향 정리'],
+    professionalReview: ['업종별 개별 법령과 처분기준 확인', '고의·과실과 정상참작 사유의 구조화', '과징금 전환·집행정지·행정심판의 병행 순서 검토'],
+    funnelDomain: 'suspension',
+    consultTopic: 'suspension',
     checkDomain: 'suspension',
   },
   {
@@ -62,6 +101,20 @@ export const services: Service[] = [
       { q: '혼자 신청했다가 반려됐습니다. 다시 하면 되나요?', a: '재신청은 가능하지만 같은 사유로 다시 반려되면 시간만 잃습니다. 반려 사유를 정확히 해소한 뒤 신청하는 것이 중요합니다.' },
       { q: '인허가에 얼마나 걸리나요?', a: '법정 처리기간은 인허가 종류마다 다르고, 보완 요구가 있으면 늘어납니다. 사전 검토로 보완 가능성을 줄이는 것이 가장 효과적입니다.' },
     ],
+    quickChecks: [
+      { label: '허가 종류', value: '등록·허가·인가·신고 중 구분' },
+      { label: '관할 기관', value: '사업장 소재지와 업무별 담당청 확인' },
+      { label: '사전 요건', value: '입지·시설·인력·자본 기준' },
+      { label: '반려 이력', value: '보완 요구와 반려 사유 원문' },
+    ],
+    officialSources: [
+      { label: '정부24 — 민원 서비스·구비서류 조회', url: 'https://www.gov.kr/portal/main', checkedAt: '2026-07-25' },
+      { label: '국가법령정보센터 — 현행 법령 조회', url: 'https://www.law.go.kr', checkedAt: '2026-07-25' },
+    ],
+    selfService: ['하려는 사업과 시설 위치를 한 문장으로 정리', '임대차계약서·건축물대장·도면 등 입지 자료 확보', '관할 기관에서 받은 보완·반려 문서 보관'],
+    professionalReview: ['인허가 명칭과 근거 법령·관할 기관 특정', '입지·결격·시설 기준의 선행 검토', '사업계획서와 증빙의 정합성 및 보완 대응'],
+    funnelDomain: 'permit',
+    consultTopic: 'permit',
   },
   {
     slug: 'immigration',
@@ -73,6 +126,28 @@ export const services: Service[] = [
     documents: ['여권·외국인등록증', '체류 자격별 요건 서류'],
     faqs: [
       { q: '비자 사전 확인은 어디에서 하나요?', a: '정명 비자 진단센터에서 비자별 일반 정보와 준비·공식 확인 항목을 확인할 수 있습니다. 개별 상담 접수는 개업 후 시작됩니다.' },
+    ],
+    quickChecks: [
+      { label: '현재 자격', value: '체류자격·만료일·체류 상태' },
+      { label: '희망 목적', value: '취업·유학·결혼·영주 등' },
+      { label: '신청 유형', value: '사증발급 / 체류자격 변경·연장' },
+      { label: '공식 확인', value: '하이코리아·비자포털 최신 공지' },
+    ],
+    officialSources: [
+      { label: '하이코리아 — 체류민원·최신 공지', url: 'https://www.hikorea.go.kr', checkedAt: '2026-07-25' },
+      { label: '대한민국 비자포털 — 사증 안내', url: 'https://www.visa.go.kr', checkedAt: '2026-07-25' },
+    ],
+    selfService: ['여권·외국인등록증의 표기 내용과 만료일 확인', '입국·체류 목적과 예정 활동 정리', '고용계약·학력·가족관계 등 기본 증빙 확보'],
+    professionalReview: ['현재 자격에서 변경 가능한 체류자격 판단', '직종·소득·학력·고용주 요건의 최신 기준 대조', '보완 가능성과 신청 시점·관할 출입국기관 검토'],
+    funnelDomain: 'visa',
+    consultTopic: 'visa',
+    relatedLinks: [
+      { label: 'E-7 전문인력', url: 'https://jm-visa-precheck.vercel.app/visa/e7' },
+      { label: 'F-6 결혼이민', url: 'https://jm-visa-precheck.vercel.app/visa/f6' },
+      { label: 'D-2 유학', url: 'https://jm-visa-precheck.vercel.app/visa/d2' },
+      { label: 'D-10 구직', url: 'https://jm-visa-precheck.vercel.app/visa/d10' },
+      { label: 'F-2-7 거주', url: 'https://jm-visa-precheck.vercel.app/visa/f27' },
+      { label: 'F-5 영주', url: 'https://jm-visa-precheck.vercel.app/visa/f5' },
     ],
     externalLink: {
       label: '정명 비자 진단센터 열기',
@@ -92,6 +167,20 @@ export const services: Service[] = [
       { q: '수십 년 전 일인데 지금도 신청할 수 있나요?', a: '등록 신청 자체에는 기한이 없습니다. 다만 오래될수록 기록 확보가 어려워지므로 가능한 자료부터 빨리 확보하는 것이 중요합니다.' },
       { q: '한 번 기각됐으면 끝인가요?', a: '아닙니다. 기각 사유를 분석해 새로운 입증 자료를 보완하면 재신청·재심의·행정심판 등 후속 절차를 검토할 수 있습니다.' },
     ],
+    quickChecks: [
+      { label: '신청 유형', value: '본인 등록 / 유족·가족 등록 / 비해당 불복' },
+      { label: '핵심 쟁점', value: '직무·교육훈련과 상이·질병의 관련성' },
+      { label: '기본 자료', value: '병적·복무·의무·민간 진료기록' },
+      { label: '불복 기한', value: '결정을 안 날부터 90일 일반 기준' },
+    ],
+    officialSources: [
+      { label: '국가보훈부 — 국가유공자 및 가족 등록신청', url: 'https://mpva.go.kr/mpva/contents.do?key=106', checkedAt: '2026-07-25' },
+      { label: '국가유공자법 제6조 — 등록 및 결정', url: 'https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1027778575', checkedAt: '2026-07-25' },
+    ],
+    selfService: ['병적증명서·전역증과 현재 보유 기록 목록 만들기', '사고·발병 시점과 치료 경과를 시간순으로 정리', '동료·지휘관 등 사실을 아는 사람과 당시 자료 확인'],
+    professionalReview: ['국가유공자·보훈보상대상자 해당 가능성 구분', '공무 관련성을 뒷받침하는 기록 공백 분석', '비해당 사유에 맞춘 보완·재신청·불복 경로 검토'],
+    funnelDomain: 'veterans',
+    consultTopic: 'veterans',
     checkDomain: 'veterans',
   },
   {
@@ -106,6 +195,20 @@ export const services: Service[] = [
       { q: '내용증명을 보내면 법적 효력이 생기나요?', a: '내용증명 자체가 의무를 강제하지는 않습니다. 다만 의사 표시의 내용과 시점을 공적으로 증명해 이후 분쟁에서 중요한 증거가 됩니다.' },
       { q: '보상금이 적은 것 같은데 그냥 받아야 하나요?', a: '협의에 응하기 전 감정평가 내용을 검토하고, 이의신청·수용재결 등 단계별 불복 절차를 확인할 수 있습니다.' },
     ],
+    quickChecks: [
+      { label: '업무 유형', value: '토지보상 / 내용증명 / 계약서' },
+      { label: '현재 단계', value: '협의·재결·이의 / 발송 전·후 / 체결 전·후' },
+      { label: '상대 문서', value: '보상 안내·계약서·대화·거래 증빙' },
+      { label: '원하는 결과', value: '금액 검토·의사표시·위험 조항 수정' },
+    ],
+    officialSources: [
+      { label: '토지보상법 — 협의·수용·손실보상 기준', url: 'https://www.law.go.kr/LSW/LsiJoLinkP.do?docType=JO&joNo=009100000&languageType=KO&lsNm=%EA%B3%B5%EC%9D%B5%EC%82%AC%EC%97%85%EC%9D%84+%EC%9C%84%ED%95%9C+%ED%86%A0%EC%A7%80+%EB%93%B1%EC%9D%98+%EC%B7%A8%EB%93%9D+%EB%B0%8F+%EB%B3%B4%EC%83%81%EC%97%90+%EA%B4%80%ED%95%9C+%EB%B2%95%EB%A5%A0&paras=1', checkedAt: '2026-07-25' },
+      { label: '인터넷우체국 — 내용증명 서비스', url: 'https://www.epost.go.kr', checkedAt: '2026-07-25' },
+    ],
+    selfService: ['문서와 거래 내역을 날짜순으로 정리', '상대방에게 요구할 내용과 기한을 명확히 적기', '원본·사본·송수신 기록을 함께 보관'],
+    professionalReview: ['보상 단계와 불복 가능 절차·기한 구분', '내용증명의 사실·요구·기한 표현과 증거 연결', '계약 조항의 책임·해지·대금·분쟁 위험 검토'],
+    funnelDomain: 'documents',
+    consultTopic: 'land',
   },
 ];
 

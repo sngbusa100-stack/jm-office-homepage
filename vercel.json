@@ -8,6 +8,10 @@
     {
       "source": "/admin/:path*",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/check/:domain/result",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
   ],
   "crons": [{ "path": "/api/cron-purge", "schedule": "0 18 * * *" }]

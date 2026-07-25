@@ -11,6 +11,7 @@ import {
   purgeInquiryRecord,
   redisConfig,
 } from './_store.mjs';
+import { createFunnelStore, emptyFunnelSummary } from './_funnel.mjs';
 
 /** Bearer 토큰을 상수 시간 비교로 검증한다 (길이 차이 노출 방지 위해 해시 후 비교). */
 export function isAuthorized(authHeader, adminToken) {
@@ -74,7 +75,13 @@ export default async function handler(req, res) {
         }
         swept.push(item);
       }
-      res.status(200).json({ ok: true, items: swept });
+      let funnel = emptyFunnelSummary(30);
+      try {
+        funnel = await createFunnelStore(cfg).summary(30, now);
+      } catch {
+        // 전환 통계 장애가 개인정보 접수 목록 조회를 막지 않는다.
+      }
+      res.status(200).json({ ok: true, items: swept, funnel });
       return;
     }
 
@@ -96,7 +103,11 @@ export default async function handler(req, res) {
       }
 
       if (req.method === 'PATCH') {
-        const result = applyInquiryPatch(record, { status: body.status, memo: body.memo });
+        const result = applyInquiryPatch(record, {
+          status: body.status,
+          memo: body.memo,
+          pipelineStage: body.pipelineStage,
+        });
         if (!result.ok) {
           res.status(400).json({ ok: false, errors: result.errors });
           return;

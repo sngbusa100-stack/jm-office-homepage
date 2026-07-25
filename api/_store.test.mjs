@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  PIPELINE_STAGES,
   STATUSES,
   acquireSubmissionProcessing,
   applyInquiryPatch,
@@ -42,6 +43,7 @@ describe('접수 레코드 생성', () => {
     expect(record.message).toBe('문의드립니다.');
     expect(record.origin).toBe('https://example.test');
     expect(record.status).toBe('new');
+    expect(record.pipelineStage).toBe('inquiry');
     expect(record.memos).toEqual([]);
     expect(record.receivedAt).toBe(NOW.toISOString());
     expect(record.id).toMatch(/^JM-/);
@@ -76,7 +78,7 @@ describe('접수 레코드 생성', () => {
   });
 });
 
-describe('접수 패치(상태·메모)', () => {
+describe('접수 패치(상태·메모·수임 단계)', () => {
   const base = buildInquiryRecord(value, {}, { now: NOW });
 
   it('유효한 상태로 변경한다', () => {
@@ -91,6 +93,15 @@ describe('접수 패치(상태·메모)', () => {
     const result = applyInquiryPatch(base, { status: 'weird' }, NOW);
     expect(result.ok).toBe(false);
     expect(result.errors).toContain('status');
+  });
+
+  it('상담→적합→수임→업무완료 단계를 기록한다', () => {
+    for (const pipelineStage of PIPELINE_STAGES) {
+      const result = applyInquiryPatch(base, { pipelineStage }, NOW);
+      expect(result.ok).toBe(true);
+      expect(result.value.pipelineStage).toBe(pipelineStage);
+    }
+    expect(applyInquiryPatch(base, { pipelineStage: 'unknown' }, NOW).errors).toContain('pipeline_stage');
   });
 
   it('메모를 시각과 함께 추가하고 원본은 바꾸지 않는다', () => {
@@ -117,6 +128,7 @@ describe('개인정보 파기', () => {
       receivedAt: record.receivedAt,
       topic: record.topic,
       status: 'new',
+      pipelineStage: 'inquiry',
       memoCount: 1,
       purged: true,
       purgedAt: NOW.toISOString(),
@@ -223,6 +235,7 @@ describe('동시 제출 처리 잠금', () => {
       'SET', 'dedup:processing:submission-1', '1', 'NX', 'EX', '30',
     ]);
   });
+
 });
 
 describe('요청 제한', () => {

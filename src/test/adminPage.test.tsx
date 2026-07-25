@@ -42,7 +42,27 @@ const ITEMS = [
 function stubAdminFetch() {
   const fetchMock = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
     if (options.method === 'GET') {
-      return { ok: true, status: 200, json: async () => ({ ok: true, items: ITEMS }) };
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          items: ITEMS,
+          funnel: {
+            days: 30,
+            totals: {
+              landing_view: 100,
+              landing_cta_click: 30,
+              diagnosis_start: 20,
+              diagnosis_complete: 12,
+              consult_view: 8,
+              consult_submit: 3,
+            },
+            byDomain: {},
+            bySource: { naver: 70, direct: 30 },
+          },
+        }),
+      };
     }
     if (options.method === 'PATCH') {
       const body = JSON.parse(String(options.body));
@@ -108,6 +128,9 @@ describe('접수 관리 페이지', () => {
     expect(screen.getByText('전체 (2)')).toBeInTheDocument();
     expect(screen.getByText('신규 (1)')).toBeInTheDocument();
     expect(screen.getByText('완료 (1)')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /30일 전환 퍼널/ })).toBeInTheDocument();
+    expect(screen.getByText('100')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
   });
 
   it('상태 변경 버튼이 PATCH를 보내고 화면을 갱신한다', async () => {

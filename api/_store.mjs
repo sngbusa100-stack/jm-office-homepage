@@ -3,9 +3,10 @@
 // - 저장소 미설정(환경변수 없음) 시에도 접수 자체는 동작하도록 호출부에서 redisConfig()로 분기한다.
 
 export const STATUSES = ['new', 'in_progress', 'done', 'on_hold'];
+export const PIPELINE_STAGES = ['inquiry', 'qualified', 'retained', 'work_completed'];
 
-/** 접수 레코드 구조 버전. 필드가 바뀌면 올린다 (v1: 07-17 최초, v2: 진단·동의·유입경로 추가). */
-export const SCHEMA_VERSION = 2;
+/** 접수 레코드 구조 버전. v5: 동의 기반 비자 진단 첨부 추가. */
+export const SCHEMA_VERSION = 5;
 
 /** 개인정보 수집 동의 문구 버전 — 개인정보처리방침 개정일과 맞춘다. */
 export const CONSENT_VERSION = '2026-07-19';
@@ -40,11 +41,14 @@ export function buildInquiryRecord(value, meta = {}, { id, now = new Date() } = 
     topic: value.topic,
     message: value.message ?? '',
     ...(value.diagnosis ? { diagnosis: value.diagnosis } : {}),
+    ...(value.visaDiagnosis ? { visaDiagnosis: value.visaDiagnosis } : {}),
     ...(value.sourcePath ? { sourcePath: value.sourcePath } : {}),
     ...(value.utmSource ? { utmSource: value.utmSource } : {}),
+    ...(value.attribution ? { attribution: value.attribution } : {}),
     consent: { version: CONSENT_VERSION, at: now.toISOString() },
     origin: meta.origin ?? '',
     status: 'new',
+    pipelineStage: 'inquiry',
     memos: [],
   };
 }
@@ -79,7 +83,17 @@ export function applyInquiryPatch(record, patch = {}, now = new Date()) {
     if (text.length >= 1 && text.length <= 1000) next.memos.push({ at: now.toISOString(), text });
     else errors.push('memo');
   }
-  if (patch.status === undefined && patch.memo === undefined) errors.push('empty_patch');
+  if (patch.pipelineStage !== undefined) {
+    if (PIPELINE_STAGES.includes(patch.pipelineStage)) {
+      next.pipelineStage = patch.pipelineStage;
+      next.pipelineStageAt = now.toISOString();
+    } else {
+      errors.push('pipeline_stage');
+    }
+  }
+  if (patch.status === undefined && patch.memo === undefined && patch.pipelineStage === undefined) {
+    errors.push('empty_patch');
+  }
 
   if (errors.length > 0) return { ok: false, errors };
   next.updatedAt = now.toISOString();
@@ -119,6 +133,7 @@ export function purgeInquiryRecord(record, now = new Date()) {
     receivedAt: record.receivedAt,
     topic: record.topic,
     status: record.status,
+    pipelineStage: record.pipelineStage ?? 'inquiry',
     memoCount: (record.memos ?? []).length,
     purged: true,
     purgedAt: now.toISOString(),

@@ -23,6 +23,18 @@ describe('정보 페이지', () => {
     renderAt(`/services/${slug}`);
     const service = services.find((s) => s.slug === slug)!;
     expect(screen.getByRole('heading', { level: 1, name: service.headline })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /먼저 확인할 항목/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /공식 기준·조회 경로/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /직접 준비와 검토가 필요한 부분/ })).toBeInTheDocument();
+  });
+
+  it('모든 업무분야는 조회 카드·공식 출처·직접 준비 구분을 갖는다', () => {
+    for (const service of services) {
+      expect(service.quickChecks.length).toBeGreaterThanOrEqual(3);
+      expect(service.officialSources.length).toBeGreaterThan(0);
+      expect(service.selfService.length).toBeGreaterThan(0);
+      expect(service.professionalReview.length).toBeGreaterThan(0);
+    }
   });
 
   it('/services는 모든 업무 분야의 전체 목록을 보여준다', () => {
@@ -38,12 +50,20 @@ describe('정보 페이지', () => {
 
   it('진단이 연결된 분야는 진단 버튼, 출입국은 준비중 안내를 보여준다', () => {
     renderAt('/services/dui');
-    expect(screen.getByRole('link', { name: /내 상황 셀프 진단하기/ })).toHaveAttribute('href', '/check/dui');
+    expect(screen.getAllByRole('link', { name: /내 상황 셀프 진단하기/ })[0]).toHaveAttribute('href', '/check/dui');
+    expect(screen.getAllByRole('link', { name: /기한이 급하면 상담부터/ })[0]).toHaveAttribute(
+      'href',
+      '/consult?topic=dui&priority=urgent',
+    );
     renderAt('/services/immigration');
     expect(screen.queryByText(/비자 진단센터는 공개 준비 중/)).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /정명 비자 진단센터 열기/ })).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: /정명 비자 진단센터 열기/ })[0]).toHaveAttribute(
       'href',
-      'https://jm-visa-precheck.vercel.app',
+      'https://jm-visa-precheck.vercel.app/?utm_content=jm_main',
+    );
+    expect(screen.getByRole('link', { name: /E-7 전문인력/ })).toHaveAttribute(
+      'href',
+      'https://jm-visa-precheck.vercel.app/visa/e7?utm_content=jm_main',
     );
   });
 

@@ -471,12 +471,76 @@ th { background: var(--surface-muted); font-weight: 700; }
 .availability-card { border-left: 4px solid var(--accent); background: var(--accent-soft); }
 .availability-card .eyebrow { margin-bottom: 5px; }
 
+/* --- 검색 유입용 업무분야 설명·조회 랜딩 --- */
+.service-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+.admin-funnel-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.admin-funnel-step { padding: 18px; }
+.admin-funnel-step p { color: var(--text-muted); font-size: 0.84rem; margin-bottom: 8px; }
+.admin-funnel-step strong { font-size: 1.6rem; }
+.quick-check-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.quick-check-card { padding: 22px; }
+.quick-check-card__label {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.quick-check-card h3 { font-size: 1.05rem; line-height: 1.45; }
+.official-source-card { border-left: 4px solid var(--accent); }
+.official-source-list { display: grid; gap: 12px; }
+.official-source-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.official-source-list a { font-weight: 700; }
+.official-source-list span { color: var(--text-muted); font-size: 0.84rem; white-space: nowrap; }
+.preparation-grid h3 { margin-bottom: 14px; }
+.related-link-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.related-link {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+.related-link:hover { border-color: var(--accent); transform: translateY(-1px); }
+.service-next-step {
+  margin-top: 52px;
+  background: linear-gradient(135deg, var(--surface), var(--accent-soft));
+}
+
 @media (max-width: 768px) {
   .page-shell { padding-left: 20px; padding-right: 20px; }
   .section { padding-top: 54px; padding-bottom: 54px; }
   .section-heading--row, .feature-band { grid-template-columns: 1fr; display: grid; align-items: start; gap: 18px; }
   .page-header { margin-bottom: 32px; }
   .hero__guide { padding: 24px; }
+  .quick-check-grid, .related-link-grid { grid-template-columns: 1fr 1fr; }
+  .official-source-list li { flex-direction: column; gap: 5px; }
+  .admin-funnel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -487,4 +551,8 @@ th { background: var(--surface-muted); font-weight: 700; }
   .hero .button, .consult-cta .button, .center-actions .button { width: 100%; }
   .card { padding: 22px; }
   .service-card { min-height: 220px; }
+  .quick-check-grid, .related-link-grid { grid-template-columns: 1fr; }
+  .service-actions { align-items: stretch; }
+  .service-actions .button { width: 100%; }
+  .admin-funnel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

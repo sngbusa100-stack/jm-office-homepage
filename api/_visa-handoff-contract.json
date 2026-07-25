@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "questions": {
+    "d2": {
+      "stayStatus": ["overseas", "valid", "near-expiry", "expired", "unsure"],
+      "violationStatus": ["none", "past", "current", "unsure"],
+      "d2Admission": ["confirmed", "pending", "missing", "unsure"],
+      "d2Program": ["confirmed", "unsure"],
+      "d2Finance": ["ready", "partial", "missing", "unsure"]
+    },
+    "d10": {
+      "stayStatus": ["overseas", "valid", "near-expiry", "expired", "unsure"],
+      "violationStatus": ["none", "past", "current", "unsure"],
+      "d10Path": ["job-search", "startup", "unsure"],
+      "d10Qualification": ["confirmed", "partial", "missing", "unsure"],
+      "d10Plan": ["ready", "partial", "missing"]
+    },
+    "e7": {
+      "stayStatus": ["overseas", "valid", "near-expiry", "expired", "unsure"],
+      "violationStatus": ["none", "past", "current", "unsure"],
+      "e7Occupation": ["confirmed", "unsure", "unknown"],
+      "e7Contract": ["ready", "partial", "missing"],
+      "e7Wage": ["meets", "below", "unsure"]
+    },
+    "f27": {
+      "stayStatus": ["overseas", "valid", "near-expiry", "expired", "unsure"],
+      "violationStatus": ["none", "past", "current", "unsure"],
+      "taxStatus": ["clear", "issue", "unsure"],
+      "f27CurrentStatus": ["confirmed", "unsure", "unknown"],
+      "f27Points": ["confirmed", "partial", "not-checked", "unsure"],
+      "f27Income": ["confirmed", "partial", "missing", "unsure"]
+    },
+    "f5": {
+      "stayStatus": ["overseas", "valid", "near-expiry", "expired", "unsure"],
+      "violationStatus": ["none", "past", "current", "unsure"],
+      "taxStatus": ["clear", "issue", "unsure"],
+      "f5Track": ["confirmed", "unsure", "unknown"],
+      "f5Stay": ["confirmed", "not-checked", "unsure"],
+      "f5Livelihood": ["ready", "partial", "missing", "unsure"],
+      "f5Integration": ["confirmed", "partial", "not-checked", "unsure"]
+    },
+    "f6": {
+      "stayStatus": ["overseas", "valid", "near-expiry", "expired", "unsure"],
+      "violationStatus": ["none", "past", "current", "unsure"],
+      "taxStatus": ["clear", "issue", "unsure"],
+      "f6Marriage": ["registered", "preparing", "unsure"],
+      "f6Household": ["2", "3", "4", "5", "6", "7", "8plus", "unsure"],
+      "f6Income": ["meets", "needs-calculation", "below", "unsure"],
+      "f6Communication": ["ready", "partial", "missing", "unsure"],
+      "f6Housing": ["ready", "partial", "missing", "unsure"]
+    }
+  }
+}

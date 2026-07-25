@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { office, isAcceptingRequests } from '../data/office';
 import { removeStorage, safeSessionGet, safeSessionSet } from '../lib/browserStorage';
 import { submitConsult } from '../lib/consultSubmit';
-import type { ConsultDiagnosis } from '../lib/consultSubmit';
+import type { ConsultDiagnosis, VisaConsultDiagnosis } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
+import { readAttribution, trackFunnelEvent } from '../lib/funnel';
 
 const LEVEL_LABEL: Record<ResultLevel, string> = {
   urgent: '긴급 확인', documents: '서류 보완', official: '공식 확인', ready: '확인됨',
@@ -21,6 +22,110 @@ const TOPIC_SLUGS: Record<string, string> = {
   veterans: '국가보훈',
   land: '토지보상 · 내용증명 · 계약서',
 };
+
+const TOPIC_FUNNEL = {
+  dui: 'dui',
+  suspension: 'suspension',
+  permit: 'permit',
+  visa: 'visa',
+  veterans: 'veterans',
+  land: 'documents',
+} as const;
+
+const VISA_CODES = {
+  d2: 'D-2',
+  d10: 'D-10',
+  e7: 'E-7',
+  f27: 'F-2-7',
+  f5: 'F-5',
+  f6: 'F-6',
+} as const;
+type VisaSlug = keyof typeof VISA_CODES;
+
+function isVisaSlug(value: string): value is VisaSlug {
+  return Object.hasOwn(VISA_CODES, value);
+}
+
+function visaCode(value: string): string {
+  return isVisaSlug(value) ? VISA_CODES[value] : value.toUpperCase();
+}
+
+type VisaHandoffStatus = 'idle' | 'loading' | 'loaded' | 'expired' | 'error';
+interface VisaHandoffState {
+  token: string;
+  status: VisaHandoffStatus;
+  value?: VisaConsultDiagnosis;
+}
+type VisaHandoffFetchResult =
+  | { status: 'loaded'; value: VisaConsultDiagnosis }
+  | { status: 'expired' | 'error' };
+
+// React StrictMode가 effect를 개발 중 두 번 실행해도 GETDEL 토큰을 두 번
+// 소비하지 않도록 같은 토큰의 진행·완료 요청을 하나로 공유한다.
+const visaHandoffRequests = new Map<string, Promise<VisaHandoffFetchResult>>();
+
+function fetchVisaHandoff(token: string): Promise<VisaHandoffFetchResult> {
+  const existing = visaHandoffRequests.get(token);
+  if (existing) return existing;
+  const request = fetch('/api/visa-handoff', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'consume', token }),
+  })
+    .then(async (response): Promise<VisaHandoffFetchResult> => {
+      if (!response.ok) {
+        return { status: response.status === 404 ? 'expired' : 'error' };
+      }
+      const data = await response.json() as { visaDiagnosis?: VisaConsultDiagnosis };
+      const value = data.visaDiagnosis;
+      if (
+        !value
+        || value.schemaVersion !== 1
+        || value.consent !== true
+        || typeof value.visaSlug !== 'string'
+        || typeof value.answers !== 'object'
+      ) return { status: 'error' };
+      return { status: 'loaded', value };
+    })
+    .catch((): VisaHandoffFetchResult => ({ status: 'error' }));
+  visaHandoffRequests.set(token, request);
+  void request.finally(() => {
+    if (visaHandoffRequests.get(token) === request) {
+      visaHandoffRequests.delete(token);
+    }
+  });
+  return request;
+}
+
+function readStoredVisaDiagnosis(token: string): VisaConsultDiagnosis | undefined {
+  const raw = safeSessionGet('consult:visaDiagnosis');
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as { token?: unknown; value?: VisaConsultDiagnosis };
+    if (
+      parsed.token === token
+      && parsed.value?.schemaVersion === 1
+      && parsed.value.consent === true
+      && typeof parsed.value.visaSlug === 'string'
+      && parsed.value.answers
+      && typeof parsed.value.answers === 'object'
+    ) return parsed.value;
+  } catch {
+    // 손상되거나 다른 토큰의 임시값은 무시한다.
+  }
+  return undefined;
+}
+
+function visaSummary(diagnosis: VisaConsultDiagnosis): string {
+  const code = visaCode(diagnosis.visaSlug);
+  const level = {
+    checked: '현재 답변상 추가 표시 없음',
+    'needs-documents': '서류 보완 항목 있음',
+    'official-check': '공식 확인 항목 있음',
+    urgent: '긴급 확인 항목 있음',
+  }[diagnosis.level];
+  return `[비자 사전진단 요약] ${code} · ${level}\n\n추가로 궁금한 내용: `;
+}
 
 /** 진단 결과 페이지에서 저장해 둔 진단 상세를 읽는다. 없거나 손상되면 무시한다. */
 function readDiagnosis(): ConsultDiagnosis | undefined {
@@ -54,20 +159,104 @@ function buildPrefill(): string {
 export function ConsultPage() {
   const accepting = isAcceptingRequests(office);
   const [searchParams] = useSearchParams();
-  const presetTopic = TOPIC_SLUGS[searchParams.get('topic') ?? ''];
-  const [message, setMessage] = useState(buildPrefill);
+  const topicSlug = searchParams.get('topic') ?? '';
+  const presetTopic = TOPIC_SLUGS[topicSlug];
+  const handoffToken = searchParams.get('handoff') ?? '';
+  const visaSlug = searchParams.get('visa') ?? '';
+  const validHandoffToken = /^[A-Za-z0-9_-]{20,80}$/.test(handoffToken);
+  const visaFunnelDomain = isVisaSlug(visaSlug)
+    ? visaSlug
+    : undefined;
+  const funnelDomain = visaFunnelDomain
+    ?? TOPIC_FUNNEL[topicSlug as keyof typeof TOPIC_FUNNEL]
+    ?? 'home';
+  const [message, setMessage] = useState(() => (
+    buildPrefill()
+    || (visaSlug ? `[비자 선택] ${visaCode(visaSlug)}\n\n추가로 궁금한 내용: ` : '')
+  ));
+  const [handoffState, setHandoffState] = useState<VisaHandoffState>({
+    token: handoffToken,
+    status: validHandoffToken ? 'loading' : 'idle',
+  });
+  const autoVisaPrefill = useRef('');
+  const handoffStatus = handoffState.token === handoffToken
+    ? handoffState.status
+    : validHandoffToken ? 'loading' : 'idle';
+  const visaDiagnosis = handoffState.token === handoffToken
+    && handoffState.status === 'loaded'
+    ? handoffState.value
+    : undefined;
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
   // 새로고침 뒤에도 실패한 제출은 같은 키를 써서 중복 등록을 막는다.
   const [submissionId] = useState<string>(readOrCreateSubmissionId);
 
+  useEffect(() => {
+    void trackFunnelEvent({
+      event: 'consult_view',
+      domain: funnelDomain,
+      path: '/consult',
+    });
+  }, [funnelDomain]);
+
+  useEffect(() => {
+    if (autoVisaPrefill.current) {
+      const previousPrefill = autoVisaPrefill.current;
+      autoVisaPrefill.current = '';
+      setMessage((current) => (
+        current === previousPrefill
+          ? (visaSlug ? `[비자 선택] ${visaCode(visaSlug)}\n\n추가로 궁금한 내용: ` : buildPrefill())
+          : current
+      ));
+    }
+    if (!validHandoffToken) {
+      removeStorage('sessionStorage', 'consult:visaDiagnosis');
+      setHandoffState({ token: handoffToken, status: 'idle' });
+      return;
+    }
+    const cached = readStoredVisaDiagnosis(handoffToken);
+    if (cached) {
+      const prefill = visaSummary(cached);
+      autoVisaPrefill.current = prefill;
+      setMessage((current) => current.startsWith('[비자 선택]') || !current ? prefill : current);
+      setHandoffState({ token: handoffToken, status: 'loaded', value: cached });
+      return;
+    }
+    removeStorage('sessionStorage', 'consult:visaDiagnosis');
+
+    let active = true;
+    setHandoffState({ token: handoffToken, status: 'loading' });
+    void fetchVisaHandoff(handoffToken)
+      .then((result) => {
+        if (result.status !== 'loaded') {
+          if (active) setHandoffState({ token: handoffToken, status: result.status });
+          return;
+        }
+        const value = result.value;
+        safeSessionSet('consult:visaDiagnosis', JSON.stringify({ token: handoffToken, value }));
+        if (active) {
+          const prefill = visaSummary(value);
+          autoVisaPrefill.current = prefill;
+          setMessage((current) => current.startsWith('[비자 선택]') || !current ? prefill : current);
+          setHandoffState({ token: handoffToken, status: 'loaded', value });
+        }
+      });
+    return () => { active = false; };
+  }, [handoffToken, validHandoffToken, visaSlug]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!accepting || !office.formEndpoint || status === 'sending') return;
+    if (
+      !accepting
+      || !office.formEndpoint
+      || status === 'sending'
+      || (validHandoffToken && (handoffStatus === 'idle' || handoffStatus === 'loading'))
+    ) return;
     const form = new FormData(event.currentTarget);
     setStatus('sending');
     const diagnosis = readDiagnosis();
     const utmSource = safeSessionGet('consult:utm') ?? undefined;
+    const attribution = readAttribution();
     const result = await submitConsult(office.formEndpoint, {
       name: String(form.get('name') ?? ''),
       phone: String(form.get('phone') ?? ''),
@@ -77,17 +266,29 @@ export function ConsultPage() {
       consent: form.get('consent') === 'on',
       company: String(form.get('company') ?? ''),
       ...(diagnosis ? { diagnosis, sourcePath: `/check/${diagnosis.domain}/result` } : {}),
+      ...(visaDiagnosis ? {
+        visaDiagnosis,
+        sourcePath: `/result?visa=${encodeURIComponent(visaDiagnosis.visaSlug)}`,
+      } : {}),
       ...(utmSource ? { utmSource } : {}),
+      ...(Object.keys(attribution).length > 0 ? { attribution } : {}),
       submissionId,
     });
     setStatus(result.status);
     setInquiryId(result.status === 'sent' ? (result.id ?? null) : null);
     if (result.status === 'sent') {
+      void trackFunnelEvent({
+        event: 'consult_submit',
+        domain: funnelDomain,
+        path: '/consult',
+      });
       // 접수 완료된 개인 데이터와 제출 키를 브라우저 세션에서 즉시 정리한다.
       removeStorage('sessionStorage', 'consult:diagnosis');
       removeStorage('sessionStorage', 'consult:summary');
       removeStorage('sessionStorage', 'consult:utm');
+      removeStorage('sessionStorage', 'consult:attribution');
       removeStorage('sessionStorage', 'consult:submission');
+      removeStorage('sessionStorage', 'consult:visaDiagnosis');
     }
   }
 
@@ -131,6 +332,16 @@ export function ConsultPage() {
 
       <form className="card consult-form" onSubmit={handleSubmit}>
         <h2>상담 신청</h2>
+        {handoffStatus === 'loading' && <p className="note" role="status">비자 진단 결과를 안전하게 불러오는 중입니다.</p>}
+        {handoffStatus === 'loaded' && (
+          <p className="note" role="status">동의하신 비자 진단 결과가 상담 화면에 안전하게 연결되었습니다.</p>
+        )}
+        {handoffStatus === 'expired' && (
+          <p className="note" role="alert">진단 결과 연결이 만료되었거나 이미 사용되었습니다. 아래에 내용을 직접 적어 일반 상담을 신청할 수 있습니다.</p>
+        )}
+        {handoffStatus === 'error' && (
+          <p className="note" role="alert">진단 결과를 불러오지 못했습니다. 아래에 내용을 직접 적어 일반 상담을 신청할 수 있습니다.</p>
+        )}
         <input type="text" name="company" className="sr-only" tabIndex={-1} autoComplete="off" aria-hidden="true" />
         <label>성함<input type="text" name="name" required disabled={!accepting} /></label>
         <label>연락처<input type="tel" name="phone" required disabled={!accepting} /></label>
@@ -138,7 +349,12 @@ export function ConsultPage() {
           <input type="email" name="email" disabled={!accepting} />
         </label>
         <label>분야
-          <select name="topic" defaultValue={presetTopic} disabled={!accepting}>
+          <select
+            key={presetTopic ?? 'default'}
+            name="topic"
+            defaultValue={presetTopic}
+            disabled={!accepting || Boolean(visaDiagnosis)}
+          >
             <option>음주운전 면허 구제</option>
             <option>영업정지 · 행정심판</option>
             <option>인허가</option>
@@ -146,6 +362,7 @@ export function ConsultPage() {
             <option>국가보훈</option>
             <option>토지보상 · 내용증명 · 계약서</option>
           </select>
+          {visaDiagnosis && <input type="hidden" name="topic" value="출입국 · 비자" />}
         </label>
         <label>상담 내용
           <textarea
@@ -160,8 +377,17 @@ export function ConsultPage() {
           <input type="checkbox" name="consent" required disabled={!accepting} />
           개인정보 수집·이용에 동의합니다 (상담 회신 목적, 처리 완료 후 120일 보관 뒤 파기)
         </label>
-        <button className="button button--accent" type="submit" disabled={!accepting || status === 'sending' || status === 'sent'}>
-          {status === 'sending' ? '전송 중...' : '상담 신청하기'}
+        <button
+          className="button button--accent"
+          type="submit"
+          disabled={
+            !accepting
+            || status === 'sending'
+            || status === 'sent'
+            || (validHandoffToken && (handoffStatus === 'idle' || handoffStatus === 'loading'))
+          }
+        >
+          {handoffStatus === 'loading' ? '진단 결과 불러오는 중...' : status === 'sending' ? '전송 중...' : '상담 신청하기'}
         </button>
         {status === 'sent' && (
           <p className="note" role="status">

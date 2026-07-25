@@ -3,6 +3,7 @@
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://sngbusa100-stack.github.io',
   'https://jm-office-homepage.vercel.app',
+  'https://jm-visa-precheck.vercel.app',
   'http://localhost:5173',
 ];
 

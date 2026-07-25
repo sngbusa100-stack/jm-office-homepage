@@ -1,5 +1,6 @@
 // 상담 접수 검증·포맷 (api/consult.js에서 사용, _접두사라 엔드포인트로 노출되지 않음)
 import CHECK_LEVELS from './_check-levels.mjs';
+import { sanitizeVisaHandoff } from './_visa-handoff.mjs';
 
 export const TOPICS = [
   '음주운전 면허 구제',
@@ -39,6 +40,17 @@ export function sanitizeDiagnosis(input) {
   return { domain, answers, counts };
 }
 
+/** 상담과 함께 저장되는 유입 식별자. 허용 키 4종 외 값은 버린다. */
+export function sanitizeAttribution(input) {
+  if (typeof input !== 'object' || input === null) return null;
+  const clean = {};
+  for (const key of ['source', 'medium', 'campaign', 'content']) {
+    const value = typeof input[key] === 'string' ? input[key].trim().slice(0, 80) : '';
+    if (value) clean[key] = value;
+  }
+  return Object.keys(clean).length > 0 ? clean : null;
+}
+
 export function validateConsultPayload(body) {
   const data = typeof body === 'object' && body !== null ? body : {};
   const name = typeof data.name === 'string' ? data.name.trim() : '';
@@ -51,6 +63,8 @@ export function validateConsultPayload(body) {
   const diagnosis = sanitizeDiagnosis(data.diagnosis);
   const sourcePath = typeof data.sourcePath === 'string' ? data.sourcePath.trim().slice(0, 120) : '';
   const utmSource = typeof data.utmSource === 'string' ? data.utmSource.trim().slice(0, 80) : '';
+  const attribution = sanitizeAttribution(data.attribution);
+  const visaDiagnosis = sanitizeVisaHandoff(data.visaDiagnosis);
   // 멱등성 키 — 응답 유실 후 재제출을 같은 접수로 묶는다. 형식이 틀리면 무시(선택 값).
   const rawSubmissionId = typeof data.submissionId === 'string' ? data.submissionId.trim() : '';
   const submissionId = /^[A-Za-z0-9-]{8,64}$/.test(rawSubmissionId) ? rawSubmissionId : '';
@@ -62,6 +76,7 @@ export function validateConsultPayload(body) {
   // 이메일은 선택 — 입력했는데 형식이 틀리면 오타 방지를 위해 오류로 잡는다.
   if (email && (email.length > 100 || !/^\S+@\S+\.\S+$/.test(email))) errors.push('email');
   if (!TOPICS.includes(topic)) errors.push('topic');
+  if (visaDiagnosis && topic !== '출입국 · 비자' && !errors.includes('topic')) errors.push('topic');
   if (message.length > 2000) errors.push('message');
   if (!consent) errors.push('consent');
 
@@ -77,6 +92,8 @@ export function validateConsultPayload(body) {
       ...(diagnosis ? { diagnosis } : {}),
       ...(sourcePath ? { sourcePath } : {}),
       ...(utmSource ? { utmSource } : {}),
+      ...(attribution ? { attribution } : {}),
+      ...(visaDiagnosis ? { visaDiagnosis } : {}),
       ...(submissionId ? { submissionId } : {}),
     },
   };

@@ -5,7 +5,7 @@ import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { PreOpeningNotice } from './PreOpeningNotice';
 import { getPageMeta } from '../lib/pageMeta';
-import { safeSessionSet } from '../lib/browserStorage';
+import { captureAttribution } from '../lib/funnel';
 
 function setMeta(selector: string, attribute: 'name' | 'property', key: string, content: string) {
   let element = document.head.querySelector<HTMLMetaElement>(selector);
@@ -32,9 +32,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // 유입 채널 파악용: 광고·블로그 링크의 utm_source를 세션에 보관해 상담 접수에 붙인다.
-    const utm = new URLSearchParams(window.location.search).get('utm_source');
-    if (utm) safeSessionSet('consult:utm', utm.slice(0, 80));
+    // 개인정보 없는 유입 식별자 4종을 상담과 전환 측정에 공통 사용한다.
+    captureAttribution(window.location.search);
     const meta = getPageMeta(pathname);
     document.title = meta.title;
     setMeta('meta[name="description"]', 'name', 'description', meta.description);

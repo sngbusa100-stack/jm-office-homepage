@@ -6,6 +6,18 @@ export interface ConsultDiagnosis {
   counts: Record<string, number>;
 }
 
+/** 비자 사이트에서 명시적 동의 후 일회성 토큰으로 가져온 진단 답변. */
+export interface VisaConsultDiagnosis {
+  schemaVersion: 1;
+  visaSlug: string;
+  language: string;
+  answers: Record<string, string>;
+  level: 'checked' | 'needs-documents' | 'official-check' | 'urgent';
+  questionCount: number;
+  consent: true;
+  consentedAt?: string;
+}
+
 export interface ConsultPayload {
   name: string;
   phone: string;
@@ -17,8 +29,15 @@ export interface ConsultPayload {
   /** 허니팟 — 사람은 비워 두고, 스팸 봇이 채우면 서버가 폐기한다. */
   company: string;
   diagnosis?: ConsultDiagnosis;
+  visaDiagnosis?: VisaConsultDiagnosis;
   sourcePath?: string;
   utmSource?: string;
+  attribution?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    content?: string;
+  };
   /** 응답 유실 후 같은 제출을 하나의 접수로 식별하는 브라우저 생성 키. */
   submissionId?: string;
 }

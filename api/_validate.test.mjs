@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { TOPICS, formatTelegramMessage, sanitizeDiagnosis, validateConsultPayload } from './_validate.mjs';
+import {
+  TOPICS,
+  formatTelegramMessage,
+  sanitizeAttribution,
+  sanitizeDiagnosis,
+  validateConsultPayload,
+} from './_validate.mjs';
 
 const valid = {
   name: '홍길동',
@@ -11,6 +17,21 @@ const valid = {
 };
 
 describe('상담 접수 검증', () => {
+  it('UTM 4종만 정리하고 임의 필드는 버린다', () => {
+    expect(sanitizeAttribution({
+      source: 'naver',
+      medium: 'blog',
+      campaign: 'dui',
+      content: 'top',
+      name: '홍길동',
+    })).toEqual({
+      source: 'naver',
+      medium: 'blog',
+      campaign: 'dui',
+      content: 'top',
+    });
+  });
+
   it('정상 입력을 통과시키고 값을 정리한다', () => {
     const result = validateConsultPayload({ ...valid, name: '  홍길동  ' });
     expect(result.ok).toBe(true);
@@ -46,6 +67,13 @@ describe('상담 접수 검증', () => {
       diagnosis: { domain: 'dui', answers: { 'dui-elapsed': 'd60to90' }, counts: { urgent: 1 } },
       sourcePath: '/check/dui/result',
       utmSource: 'naver_blog',
+      attribution: {
+        source: 'naver',
+        medium: 'blog',
+        campaign: 'dui',
+        content: 'top',
+        name: '홍길동',
+      },
     });
     expect(withExtras.ok).toBe(true);
     expect(withExtras.value.diagnosis).toEqual({
@@ -55,12 +83,68 @@ describe('상담 접수 검증', () => {
     });
     expect(withExtras.value.sourcePath).toBe('/check/dui/result');
     expect(withExtras.value.utmSource).toBe('naver_blog');
+    expect(withExtras.value.attribution).toEqual({
+      source: 'naver',
+      medium: 'blog',
+      campaign: 'dui',
+      content: 'top',
+    });
 
     const without = validateConsultPayload(valid);
     expect(without.ok).toBe(true);
     expect(without.value).not.toHaveProperty('diagnosis');
     expect(without.value).not.toHaveProperty('sourcePath');
     expect(without.value).not.toHaveProperty('utmSource');
+    expect(without.value).not.toHaveProperty('attribution');
+  });
+
+  it('비자 진단은 서버 비자 규격으로 다시 검증해 접수에 담는다', () => {
+    const result = validateConsultPayload({
+      ...valid,
+      topic: '출입국 · 비자',
+      visaDiagnosis: {
+        schemaVersion: 1,
+        visaSlug: 'e7',
+        language: 'ko',
+        consent: true,
+        answers: {
+          stayStatus: 'valid',
+          violationStatus: 'none',
+          e7Occupation: 'confirmed',
+          e7Contract: 'ready',
+          e7Wage: 'meets',
+        },
+      },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.value.visaDiagnosis).toMatchObject({
+      visaSlug: 'e7',
+      level: 'checked',
+      questionCount: 5,
+    });
+  });
+
+  it('비자 진단이 첨부되면 출입국·비자 분야만 허용한다', () => {
+    const visaDiagnosis = {
+      schemaVersion: 1,
+      visaSlug: 'e7',
+      language: 'ko',
+      consent: true,
+      answers: {
+        stayStatus: 'valid',
+        violationStatus: 'none',
+        e7Occupation: 'confirmed',
+        e7Contract: 'ready',
+        e7Wage: 'meets',
+      },
+    };
+    const mismatched = validateConsultPayload({
+      ...valid,
+      topic: '음주운전 면허 구제',
+      visaDiagnosis,
+    });
+    expect(mismatched.ok).toBe(false);
+    expect(mismatched.errors).toContain('topic');
   });
 
   it('멱등성 키(submissionId)는 형식이 맞을 때만 담는다', () => {

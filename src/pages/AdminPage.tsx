@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { removeStorage, safeSessionGet, safeSessionSet } from '../lib/browserStorage';
 import {
-  fetchInquiries,
+  fetchAdminDashboard,
   patchInquiry,
   purgeInquiry,
   summarizeInquiries,
 } from '../lib/adminApi';
-import type { InquiryDiagnosis, InquiryRecord } from '../lib/adminApi';
+import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/adminApi';
 import { buildReply, findReplyTemplate } from '../data/replyTemplates';
 import { findCheck } from '../data/checks';
+import { describeVisaDiagnosisAnswer } from '../data/visaDiagnosisLabels';
 
 const TOKEN_KEY = 'admin:token';
 
@@ -19,6 +20,13 @@ const STATUS_LABEL: Record<InquiryRecord['status'], string> = {
   in_progress: '진행 중',
   done: '완료',
   on_hold: '보류',
+};
+
+const PIPELINE_LABEL: Record<NonNullable<InquiryRecord['pipelineStage']>, string> = {
+  inquiry: '상담 접수',
+  qualified: '수임 적합',
+  retained: '수임 확정',
+  work_completed: '업무 완료',
 };
 
 /** 진단 답변(questionId→optionId)을 진단 정의와 대조해 사람이 읽을 문항·답변으로 변환한다. */
@@ -47,6 +55,7 @@ export function AdminPage() {
   const [token, setToken] = useState<string | null>(() => safeSessionGet(TOKEN_KEY));
   const [tokenInput, setTokenInput] = useState('');
   const [items, setItems] = useState<InquiryRecord[] | null>(null);
+  const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | InquiryRecord['status']>('all');
   const [memoDrafts, setMemoDrafts] = useState<Record<string, string>>({});
@@ -55,7 +64,7 @@ export function AdminPage() {
 
   const load = useCallback(async (activeToken: string) => {
     setError(null);
-    const result = await fetchInquiries(activeToken);
+    const result = await fetchAdminDashboard(activeToken);
     if (!result.ok) {
       if (result.error === 'unauthorized') {
         removeStorage('sessionStorage', TOKEN_KEY);
@@ -65,9 +74,11 @@ export function AdminPage() {
         setError('접수 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
       setItems(null);
+      setFunnel(null);
       return;
     }
-    setItems(result.value);
+    setItems(result.value.items);
+    setFunnel(result.value.funnel);
   }, []);
 
   useEffect(() => {
@@ -91,6 +102,16 @@ export function AdminPage() {
     const result = await patchInquiry(token, id, { status });
     if (result.ok) replaceItem(result.value);
     else setError('상태 변경에 실패했습니다.');
+  }
+
+  async function handlePipelineStage(
+    id: string,
+    pipelineStage: NonNullable<InquiryRecord['pipelineStage']>,
+  ) {
+    if (!token) return;
+    const result = await patchInquiry(token, id, { pipelineStage });
+    if (result.ok) replaceItem(result.value);
+    else setError('수임 단계 변경에 실패했습니다.');
   }
 
   async function handleMemoAdd(id: string) {
@@ -215,7 +236,45 @@ export function AdminPage() {
               {stats.total === 0 && <li>아직 접수가 없습니다.</li>}
             </ul>
           </article>
+          <article className="card">
+            <h3>수임 단계별</h3>
+            <ul className="admin-stat-list">
+              {Object.entries(PIPELINE_LABEL).map(([key, label]) => (
+                <li key={key}>{label}: {stats.byPipelineStage[key] ?? 0}건</li>
+              ))}
+            </ul>
+          </article>
         </div>
+      </section>
+
+      <section aria-labelledby="funnel-stats">
+        <h2 id="funnel-stats">{funnel?.days ?? 30}일 전환 퍼널</h2>
+        <p className="note">이름·연락처·진단 답변을 제외한 단계별 합계입니다. 앞 단계 대비 이탈이 큰 구간을 우선 보완하세요.</p>
+        <div className="admin-funnel-grid">
+          {[
+            ['landing_view', '설명 조회'],
+            ['landing_cta_click', '다음 단계 클릭'],
+            ['diagnosis_start', '진단 시작'],
+            ['diagnosis_complete', '진단 완료'],
+            ['consult_view', '상담 화면'],
+            ['consult_submit', '상담 접수'],
+          ].map(([key, label]) => (
+            <article className="card admin-funnel-step" key={key}>
+              <p>{label}</p>
+              <strong>{funnel?.totals[key] ?? 0}</strong>
+            </article>
+          ))}
+        </div>
+        {funnel && Object.keys(funnel.bySource).length > 0 && (
+          <details className="card admin-item">
+            <summary>유입 출처별 이벤트 합계</summary>
+            <ul className="admin-stat-list">
+              {Object.entries(funnel.bySource).map(([source, count]) => (
+                <li key={source}>{source}: {count}</li>
+              ))}
+            </ul>
+          </details>
+        )}
       </section>
 
       <section aria-labelledby="inquiries">
@@ -286,6 +345,27 @@ export function AdminPage() {
                     </ul>
                   </details>
                 )}
+                {item.visaDiagnosis && (
+                  <details className="admin-item">
+                    <summary>
+                      비자 사전진단 상세 ({item.visaDiagnosis.visaSlug.toUpperCase()}
+                      {' · '}{item.visaDiagnosis.questionCount}개 답변
+                      {item.visaDiagnosis.level === 'urgent' ? ' · 긴급 확인 항목 있음' : ''})
+                    </summary>
+                    <ul className="admin-stat-list">
+                      {Object.entries(item.visaDiagnosis.answers).map(([questionId, answer]) => (
+                        <li key={questionId}>
+                          {describeVisaDiagnosisAnswer(questionId, answer).question}
+                          {' '}<span className="note">({questionId})</span>
+                          {' — '}
+                          <strong>{describeVisaDiagnosisAnswer(questionId, answer).answer}</strong>
+                          {' '}<span className="note">({answer})</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="note">고객의 결과 전달 동의를 거쳐 일회성 연결로 접수된 답변입니다.</p>
+                  </details>
+                )}
                 {(item.sourcePath || item.utmSource) && (
                   <p className="note">
                     유입: {item.sourcePath ?? '-'}
@@ -304,6 +384,29 @@ export function AdminPage() {
                       {STATUS_LABEL[key]}(으)로 변경
                     </button>
                   ))}
+                </div>
+
+                <div className="admin-pipeline">
+                  <p className="note">
+                    수임 흐름: {PIPELINE_LABEL[item.pipelineStage ?? 'inquiry']}
+                  </p>
+                  <div className="admin-actions" role="group" aria-label={`${item.id} 수임 단계 변경`}>
+                    {Object.entries(PIPELINE_LABEL)
+                      .filter(([key]) => key !== (item.pipelineStage ?? 'inquiry'))
+                      .map(([key, label]) => (
+                        <button
+                          className="button"
+                          key={key}
+                          type="button"
+                          onClick={() => void handlePipelineStage(
+                            item.id,
+                            key as NonNullable<InquiryRecord['pipelineStage']>,
+                          )}
+                        >
+                          {label}(으)로 기록
+                        </button>
+                      ))}
+                  </div>
                 </div>
 
                 {(item.memos ?? []).length > 0 && (

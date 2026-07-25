@@ -14,6 +14,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit --pretty false",
+    "sync:visa-contract": "node scripts/sync-visa-handoff-contract.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "check": "npm run typecheck && npm run test:run && npm run build && npm run verify:dist"
   },

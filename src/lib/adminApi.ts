@@ -14,12 +14,25 @@ export interface InquiryDiagnosis {
   counts: Record<string, number>;
 }
 
+export interface InquiryVisaDiagnosis {
+  schemaVersion: 1;
+  visaSlug: string;
+  language: string;
+  answers: Record<string, string>;
+  level: 'checked' | 'needs-documents' | 'official-check' | 'urgent';
+  questionCount: number;
+  consent: true;
+  consentedAt?: string;
+}
+
 export interface InquiryRecord {
   id: string;
   schemaVersion?: number;
   receivedAt: string;
   topic: string;
   status: 'new' | 'in_progress' | 'done' | 'on_hold';
+  pipelineStage?: 'inquiry' | 'qualified' | 'retained' | 'work_completed';
+  pipelineStageAt?: string;
   origin?: string;
   name?: string;
   phone?: string;
@@ -28,8 +41,15 @@ export interface InquiryRecord {
   pulledAt?: string;
   localCaseId?: string;
   diagnosis?: InquiryDiagnosis;
+  visaDiagnosis?: InquiryVisaDiagnosis;
   sourcePath?: string;
   utmSource?: string;
+  attribution?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    content?: string;
+  };
   consent?: { version: string; at: string };
   memos?: InquiryMemo[];
   updatedAt?: string;
@@ -77,10 +97,45 @@ export async function fetchInquiries(token: string): Promise<AdminResult<Inquiry
   return { ok: true, value: result.value.items ?? [] };
 }
 
+export interface FunnelSummary {
+  days: number;
+  totals: Record<string, number>;
+  byDomain: Record<string, Record<string, number>>;
+  bySource: Record<string, number>;
+}
+
+export interface AdminDashboard {
+  items: InquiryRecord[];
+  funnel: FunnelSummary;
+}
+
+const EMPTY_FUNNEL: FunnelSummary = {
+  days: 30,
+  totals: {},
+  byDomain: {},
+  bySource: {},
+};
+
+export async function fetchAdminDashboard(token: string): Promise<AdminResult<AdminDashboard>> {
+  const result = await callAdmin<{ items: InquiryRecord[]; funnel?: FunnelSummary }>('GET', token);
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    value: {
+      items: result.value.items ?? [],
+      funnel: result.value.funnel ?? EMPTY_FUNNEL,
+    },
+  };
+}
+
 export async function patchInquiry(
   token: string,
   id: string,
-  patch: { status?: InquiryRecord['status']; memo?: string },
+  patch: {
+    status?: InquiryRecord['status'];
+    memo?: string;
+    pipelineStage?: InquiryRecord['pipelineStage'];
+  },
 ): Promise<AdminResult<InquiryRecord>> {
   const result = await callAdmin<{ item: InquiryRecord }>('PATCH', token, { id, ...patch });
   if (!result.ok) return result;
@@ -98,14 +153,23 @@ export interface InquiryStats {
   byStatus: Record<string, number>;
   byTopic: Record<string, number>;
   byMonth: Record<string, number>;
+  byPipelineStage: Record<string, number>;
 }
 
 /** 상태·분야·월별 접수 건수를 집계한다 (파기된 건도 통계에는 포함). */
 export function summarizeInquiries(items: InquiryRecord[]): InquiryStats {
-  const stats: InquiryStats = { total: items.length, byStatus: {}, byTopic: {}, byMonth: {} };
+  const stats: InquiryStats = {
+    total: items.length,
+    byStatus: {},
+    byTopic: {},
+    byMonth: {},
+    byPipelineStage: {},
+  };
   for (const item of items) {
     stats.byStatus[item.status] = (stats.byStatus[item.status] ?? 0) + 1;
     stats.byTopic[item.topic] = (stats.byTopic[item.topic] ?? 0) + 1;
+    const pipelineStage = item.pipelineStage ?? 'inquiry';
+    stats.byPipelineStage[pipelineStage] = (stats.byPipelineStage[pipelineStage] ?? 0) + 1;
     const month = item.receivedAt?.slice(0, 7) ?? '알 수 없음';
     stats.byMonth[month] = (stats.byMonth[month] ?? 0) + 1;
   }
