@@ -109,4 +109,13 @@
   - [x] 메인 42파일 289테스트·비자 28파일 177테스트·빌드·산출물 검증
   - [x] 독립 리뷰 3회 지적 반영 후 최종 P0/P1 없음
   - [x] 계획서·checklist·memory 최종 기록
-- [ ] 커밋·푸시·배포는 주인님 별도 지시 대기
+- [x] 커밋 `7fe3f4d`·push·Vercel Production 배포 및 운영 URL 최종 검증
+
+## 2026-07-26 운영 배포
+
+- [x] 주인님 커밋·푸시·배포 승인
+- [x] 기능 고도화 커밋 `7fe3f4d`를 `master`에 push
+- [x] Vercel Production `Ready` 및 공식 별칭 연결 확인
+- [x] 운영 `robots.txt`·`sitemap.xml`·출입국 설명 페이지 응답 확인
+- [x] `/admin`의 `X-Robots-Tag: noindex, nofollow` 확인
+- [x] 개업 전 `CONSULT_OPEN=false`에 따른 상담 API 503 유지 확인
