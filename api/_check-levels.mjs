@@ -161,5 +161,63 @@ export default {
       "yes": "ready",
       "none": "official"
     }
+  },
+  "permit": {
+    "permit-type": {
+      "corporation": "ready",
+      "factory": "official",
+      "business": "ready",
+      "other": "official"
+    },
+    "permit-stage": {
+      "reviewing": "ready",
+      "preparing": "documents",
+      "submitted": "official",
+      "supplement": "urgent",
+      "rejected": "official"
+    },
+    "permit-authority": {
+      "confirmed": "ready",
+      "guessing": "official",
+      "unknown": "official"
+    },
+    "permit-location": {
+      "checked": "ready",
+      "contracted": "official",
+      "notyet": "ready"
+    },
+    "permit-facility": {
+      "meets": "ready",
+      "partial": "documents",
+      "unknown": "official"
+    },
+    "permit-staff": {
+      "secured": "ready",
+      "needed": "documents",
+      "none": "ready",
+      "unknown": "official"
+    },
+    "permit-disqualification": {
+      "checked": "ready",
+      "possible": "official",
+      "unknown": "official"
+    },
+    "permit-supplement-deadline": {
+      "remaining": "documents",
+      "soon": "urgent",
+      "passed": "urgent",
+      "na": "ready"
+    },
+    "permit-rejection": {
+      "none": "ready",
+      "hasdoc": "documents",
+      "nodoc": "official"
+    },
+    "permit-opening": {
+      "over3m": "ready",
+      "m1to3": "official",
+      "within1m": "urgent",
+      "undecided": "ready"
+    }
   }
 };

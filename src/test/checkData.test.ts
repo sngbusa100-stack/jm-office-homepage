@@ -5,8 +5,8 @@ const LEVELS = ['ready', 'documents', 'official', 'urgent'];
 describe('진단 데이터 무결성', () => {
   const domains = Object.keys(checks);
 
-  it('3개 도메인이 모두 존재한다', () => {
-    expect(domains.sort()).toEqual(['dui', 'suspension', 'veterans']);
+  it('4개 도메인이 모두 존재한다', () => {
+    expect(domains.sort()).toEqual(['dui', 'permit', 'suspension', 'veterans']);
   });
 
   it.each(domains)('%s: 문항 8~12개, ID 중복 없음, 모든 선택지에 분류·안내가 있다', (domain) => {

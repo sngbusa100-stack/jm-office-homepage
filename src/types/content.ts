@@ -1,4 +1,4 @@
-export type CheckDomain = 'dui' | 'suspension' | 'veterans';
+export type CheckDomain = 'dui' | 'suspension' | 'veterans' | 'permit';
 
 export type ResultLevel = 'ready' | 'documents' | 'official' | 'urgent';
 
