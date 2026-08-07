@@ -166,52 +166,70 @@ export default {
     "permit-type": {
       "corporation": "ready",
       "factory": "official",
+      "warehouse": "official",
       "business": "ready",
-      "other": "official"
+      "unknown": "official"
+    },
+    "permit-kind": {
+      "withlaw": "ready",
+      "nameonly": "official",
+      "never": "official"
+    },
+    "permit-authority": {
+      "contacted": "ready",
+      "agencyonly": "official",
+      "none": "official"
+    },
+    "permit-address": {
+      "candidate": "ready",
+      "contracted": "documents",
+      "owned": "ready",
+      "notyet": "ready",
+      "na": "ready"
+    },
+    "permit-zoning": {
+      "ok": "ready",
+      "unsure": "official",
+      "notchecked": "official",
+      "na": "ready"
+    },
+    "permit-building": {
+      "clean": "ready",
+      "flagged": "documents",
+      "notchecked": "official",
+      "na": "ready"
+    },
+    "permit-facility": {
+      "matched": "ready",
+      "gap": "documents",
+      "seenonly": "documents",
+      "nowhere": "official",
+      "na": "ready"
+    },
+    "permit-staff": {
+      "ready": "ready",
+      "pending": "documents",
+      "noneneeded": "ready",
+      "unknown": "official"
+    },
+    "permit-disqualification": {
+      "clear": "ready",
+      "maybe": "official",
+      "notchecked": "official"
     },
     "permit-stage": {
       "reviewing": "ready",
       "preparing": "documents",
       "submitted": "official",
       "supplement": "urgent",
-      "rejected": "official"
-    },
-    "permit-authority": {
-      "confirmed": "ready",
-      "guessing": "official",
-      "unknown": "official"
-    },
-    "permit-location": {
-      "checked": "ready",
-      "contracted": "official",
-      "notyet": "ready"
-    },
-    "permit-facility": {
-      "meets": "ready",
-      "partial": "documents",
-      "unknown": "official"
-    },
-    "permit-staff": {
-      "secured": "ready",
-      "needed": "documents",
-      "none": "ready",
-      "unknown": "official"
-    },
-    "permit-disqualification": {
-      "checked": "ready",
-      "possible": "official",
-      "unknown": "official"
+      "rejectedwithdoc": "documents",
+      "rejectednodoc": "official"
     },
     "permit-supplement-deadline": {
       "remaining": "documents",
       "soon": "urgent",
       "passed": "urgent",
       "na": "ready"
-    },
-    "permit-rejection": {
-      "none": "ready",
-      "hasdoc": "documents",
-      "nodoc": "official"
     },
     "permit-opening": {
       "over3m": "ready",
