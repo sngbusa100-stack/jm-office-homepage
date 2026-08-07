@@ -115,6 +115,7 @@ export const services: Service[] = [
     professionalReview: ['인허가 명칭과 근거 법령·관할 기관 특정', '입지·결격·시설 기준의 선행 검토', '사업계획서와 증빙의 정합성 및 보완 대응'],
     funnelDomain: 'permit',
     consultTopic: 'permit',
+    checkDomain: 'permit',
   },
   {
     slug: 'immigration',

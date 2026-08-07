@@ -18,6 +18,11 @@ describe('라우팅', () => {
     expect(screen.getAllByText(/행정사가 필요한 이유/).length).toBeGreaterThan(0);
   });
 
+  it('인허가 진단 경로가 열린다', () => {
+    renderAt('/check/permit');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('인허가 신청 사전 점검');
+  });
+
   it('없는 주소는 404와 복구 경로를 보여준다', () => {
     renderAt('/no-such-page');
     expect(screen.getByText(/페이지를 찾을 수 없습니다/)).toBeInTheDocument();
