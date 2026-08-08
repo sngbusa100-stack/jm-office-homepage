@@ -4,8 +4,6 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 const menu = [
   { to: '/why', label: '행정사가 필요한 이유' },
   { to: '/services', label: '업무분야' },
-  { to: '/check', label: '셀프 진단' },
-  { to: '/consult', label: '상담 안내' },
 ];
 
 export function Navbar() {
@@ -44,6 +42,9 @@ export function Navbar() {
               {item.label}
             </NavLink>
           ))}
+          <Link className="button button--accent navbar__cta" to="/consult" onClick={() => setOpen(false)}>
+            상담 문의
+          </Link>
         </nav>
       </div>
     </header>

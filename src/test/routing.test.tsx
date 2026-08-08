@@ -11,6 +11,21 @@ function renderAt(path: string) {
 }
 
 describe('라우팅', () => {
+  it('홈에서 업무 분야가 셀프 진단보다 먼저 나온다', () => {
+    const { container } = renderAt('/');
+    const headings = Array.from(container.querySelectorAll('h2')).map((h) => h.textContent ?? '');
+    const services = headings.findIndex((t) => t.includes('업무 분야'));
+    const check = headings.findIndex((t) => t.includes('셀프 진단'));
+    expect(services).toBeGreaterThanOrEqual(0);
+    expect(check).toBeGreaterThanOrEqual(0);
+    expect(services).toBeLessThan(check);
+  });
+
+  it('홈의 주 버튼은 업무 분야로 간다', () => {
+    renderAt('/');
+    expect(screen.getByRole('link', { name: /업무 분야 살펴보기/ })).toHaveAttribute('href', '/services');
+  });
+
   it('홈에는 진단 진입과 행정사 필요성 안내가 있다', () => {
     renderAt('/');
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();

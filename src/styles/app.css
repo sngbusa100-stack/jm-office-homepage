@@ -607,3 +607,16 @@ th { background: var(--surface-muted); font-weight: 700; }
 @media (max-width: 380px) {
   .flow-steps__list { grid-template-columns: 1fr; }
 }
+
+nav#global-nav .navbar__cta {
+  min-height: 40px;
+  padding: 8px 18px;
+  margin-left: 8px;
+  font-size: 0.95rem;
+  background: var(--accent);
+  color: #fff;
+}
+nav#global-nav .navbar__cta:hover { background: var(--accent-dark); color: #fff; }
+@media (max-width: 768px) {
+  nav#global-nav .navbar__cta { margin-left: 0; margin-top: 8px; width: 100%; }
+}

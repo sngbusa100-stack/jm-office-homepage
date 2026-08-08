@@ -17,8 +17,8 @@ export function HomePage() {
               언제까지 확인해야 하는지 셀프 진단으로 먼저 정리해 보세요.
             </p>
             <div className="button-row">
-              <Link className="button button--accent" to="/check">셀프 진단 시작 →</Link>
-              <Link className="button button--ghost" to="/services">업무 분야 살펴보기</Link>
+              <Link className="button button--accent" to="/services">업무 분야 살펴보기 →</Link>
+              <Link className="button button--ghost" to="/check">바로 셀프 진단하기</Link>
             </div>
             <ul className="trust-list">
               <li>결과는 처분·인용 여부에 대한 판단이 아닌 일반 정보입니다</li>
@@ -38,23 +38,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="section page-shell" aria-labelledby="check-heading">
-        <div className="section-heading">
-          <p className="eyebrow">스스로 먼저 확인하기</p>
-          <h2 id="check-heading">3분 셀프 진단</h2>
-          <p>지금 확인이 급한 대표 3개 분야입니다.</p>
-        </div>
-        <div className="grid-3">
-          {Object.values(checks).map((def) => (
-            <article className="card action-card" key={def.domain}>
-              <h3>{def.title}</h3>
-              <p>{def.intro}</p>
-              <Link className="button button--primary" to={`/check/${def.domain}`}>진단 시작 →</Link>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="section page-shell" id="services" aria-labelledby="services-heading">
         <div className="section-heading section-heading--row">
           <div>
@@ -70,6 +53,23 @@ export function HomePage() {
               <h3>{s.name}</h3>
               <p>{s.short}</p>
               <Link className="text-link" to={`/services/${s.slug}`}>자세히 보기 →</Link>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section page-shell" aria-labelledby="check-heading">
+        <div className="section-heading">
+          <p className="eyebrow">분야를 모르겠다면</p>
+          <h2 id="check-heading">3분 셀프 진단</h2>
+          <p>어느 분야에 해당하는지 애매하다면 진단으로 먼저 확인할 항목을 정리해 보세요.</p>
+        </div>
+        <div className="grid-3">
+          {Object.values(checks).map((def) => (
+            <article className="card action-card" key={def.domain}>
+              <h3>{def.title}</h3>
+              <p>{def.intro}</p>
+              <Link className="button button--primary" to={`/check/${def.domain}`}>진단 시작 →</Link>
             </article>
           ))}
         </div>
