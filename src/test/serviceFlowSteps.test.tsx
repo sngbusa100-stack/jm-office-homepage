@@ -74,4 +74,34 @@ describe('분야 상세의 단계 안내', () => {
     expect(links).toHaveLength(2);
     links.forEach((link) => expect(link).toHaveAttribute('href', '#preparation-review'));
   });
+
+  it('법정 기한이 있는 분야는 기한 섹션이 조회 카드보다 먼저 나온다', () => {
+    renderPage('dui');
+    const headings = [...document.querySelectorAll('h2')].map((h) => h.textContent ?? '');
+    const deadline = headings.findIndex((t) => t.includes('법정 기한'));
+    const quick = headings.findIndex((t) => t.includes('먼저 확인할 항목'));
+    expect(deadline).toBeGreaterThanOrEqual(0);
+    expect(deadline).toBeLessThan(quick);
+  });
+
+  it('공식 출처는 기본으로 접혀 있고 제목은 접혀도 보인다', () => {
+    renderPage('dui');
+    const sources = document.querySelector('details.reference-section');
+    expect(sources).not.toBeNull();
+    expect((sources as HTMLDetailsElement).open).toBe(false);
+    // 제목은 summary 안에 있어 접혀도 보인다.
+    expect(screen.getByRole('heading', { name: /공식 기준·조회 경로/ })).toBeInTheDocument();
+  });
+
+  it('FAQ는 질문 목록이 보이도록 바깥으로 감싸지 않는다', () => {
+    renderPage('dui');
+    const service = findService('dui')!;
+    // 질문을 훑어 자기 상황을 찾는 것이 FAQ의 핵심이다. 바깥 details로 감싸면
+    // 질문까지 숨겨지고 답을 보기까지 클릭이 두 번 필요해진다.
+    for (const faq of service.faqs) {
+      expect(screen.getByText(faq.q)).toBeInTheDocument();
+    }
+    const faqHeading = screen.getByRole('heading', { name: /자주 묻는 질문/ });
+    expect(faqHeading.closest('details')).toBeNull();
+  });
 });

@@ -84,6 +84,14 @@ export function ServicePage() {
         <ServiceActions service={service} location="top" attribution={attribution} />
       </header>
 
+      {service.deadlines && (
+        <section className="card level-urgent deadline-callout" aria-labelledby="deadlines">
+          <h2 id="deadlines">법정 기한 — 늦기 전에 확인하세요</h2>
+          <p className="note">아래는 일반적인 기한입니다. 처분 종류·통지 방식·개별 사정에 따라 달라질 수 있으므로 처분서의 안내를 함께 확인하세요.</p>
+          <ul className="bullet-list">{service.deadlines.map((d) => <li key={d}>{d}</li>)}</ul>
+        </section>
+      )}
+
       <section aria-labelledby="quick-checks">
         <div className="section-heading">
           <p className="eyebrow">조회</p>
@@ -106,20 +114,12 @@ export function ServicePage() {
         <ul className="check-list">{service.target.map((t) => <li key={t}>{t}</li>)}</ul>
       </section>
 
-      {service.deadlines && (
-        <section className="card level-urgent" aria-labelledby="deadlines">
-          <h2 id="deadlines">법정 기한 — 늦기 전에 확인하세요</h2>
-          <p className="note">아래는 일반적인 기한입니다. 처분 종류·통지 방식·개별 사정에 따라 달라질 수 있으므로 처분서의 안내를 함께 확인하세요.</p>
-          <ul className="bullet-list">{service.deadlines.map((d) => <li key={d}>{d}</li>)}</ul>
-        </section>
-      )}
-
-      <section className="card official-source-card" aria-labelledby="official-sources">
-        <div className="section-heading">
-          <p className="eyebrow">공식 확인</p>
+      <details className="card official-source-card reference-section">
+        <summary>
           <h2 id="official-sources">공식 기준·조회 경로</h2>
-          <p>기준은 바뀔 수 있으므로 실제 신청 전 최신 공지와 받은 문서를 다시 확인해야 합니다.</p>
-        </div>
+          <span className="reference-section__hint">{service.officialSources.length}건 · 펼쳐 보기</span>
+        </summary>
+        <p className="note">기준은 바뀔 수 있으므로 실제 신청 전 최신 공지와 받은 문서를 다시 확인해야 합니다.</p>
         <ul className="official-source-list">
           {service.officialSources.map((source) => (
             <li key={source.url}>
@@ -128,7 +128,7 @@ export function ServicePage() {
             </li>
           ))}
         </ul>
-      </section>
+      </details>
 
       <section aria-labelledby="process">
         <h2 id="process">진행 절차</h2>
@@ -174,7 +174,10 @@ export function ServicePage() {
         </section>
       )}
 
-      <section className="faq-list" aria-labelledby="faq">
+      {/* FAQ는 바깥으로 한 번 더 감싸지 않는다. 질문 목록을 훑어 내 상황을 찾는 것이
+          FAQ의 핵심인데, 감싸면 질문까지 숨겨지고 답을 보기까지 클릭이 두 번 필요하다.
+          항목별 details로 이미 가벼우므로 제목 무게만 참고 섹션 수준으로 낮춘다. */}
+      <section className="faq-list reference-heading" aria-labelledby="faq">
         <h2 id="faq">자주 묻는 질문</h2>
         {service.faqs.map((faq) => (
           <details key={faq.q}><summary>{faq.q}</summary><p>{faq.a}</p></details>
