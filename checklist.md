@@ -119,3 +119,34 @@
 - [x] 운영 `robots.txt`·`sitemap.xml`·출입국 설명 페이지 응답 확인
 - [x] `/admin`의 `X-Robots-Tag: noindex, nofollow` 확인
 - [x] 개업 전 `CONSULT_OPEN=false`에 따른 상담 API 503 유지 확인
+
+## 2026-08-08 업무분야 설명 → 진단 동선 재정렬 Phase 1 (구조)
+
+기준 문서: `docs/superpowers/specs/2026-08-07-service-to-diagnosis-flow-design.md`
+계획 문서: `docs/superpowers/plans/2026-08-07-service-to-diagnosis-flow-phase1.md`
+구현 codex-cli 0.146.0, 계획 대조·검증 Claude.
+
+- [x] Task 1: 인허가 진단(permit) 신설 — 주인님 검수 반영해 10문항 → 12문항 구체화
+  - [x] 유형 5종(법인설립·공장·창고물류·영업·미정), 각 유형에 근거 조문 부착
+  - [x] 선택지를 '확인했다/안했다'에서 실제 행동 단위로 (대조했다/보기만 했다/모른다)
+  - [x] 업종별 조문 원문 확인 (민법 32, 산집법 13·16, 물류시설법 21의2, 식품위생법 37·38·41+시행규칙 36 별표14, 학원법 6)
+  - [x] 학원 시설기준은 시행령 별표가 아니라 시·도 조례임을 확인해 문구 정정
+- [x] Task 2: license ↔ permit 연결 + 진단 공백 방지 커버리지 테스트
+- [x] Task 3: 4단계 진행 표시 컴포넌트 (비자 사이트 flowSteps와 문구 고정)
+- [x] Task 4: 분야 상세에 스텝 배치 + 확인 목록 앵커 (#preparation-review)
+- [x] Task 5: 홈 섹션 순서 교체 (업무 분야 → 셀프 진단), '대표 3개 분야' 표기 해소
+- [x] Task 6: 상단 메뉴 4개 → 2개 + 상시 상담 버튼
+- [x] `npm run check` 전량 통과 (typecheck·테스트·빌드·verify:dist)
+- [x] 브라우저 실측: 6개 화면 + 모바일 375px (가로 오버플로 없음, 메뉴 열림, CTA 전폭)
+- [ ] 커밋·푸시·배포 승인 대기 — master push는 Vercel Production 자동 배포
+
+### 검증 중 잡아낸 결함 4건
+
+1. `b0c460f`가 불완전 커밋 — 12문항 개편 후 재생성한 `api/_check-levels.mjs` 스테이징 누락. `b9f0237`로 보완.
+2. 계획서의 확인 목록 버튼 테스트가 `getByRole` 단일 조회 — `ServiceActions`가 상단·하단 2회 렌더되어 실패. `getAllByRole`(length 2)로 교정.
+3. 계획서의 `.navbar__cta` 선택자가 `nav#global-nav a`보다 명시도가 낮아 글자색이 덮여 대비 1.13:1. `nav#global-nav .navbar__cta`로 구체화, 실측 5.67:1 확인.
+4. `ServiceFlowSteps`가 `attribution ?? {}`를 넘겨 `readAttribution()` 세션 폴백 유실. `95f9e15`로 보완.
+
+### 별도 확인 필요 (이번 범위 밖)
+
+- `npm run test:run`이 gitignored `.claude/worktrees/admin-inquiry-system-e8017d/`의 낡은 사본 15파일을 중복 수집한다. 실제 저장소는 29파일 213테스트, 중복 포함 시 44파일 309테스트로 부풀려진다. `vite.config.ts`의 `test.exclude` 설정 필요.
