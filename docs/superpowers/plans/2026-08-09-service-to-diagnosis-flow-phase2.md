@@ -46,7 +46,7 @@
 
 **Files:**
 - Modify: `src/styles/tokens.css`
-- Modify: `src/styles/app.css` (font-size 30곳, body 1곳)
+- Modify: `src/styles/app.css` (font-size 31곳, body 1곳)
 - Modify: `src/test/designTokens.test.ts`
 
 - [ ] **Step 1: 실패하는 테스트를 추가한다**
@@ -108,7 +108,7 @@ Expected: FAIL — `--fs-xs 없음`
 body { font-family: 'Noto Sans KR', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: var(--fs-base); line-height: var(--lh-body); overflow-x: hidden; }
 ```
 
-- [ ] **Step 5: 폰트 크기 30곳을 토큰으로 치환한다**
+- [ ] **Step 5: 폰트 크기 31곳을 토큰으로 치환한다**
 
 아래 표대로 `src/styles/app.css`의 모든 `font-size: <숫자>rem`을 치환한다. `clamp()`는 건드리지 않는다.
 
@@ -162,7 +162,8 @@ Expected: 타입 오류 0건, 29파일 216테스트 통과 (213 + 신규 3)
 ```css
 /* --- 본문 읽기 폭 ---
    .service-landing은 page-shell(1120px)을 쓰므로 문단이 1072px로 깔린다.
-   한글은 한 줄 45~50자가 읽기 편하므로 텍스트 요소만 780px로 제한한다.
+   텍스트 요소만 780px로 제한한다 — Range API 실측으로 줄당 53~56자
+   (제한 전에는 약 80자였다).
    카드 그리드(quick-check-grid, preparation-grid, related-link-grid)와
    process-list(auto-fit 그리드), flow-steps는 제외해 전체 폭을 유지한다. */
 .service-landing > section > p,
