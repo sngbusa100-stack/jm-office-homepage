@@ -13,8 +13,8 @@ export function HomePage() {
             <p className="eyebrow">정명(正明) 행정사사무소</p>
             <h1>영업정지 통지, 면허 취소, 반려된 신청 —<br />행정 문제는 초기 대응이 중요합니다.</h1>
             <p className="hero__intro">
-              처분에 대한 불복과 의견제출에는 정해진 기간이 있습니다. 내 상황에서 무엇을,
-              언제까지 확인해야 하는지 셀프 진단으로 먼저 정리해 보세요.
+              처분에 대한 불복과 의견제출에는 정해진 기간이 있습니다. 내 상황에 가까운
+              업무 분야에서 절차와 기한을 먼저 확인해 보세요.
             </p>
             <div className="button-row">
               <Link className="button button--accent" to="/services">업무 분야 살펴보기 →</Link>

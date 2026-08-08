@@ -608,15 +608,10 @@ th { background: var(--surface-muted); font-weight: 700; }
   .flow-steps__list { grid-template-columns: 1fr; }
 }
 
-nav#global-nav .navbar__cta {
-  min-height: 40px;
-  padding: 8px 18px;
-  margin-left: 8px;
-  font-size: 0.95rem;
-  background: var(--accent);
-  color: #fff;
-}
-nav#global-nav .navbar__cta:hover { background: var(--accent-dark); color: #fff; }
+/* 상담 버튼은 nav 밖에 있어 접힌 메뉴와 무관하게 항상 보인다.
+   nav#global-nav a의 색을 상속받지 않으므로 .button--accent 값이 그대로 적용된다. */
+.navbar__right { display: flex; align-items: center; gap: 8px; }
+.navbar__cta { min-height: 40px; padding: 8px 18px; font-size: 0.95rem; }
 @media (max-width: 768px) {
-  nav#global-nav .navbar__cta { margin-left: 0; margin-top: 8px; width: 100%; }
+  .navbar__cta { padding: 8px 14px; font-size: 0.9rem; }
 }
