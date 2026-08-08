@@ -15,7 +15,7 @@ function renderAt(path: string) {
 describe('진단 흐름', () => {
   beforeEach(() => sessionStorage.clear());
 
-  it('/check에서 3개 진단을 고를 수 있다', () => {
+  it('/check에서 모든 진단을 고를 수 있다', () => {
     renderAt('/check');
     for (const def of Object.values(checks)) {
       expect(screen.getByRole('link', { name: new RegExp(def.title) })).toBeInTheDocument();

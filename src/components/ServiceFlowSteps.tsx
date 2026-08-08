@@ -18,7 +18,9 @@ function diagnosisTarget(service: Service, attribution?: Attribution): StepTarge
   if (service.externalLink) {
     return {
       label: SERVICE_FLOW_STEPS[2],
-      href: attributedExternalUrl(service.externalLink.url, 'jm_main', attribution ?? {}),
+      // attribution을 그대로 넘긴다. 빈 객체를 넘기면 attributedExternalUrl의
+      // readAttribution() 세션 폴백이 건너뛰어져 저장된 유입정보가 유실된다.
+      href: attributedExternalUrl(service.externalLink.url, 'jm_main', attribution),
       external: true,
     };
   }
