@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { ServiceFlowSteps } from '../components/ServiceFlowSteps';
 import { findService, type Service } from '../data/services';
 import {
   attributedExternalUrl,
@@ -41,9 +42,9 @@ function ServiceActions({
           {service.externalLink.label} →
         </a>
       ) : (
-        <Link className="button button--accent" to={`/consult?topic=${service.consultTopic}`} onClick={track}>
-          상담 준비 항목 확인하기 →
-        </Link>
+        <a className="button button--accent" href="#preparation-review" onClick={track}>
+          상담 전 확인 목록 보기 →
+        </a>
       )}
       <Link
         className="button button--ghost"
@@ -79,6 +80,7 @@ export function ServicePage() {
         <p className="eyebrow">{service.name}</p>
         <h1>{service.headline}</h1>
         <p className="page-lead">{service.short}</p>
+        <ServiceFlowSteps service={service} attribution={attribution} />
         <ServiceActions service={service} location="top" attribution={attribution} />
       </header>
 
@@ -138,10 +140,10 @@ export function ServicePage() {
         <ul className="bullet-list">{service.documents.map((d) => <li key={d}>{d}</li>)}</ul>
       </section>
 
-      <section aria-labelledby="preparation-review">
+      <section id="preparation-review" aria-labelledby="preparation-review-heading">
         <div className="section-heading">
           <p className="eyebrow">준비 구분</p>
-          <h2 id="preparation-review">직접 준비와 검토가 필요한 부분</h2>
+          <h2 id="preparation-review-heading">직접 준비와 검토가 필요한 부분</h2>
         </div>
         <div className="grid-2 preparation-grid">
           <article className="card">

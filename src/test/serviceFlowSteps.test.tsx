@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ServiceFlowSteps } from '../components/ServiceFlowSteps';
 import { SERVICE_FLOW_STEPS } from '../data/serviceFlow';
 import { findService } from '../data/services';
+import { ServicePage } from '../pages/ServicePage';
 
 function renderFor(slug: string) {
   const service = findService(slug)!;
@@ -43,5 +44,34 @@ describe('업무분야 4단계 진행 표시', () => {
   it('현재 단계를 접근성 속성으로 알린다', () => {
     renderFor('dui');
     expect(screen.getByText('설명').closest('li')).toHaveAttribute('aria-current', 'step');
+  });
+});
+
+function renderPage(slug: string) {
+  return render(
+    <MemoryRouter initialEntries={[`/services/${slug}`]}>
+      <Routes>
+        <Route path="/services/:slug" element={<ServicePage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe('분야 상세의 단계 안내', () => {
+  it('상세 페이지 상단에 진행 단계를 보여준다', () => {
+    renderPage('dui');
+    expect(screen.getByRole('navigation', { name: '진행 단계' })).toBeInTheDocument();
+  });
+
+  it('확인 목록 섹션에 앵커 대상이 있다', () => {
+    renderPage('documents');
+    expect(document.querySelector('#preparation-review')).not.toBeNull();
+  });
+
+  it('진단이 없는 분야의 주 버튼은 확인 목록으로 간다', () => {
+    renderPage('documents');
+    const links = screen.getAllByRole('link', { name: /상담 전 확인 목록 보기/ });
+    expect(links).toHaveLength(2);
+    links.forEach((link) => expect(link).toHaveAttribute('href', '#preparation-review'));
   });
 });
