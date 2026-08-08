@@ -671,3 +671,37 @@ th { background: var(--surface-muted); font-weight: 700; }
 /* FAQ는 접지 않되 제목 무게만 참고 섹션 수준으로 낮춘다. 질문 목록이 보여야
    방문자가 자기 상황을 훑어 찾을 수 있다. */
 .reference-heading > h2 { font-size: var(--fs-lg); margin-bottom: 14px; }
+
+/* --- 모바일 하단 문맥 CTA 바 ---
+   데스크톱은 4단계 표시가 화면에 함께 보이므로 필요 없다. 모바일에서만 띄운다. */
+.next-step-bar { display: none; }
+@media (max-width: 768px) {
+  .next-step-bar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px -18px rgb(15 26 42 / 55%);
+  }
+  .next-step-bar__field {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .next-step-bar .button { min-height: 44px; padding: 10px 16px; font-size: var(--fs-sm); flex: none; }
+  /* 고정 바가 마지막 내용을 가리지 않도록 여백을 준다. */
+  /* 바 높이는 64px + safe-area다. 여백을 고정값으로 두면 홈 인디케이터가 있는
+     기기에서 그 차이만큼 마지막 내용이 가려진다. */
+  .service-landing { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+}

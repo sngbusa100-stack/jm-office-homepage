@@ -75,6 +75,14 @@ describe('분야 상세의 단계 안내', () => {
     links.forEach((link) => expect(link).toHaveAttribute('href', '#preparation-review'));
   });
 
+  it('상단에는 주 행동 하나만, 하단에는 둘을 둔다', () => {
+    renderPage('dui');
+    const top = document.querySelector('.service-actions--top')!;
+    const bottom = document.querySelector('.service-actions--bottom')!;
+    expect(top.querySelectorAll('a').length).toBe(1);
+    expect(bottom.querySelectorAll('a').length).toBe(2);
+  });
+
   it('법정 기한이 있는 분야는 기한 섹션이 조회 카드보다 먼저 나온다', () => {
     renderPage('dui');
     const headings = [...document.querySelectorAll('h2')].map((h) => h.textContent ?? '');

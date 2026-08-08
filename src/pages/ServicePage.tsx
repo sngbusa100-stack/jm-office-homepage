@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ServiceFlowSteps } from '../components/ServiceFlowSteps';
+import { ServiceNextStepBar } from '../components/ServiceNextStepBar';
 import { findService, type Service } from '../data/services';
 import {
   attributedExternalUrl,
@@ -46,13 +47,15 @@ function ServiceActions({
           상담 전 확인 목록 보기 →
         </a>
       )}
-      <Link
-        className="button button--ghost"
-        to={`/consult?topic=${service.consultTopic}&priority=urgent`}
-        onClick={track}
-      >
-        {service.deadlines ? '기한이 급하면 상담부터' : '내 상황을 상담으로 정리하기'}
-      </Link>
+      {location === 'bottom' && (
+        <Link
+          className="button button--ghost"
+          to={`/consult?topic=${service.consultTopic}&priority=urgent`}
+          onClick={track}
+        >
+          {service.deadlines ? '기한이 급하면 상담부터' : '내 상황을 상담으로 정리하기'}
+        </Link>
+      )}
     </div>
   );
 }
@@ -190,6 +193,7 @@ export function ServicePage() {
         <p>진단은 가능성과 준비 항목을 정리하는 도구이며, 결과를 보장하지 않습니다. 기한이 임박했거나 문서 종류가 불명확하면 상담 단계로 바로 이동할 수 있습니다.</p>
         <ServiceActions service={service} location="bottom" attribution={attribution} />
       </aside>
+      <ServiceNextStepBar service={service} attribution={attribution} />
     </div>
   );
 }
