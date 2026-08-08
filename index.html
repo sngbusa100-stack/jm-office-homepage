@@ -3,13 +3,57 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="정명 행정사사무소 — 음주운전 구제, 영업정지 행정심판, 인허가, 국가보훈. 셀프 진단으로 내 상황을 먼저 확인하세요. (개업 준비 중 사전 공개)" />
-    <title>정명 행정사사무소 | 정확함으로 길을 밝히다</title>
-    <link rel="icon" href="/jm-office-homepage/images/logo.png" type="image/png" />
-    <script type="module" crossorigin src="/jm-office-homepage/assets/index-kqAkABE1.js"></script>
-    <link rel="stylesheet" crossorigin href="/jm-office-homepage/assets/index-C9fUp99j.css">
+    <title>정명(正明) 행정사사무소 — 새 주소로 이동합니다</title>
+    <link rel="canonical" href="https://jm-office-homepage.vercel.app" />
+    <meta name="robots" content="noindex, follow" />
+    <meta http-equiv="refresh" content="0; url=https://jm-office-homepage.vercel.app" />
+    <style>
+      body {
+        font-family: 'Noto Sans KR', system-ui, sans-serif;
+        background: #fafaf8;
+        color: #0f1a2a;
+        line-height: 1.7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+      }
+      main { max-width: 520px; text-align: center; }
+      h1 { font-size: 1.4rem; line-height: 1.4; margin-bottom: 14px; word-break: keep-all; }
+      p { color: #526072; margin: 0 0 22px; word-break: keep-all; }
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        background: #86601d;
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <main>
+      <h1>정명(正明) 행정사사무소 홈페이지가 새 주소로 옮겨졌습니다</h1>
+      <p>잠시 후 자동으로 이동합니다. 이동하지 않으면 아래 버튼을 눌러 주세요.</p>
+      <a id="go" href="https://jm-office-homepage.vercel.app">새 주소로 이동 →</a>
+    </main>
+    <script>
+      // GitHub Pages는 /jm-office-homepage 하위에서 서비스되므로 그 접두사를 떼고
+      // 나머지 경로를 그대로 새 주소에 이어 붙인다. (/services/license 등 기존 링크 보존)
+      (function () {
+        var base = 'https://jm-office-homepage.vercel.app';
+        var path = window.location.pathname.replace(/^\/jm-office-homepage/, '');
+        if (path === '/index.html') path = '';
+        var target = base + path + window.location.search + window.location.hash;
+        document.getElementById('go').href = target;
+        window.location.replace(target);
+      })();
+    </script>
   </body>
 </html>
