@@ -24,7 +24,7 @@ export function Navbar() {
     <header className="navbar">
       <div className="page-shell navbar__inner">
         <Link to="/" className="navbar__logo" onClick={() => setOpen(false)}>
-          <img src={`${import.meta.env.BASE_URL}images/logo_final.png`} alt="" width={40} height={40} />
+          <img src={`${import.meta.env.BASE_URL}images/logo-mark-128.png`} alt="" width={40} height={40} />
           <span>정명(正明) <small>행정사사무소</small></span>
         </Link>
         {/* 상담 버튼은 nav 밖에 둔다. nav는 768px 이하에서 접히므로 안에 넣으면
