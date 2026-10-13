@@ -198,6 +198,6 @@
 - [x] Google DNS 반영·Vercel `misconfigured=false` 5건 확인, `vercel certs issue`로 인증서 5건 발급
 - [x] 실측: apex 200, www/.co.kr/www.co.kr/http → 308 apex, visa 200, `/api/consult` GET 405
 - [ ] 가비아 안전잠금 켜기 (주인님)
-- [ ] 3단계: 코드 내 주소 교체 (SITE_URL, index.html, robots/sitemap, office.json formEndpoint, _cors, services.ts 비자 링크, 비자 사이트 설정) — 승인 대기
+- [x] 3단계: 코드 내 주소 교체 — 메인 `2b3c3cb`(CORS 새 도메인 선반영) → 비자 `e05fb97` 배포, 운영 canonical·sitemap·CORS·비자→중앙 상담 링크 실측 확인. 이전 vercel.app 주소는 리다이렉트 없이 유지
 - [ ] 메인 사이트는 사전 렌더링이 없어 모든 경로 원본 HTML의 title·canonical이 홈 기준(실측 `/services/dui`) — 네이버 등록 전 보완 검토
 - [ ] 개업 상태 전환(광명 사무소 정보, 등록번호·사업자번호 필요), 네이버 서치어드바이저·구글 서치콘솔 등록
