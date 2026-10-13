@@ -189,3 +189,15 @@
 1. 계획서의 "치환 30곳"이 실제로는 31곳 — 치환표에는 31곳이 다 있어 누락 없음(코덱스 지적).
 2. 계획서의 읽기 폭 목표 "한글 45~50자"는 글자 폭을 17px로 잘못 잡은 추정치. Range API 실측 53~56자(실제 글자당 약 13.7px). 설계 문서·CSS 주석을 실측값으로 정정.
 3. 하단 바 여백이 고정 88px이라 홈 인디케이터가 있는 기기에서 마지막 내용이 가려질 수 있었다 → `calc(88px + env(safe-area-inset-bottom))`(코덱스 독립 리뷰 지적).
+
+## 2026-10-13 맞춤 도메인 연결 (jungmyungoffice.com)
+
+- [x] 가비아 구매: `jungmyungoffice.com`·`jungmyungoffice.co.kr` (2년, .co.kr 등록정보숨김, 안전잠금은 연결 후 켜기)
+- [x] Vercel(CLI 로그인 → REST API) 도메인 등록: 메인 프로젝트에 apex + `www`/`.co.kr`/`www.co.kr`(308 → apex), 비자 프로젝트에 `visa.`
+- [x] 가비아 DNS: .com 4건(A 216.198.79.1·64.29.17.1, CNAME www·visa), .co.kr 3건(A 2건, CNAME www) — 21:08/21:09 저장
+- [x] Google DNS 반영·Vercel `misconfigured=false` 5건 확인, `vercel certs issue`로 인증서 5건 발급
+- [x] 실측: apex 200, www/.co.kr/www.co.kr/http → 308 apex, visa 200, `/api/consult` GET 405
+- [ ] 가비아 안전잠금 켜기 (주인님)
+- [ ] 3단계: 코드 내 주소 교체 (SITE_URL, index.html, robots/sitemap, office.json formEndpoint, _cors, services.ts 비자 링크, 비자 사이트 설정) — 승인 대기
+- [ ] 메인 사이트는 사전 렌더링이 없어 모든 경로 원본 HTML의 title·canonical이 홈 기준(실측 `/services/dui`) — 네이버 등록 전 보완 검토
+- [ ] 개업 상태 전환(광명 사무소 정보, 등록번호·사업자번호 필요), 네이버 서치어드바이저·구글 서치콘솔 등록

@@ -32,7 +32,7 @@ describe('업무분야 4단계 진행 표시', () => {
   it('비자 분야는 외부 이동임을 알린다', () => {
     renderFor('immigration');
     const link = screen.getByRole('link', { name: /내 상황 진단/ });
-    expect(link.getAttribute('href')).toContain('jm-visa-precheck');
+    expect(link.getAttribute('href')).toContain('visa.jungmyungoffice.com');
     expect(screen.getByText(/다국어 진단센터로 이동합니다/)).toBeInTheDocument();
   });
 

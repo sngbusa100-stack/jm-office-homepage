@@ -59,11 +59,11 @@ describe('정보 페이지', () => {
     expect(screen.queryByText(/비자 진단센터는 공개 준비 중/)).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /정명 비자 진단센터 열기/ })[0]).toHaveAttribute(
       'href',
-      'https://jm-visa-precheck.vercel.app/?utm_content=jm_main',
+      'https://visa.jungmyungoffice.com/?utm_content=jm_main',
     );
     expect(screen.getByRole('link', { name: /E-7 전문인력/ })).toHaveAttribute(
       'href',
-      'https://jm-visa-precheck.vercel.app/visa/e7?utm_content=jm_main',
+      'https://visa.jungmyungoffice.com/visa/e7?utm_content=jm_main',
     );
   });
 

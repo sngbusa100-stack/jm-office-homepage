@@ -1,7 +1,7 @@
 import { findCheck } from '../data/checks';
 import { findService } from '../data/services';
 
-export const SITE_URL = 'https://jm-office-homepage.vercel.app';
+export const SITE_URL = 'https://jungmyungoffice.com';
 
 export interface PageMeta {
   title: string;

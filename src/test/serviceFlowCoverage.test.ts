@@ -24,6 +24,6 @@ describe('업무분야 → 진단 경로 커버리지', () => {
   it('출입국 비자 분야는 외부 진단센터로 연결된다', () => {
     const immigration = services.find((s) => s.slug === 'immigration');
     expect(immigration?.checkDomain).toBeUndefined();
-    expect(immigration?.externalLink?.url).toContain('jm-visa-precheck');
+    expect(immigration?.externalLink?.url).toContain('visa.jungmyungoffice.com');
   });
 });

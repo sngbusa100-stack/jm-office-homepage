@@ -143,16 +143,16 @@ export const services: Service[] = [
     funnelDomain: 'visa',
     consultTopic: 'visa',
     relatedLinks: [
-      { label: 'E-7 전문인력', url: 'https://jm-visa-precheck.vercel.app/visa/e7' },
-      { label: 'F-6 결혼이민', url: 'https://jm-visa-precheck.vercel.app/visa/f6' },
-      { label: 'D-2 유학', url: 'https://jm-visa-precheck.vercel.app/visa/d2' },
-      { label: 'D-10 구직', url: 'https://jm-visa-precheck.vercel.app/visa/d10' },
-      { label: 'F-2-7 거주', url: 'https://jm-visa-precheck.vercel.app/visa/f27' },
-      { label: 'F-5 영주', url: 'https://jm-visa-precheck.vercel.app/visa/f5' },
+      { label: 'E-7 전문인력', url: 'https://visa.jungmyungoffice.com/visa/e7' },
+      { label: 'F-6 결혼이민', url: 'https://visa.jungmyungoffice.com/visa/f6' },
+      { label: 'D-2 유학', url: 'https://visa.jungmyungoffice.com/visa/d2' },
+      { label: 'D-10 구직', url: 'https://visa.jungmyungoffice.com/visa/d10' },
+      { label: 'F-2-7 거주', url: 'https://visa.jungmyungoffice.com/visa/f27' },
+      { label: 'F-5 영주', url: 'https://visa.jungmyungoffice.com/visa/f5' },
     ],
     externalLink: {
       label: '정명 비자 진단센터 열기',
-      url: 'https://jm-visa-precheck.vercel.app',
+      url: 'https://visa.jungmyungoffice.com',
     },
   },
   {

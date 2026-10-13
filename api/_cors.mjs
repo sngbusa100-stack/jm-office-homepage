@@ -1,6 +1,9 @@
 // 공용 CORS 처리 (_접두사라 엔드포인트로 노출되지 않음)
 
 const DEFAULT_ALLOWED_ORIGINS = [
+  'https://jungmyungoffice.com',
+  'https://visa.jungmyungoffice.com',
+  // 이전 주소: 관리 화면·로컬 연동기가 계속 쓸 수 있도록 유지
   'https://sngbusa100-stack.github.io',
   'https://jm-office-homepage.vercel.app',
   'https://jm-visa-precheck.vercel.app',

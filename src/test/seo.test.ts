@@ -7,7 +7,7 @@ describe('검색 노출 기반', () => {
     const meta = getPageMeta('/services/dui');
     expect(meta.title).toContain('음주운전 면허 구제');
     expect(meta.description).toContain('면허 정지·취소');
-    expect(meta.canonical).toBe('https://jm-office-homepage.vercel.app/services/dui');
+    expect(meta.canonical).toBe('https://jungmyungoffice.com/services/dui');
     expect(meta.robots).toBe('index, follow');
   });
 
@@ -19,10 +19,10 @@ describe('검색 노출 기반', () => {
   it('robots와 sitemap이 실제 공개 경로를 안내한다', () => {
     const robots = readFileSync(join(__dirname, '../../public/robots.txt'), 'utf8');
     const sitemap = readFileSync(join(__dirname, '../../public/sitemap.xml'), 'utf8');
-    expect(robots).toContain('Sitemap: https://jm-office-homepage.vercel.app/sitemap.xml');
+    expect(robots).toContain('Sitemap: https://jungmyungoffice.com/sitemap.xml');
     expect(robots).not.toContain('Disallow: /check');
-    expect(sitemap).toContain('<loc>https://jm-office-homepage.vercel.app/services</loc>');
-    expect(sitemap).toContain('<loc>https://jm-office-homepage.vercel.app/services/immigration</loc>');
+    expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services</loc>');
+    expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services/immigration</loc>');
     expect(sitemap).not.toContain('/result</loc>');
   });
 

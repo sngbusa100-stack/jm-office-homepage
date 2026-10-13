@@ -387,3 +387,11 @@ Phase 1(구조)에 이은 두 번째 단계. 분야 상세 페이지를 "읽을 
 비자 사이트도 같은 자산으로 통일했다(같은 날짜 `jm-visa-check` 저장소 기록 참조).
 
 커밋 `474e3d9` — push 미실행, 승인 대기.
+
+## 2026-10-13 맞춤 도메인 연결
+
+- 주인님이 광명(광명역자이타워 B1305호)에 개업. 도메인은 블로그 철자(jungmyung)를 따라 `jungmyungoffice.com`(대표)·`jungmyungoffice.co.kr`(보호용)로 정해 가비아에서 구매했다. 명함 영문(JEONGMYEONG)과 철자가 다르므로 재인쇄 시 맞추기로 했다. `consult.` 서브도메인은 만들지 않는다(상담은 메인 `/consult`).
+- Chrome 확장이 연결되지 않아 Vercel CLI 기기 로그인(계정 sngbusa100-9725)으로 처리했다. 도메인 등록은 REST API `POST /v10/projects/{project}/domains`로 했고, 리다이렉트는 308로 지정했다.
+- Vercel 권장값: apex A `216.198.79.1`·`64.29.17.1`, 메인 CNAME `df2b1eea67f784e2.vercel-dns-017.com.`, 비자 CNAME `96df3c6aaae223ad.vercel-dns-017.com.`. 가비아 DNS는 내장 브라우저에서 주인님 로그인 후 입력·저장했다.
+- DNS 반영 직후 TLS 핸드셰이크가 몇 분간 실패해 `vercel certs issue`로 5개 도메인 인증서를 직접 발급했고, 그 뒤 정상 응답을 확인했다.
+- 확인된 남은 문제: 새 도메인에서도 canonical·sitemap이 아직 `jm-office-homepage.vercel.app`을 가리킨다(3단계에서 교체). 메인 사이트는 사전 렌더링이 없어 원본 HTML의 title·canonical이 모든 경로에서 홈 기준이다. 사전 렌더링은 비자 사이트에만 있다.
