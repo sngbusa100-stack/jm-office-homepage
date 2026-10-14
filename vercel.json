@@ -1,5 +1,23 @@
 {
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/why", "destination": "/why/index.html" },
+    { "source": "/services", "destination": "/services/index.html" },
+    { "source": "/check", "destination": "/check/index.html" },
+    { "source": "/consult", "destination": "/consult/index.html" },
+    { "source": "/privacy", "destination": "/privacy/index.html" },
+    { "source": "/disclaimer", "destination": "/disclaimer/index.html" },
+    { "source": "/services/dui", "destination": "/services/dui/index.html" },
+    { "source": "/services/suspension", "destination": "/services/suspension/index.html" },
+    { "source": "/services/license", "destination": "/services/license/index.html" },
+    { "source": "/services/immigration", "destination": "/services/immigration/index.html" },
+    { "source": "/services/veterans", "destination": "/services/veterans/index.html" },
+    { "source": "/services/documents", "destination": "/services/documents/index.html" },
+    { "source": "/check/dui", "destination": "/check/dui/index.html" },
+    { "source": "/check/suspension", "destination": "/check/suspension/index.html" },
+    { "source": "/check/veterans", "destination": "/check/veterans/index.html" },
+    { "source": "/check/permit", "destination": "/check/permit/index.html" },
+    { "source": "/((?!api/).*)", "destination": "/spa-fallback.html" }
+  ],
   "headers": [
     {
       "source": "/admin",
