@@ -204,32 +204,32 @@
 
 ## 2026-10-13~14 메인 사전 렌더링 (3.5단계) — 완료·배포
 
-계획 문서:  (직접 실행 + 마지막 독립 검토 1회)
+계획 문서: `docs/superpowers/plans/2026-10-13-main-site-prerender.md` (직접 실행 + 마지막 독립 검토 1회)
 
-- [x] 운영 실측으로 문제 확인:  원본 HTML의 title·canonical이 홈과 같고 본문이 비어 있음
-- [x] Task 1: 색인 경로 단일 출처 와 sitemap 생성 함수 ()
-- [x] Task 2: 브라우저 없이 렌더링하는 SSR 진입점,  window 가드 ()
-- [x] Task 3: 빌드 파이프라인·vercel.json 경로별 rewrite·셸 ·verify-dist ()
-- [x] 독립 검토(opus): Critical 0, Important 1 → 상담 폼이 스크립트 전 제출되면 GET으로 개인정보 노출 → 사전 렌더링 중 입력·제출 차단 ()
+- [x] 운영 실측으로 문제 확인: `/services/dui` 원본 HTML의 title·canonical이 홈과 같고 본문이 비어 있음
+- [x] Task 1: 색인 경로 단일 출처 `getIndexablePaths()`와 sitemap 생성 함수 (`4f03118`)
+- [x] Task 2: 브라우저 없이 렌더링하는 SSR 진입점, `ServicePage.tsx:67` window 가드 (`dbd1a38`)
+- [x] Task 3: 빌드 파이프라인·vercel.json 경로별 rewrite·셸 `spa-fallback.html`·verify-dist (`fef5f00`)
+- [x] 독립 검토(opus): Critical 0, Important 1 → 상담 폼이 스크립트 전 제출되면 GET으로 개인정보 노출 → 사전 렌더링 중 입력·제출 차단 (`032eb78`)
 - [x] 주인님 요청 재점검: 17개 페이지 head·본문·자산 경로 전수 확인, React 개발/운영 빌드 출력 동일(해시 일치), 비자 사이트로 Vercel 규칙 실증
-- [x] 보완 3건(주인님 A안 승인): 없는 페이지 화면 차단, postbuild 검사 + vercel.json 빌드 명령 고정, 옛  삭제 ()
+- [x] 보완 3건(주인님 A안 승인): 없는 페이지 화면 차단, postbuild 검사 + vercel.json 빌드 명령 고정, 옛 `_redirects` 삭제 (`505a7ec`)
 - [x] 검사: 실제 저장소 33파일 239테스트(옛 worktree 사본 포함 시 48파일 335)·빌드·verify-dist 통과
-- [x] master fast-forward·push()·Vercel Production 반영
+- [x] master fast-forward·push(`337e313..505a7ec`)·Vercel Production 반영
 
 ### 운영 실측 (2026-10-14)
 
 | 경로 | 결과 |
 |---|---|
-| , , , , , , , , ,  | 200, index, 각자 canonical |
-| ,  | 200, index, canonical  (끝 슬래시도 사전 렌더링 파일) |
-|  | 200, noindex, canonical 없음 (셸) |
-| ,  | 200, noindex + X-Robots-Tag noindex |
-| sitemap | 17개 ( 포함) |
-|  POST | 503 (개업 전 닫힘 유지) |
-| 이전 주소  | canonical이 새 도메인 |
+| `/`, `/why`, `/services`, `/services/dui`, `/services/immigration`, `/check`, `/check/permit`, `/consult`, `/privacy`, `/disclaimer` | 200, index, 각자 canonical |
+| `/services/dui?utm_source=naver`, `/services/dui/` | 200, index, canonical `/services/dui` (끝 슬래시도 사전 렌더링 파일) |
+| `/services/nope` | 200, noindex, canonical 없음 (셸) |
+| `/admin`, `/check/dui/result` | 200, noindex + X-Robots-Tag noindex |
+| sitemap | 17개 (`/check/permit` 포함) |
+| `/api/consult` POST | 503 (개업 전 닫힘 유지) |
+| 이전 주소 `jm-office-homepage.vercel.app/services/dui` | canonical이 새 도메인 |
 | 브라우저 | 본문 1회·콘솔 오류 0, /admin 로그인 폼, /consult?topic=dui 분야 미리 선택, /check/dui 문항 진행 |
 
 ### 남은 경미 항목 (미룸)
 
-- [ ] 연결이 느릴 때 스크립트가 붙기 전 스크롤한 위치가 마운트 시 맨 위로 돌아감( scrollTo)
+- [ ] 연결이 느릴 때 스크립트가 붙기 전 스크롤한 위치가 마운트 시 맨 위로 돌아감(`Layout.tsx` scrollTo)
 - [ ] 개업 전환 전에는 "개업 준비 중" 문구가 검색로봇에도 보임 → 네이버 등록은 개업 전환 뒤에
