@@ -158,6 +158,9 @@ function buildPrefill(): string {
 
 export function ConsultPage() {
   const accepting = isAcceptingRequests(office);
+  // 사전 렌더링(Node)된 폼은 스크립트가 붙기 전까지 막아 둔다. 그대로 제출되면
+  // 브라우저 기본 GET으로 성함·연락처가 주소창·서버 기록에 남고 접수도 되지 않는다.
+  const formEnabled = accepting && typeof window !== 'undefined';
   const [searchParams] = useSearchParams();
   const topicSlug = searchParams.get('topic') ?? '';
   const presetTopic = TOPIC_SLUGS[topicSlug];
@@ -343,17 +346,17 @@ export function ConsultPage() {
           <p className="note" role="alert">진단 결과를 불러오지 못했습니다. 아래에 내용을 직접 적어 일반 상담을 신청할 수 있습니다.</p>
         )}
         <input type="text" name="company" className="sr-only" tabIndex={-1} autoComplete="off" aria-hidden="true" />
-        <label>성함<input type="text" name="name" required disabled={!accepting} /></label>
-        <label>연락처<input type="tel" name="phone" required disabled={!accepting} /></label>
+        <label>성함<input type="text" name="name" required disabled={!formEnabled} /></label>
+        <label>연락처<input type="tel" name="phone" required disabled={!formEnabled} /></label>
         <label>이메일 (선택 — 서면 답변을 원하시면 입력해 주세요)
-          <input type="email" name="email" disabled={!accepting} />
+          <input type="email" name="email" disabled={!formEnabled} />
         </label>
         <label>분야
           <select
             key={presetTopic ?? 'default'}
             name="topic"
             defaultValue={presetTopic}
-            disabled={!accepting || Boolean(visaDiagnosis)}
+            disabled={!formEnabled || Boolean(visaDiagnosis)}
           >
             <option>음주운전 면허 구제</option>
             <option>영업정지 · 행정심판</option>
@@ -370,18 +373,18 @@ export function ConsultPage() {
             rows={5}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            disabled={!accepting}
+            disabled={!formEnabled}
           />
         </label>
         <label className="agree">
-          <input type="checkbox" name="consent" required disabled={!accepting} />
+          <input type="checkbox" name="consent" required disabled={!formEnabled} />
           개인정보 수집·이용에 동의합니다 (상담 회신 목적, 처리 완료 후 120일 보관 뒤 파기)
         </label>
         <button
           className="button button--accent"
           type="submit"
           disabled={
-            !accepting
+            !formEnabled
             || status === 'sending'
             || status === 'sent'
             || (validHandoffToken && (handoffStatus === 'idle' || handoffStatus === 'loading'))
