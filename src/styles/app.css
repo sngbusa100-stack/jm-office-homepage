@@ -161,6 +161,7 @@ nav#global-nav a.active {
   margin-bottom: 12px;
 }
 .footer p { margin-bottom: 8px; color: #c3c9d4; }
+.footer p a { color: #fff; text-decoration: underline; }
 .footer nav[aria-label='법적 고지'] {
   display: flex;
   gap: 16px;
@@ -365,6 +366,7 @@ th { background: var(--surface-muted); font-weight: 700; }
 .answer { color: var(--text-muted); }
 
 .consult-form { display: flex; flex-direction: column; gap: 16px; margin: 24px 0; }
+.location-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
 .consult-form label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
 .consult-form input[type='text'],
 .consult-form input[type='tel'],

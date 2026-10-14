@@ -3,10 +3,12 @@ import { services } from '../data/services';
 import { homeFaqs } from '../data/faq';
 import { checks } from '../data/checks';
 import { ConsultCta } from '../components/ConsultCta';
+import { OfficeStructuredData } from '../components/OfficeStructuredData';
 
 export function HomePage() {
   return (
     <>
+      <OfficeStructuredData />
       <section className="hero">
         <div className="page-shell hero__grid">
           <div className="hero__content">

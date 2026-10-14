@@ -1,3 +1,5 @@
+import { office } from '../data/office';
+
 export function PrivacyPage() {
   return (
     <div className="page-shell section narrow-page">
@@ -61,10 +63,18 @@ export function PrivacyPage() {
 
       <section aria-labelledby="contact">
         <h2 id="contact">문의</h2>
-        <p>
-          개인정보 처리방침에 관한 문의는 개업 후 이 사이트와 사무소 안내에 공개되는 연락처로
-          가능합니다.
-        </p>
+        {office.email && office.phone ? (
+          <p>
+            개인정보 처리방침에 관한 문의는 사무소 이메일(
+            <a href={`mailto:${office.email}`}>{office.email}</a>) 또는 전화(
+            <a href={`tel:${office.phone}`}>{office.phone}</a>)로 하실 수 있습니다.
+          </p>
+        ) : (
+          <p>
+            개인정보 처리방침에 관한 문의는 개업 후 이 사이트와 사무소 안내에 공개되는 연락처로
+            가능합니다.
+          </p>
+        )}
       </section>
     </div>
   );

@@ -2,9 +2,18 @@ import raw from './office.json';
 
 export interface Office {
   isOpen: boolean;
+  representative?: string | null;
   phone: string | null;
+  fax?: string | null;
+  email?: string | null;
+  blogUrl?: string | null;
   kakaoChannelUrl: string | null;
   address: string | null;
+  addressRegion?: string | null;
+  addressLocality?: string | null;
+  streetAddress?: string | null;
+  addressNote?: string | null;
+  mapQuery?: string | null;
   registrationNumber: string | null;
   businessNumber: string | null;
   formEndpoint: string | null;

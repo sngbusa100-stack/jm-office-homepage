@@ -6,6 +6,7 @@ import { submitConsult } from '../lib/consultSubmit';
 import type { ConsultDiagnosis, VisaConsultDiagnosis } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
 import { readAttribution, trackFunnelEvent } from '../lib/funnel';
+import { mapLinks } from '../lib/officeContact';
 
 const LEVEL_LABEL: Record<ResultLevel, string> = {
   urgent: '긴급 확인', documents: '서류 보완', official: '공식 확인', ready: '확인됨',
@@ -316,15 +317,15 @@ export function ConsultPage() {
         <div className="grid-3">
           <article className="card">
             <h3>전화 상담</h3>
-            {accepting && office.phone
+            {office.phone
               ? <a className="button button--primary" href={`tel:${office.phone}`}>{office.phone}</a>
               : <p className="note">개업 후 공개됩니다.</p>}
           </article>
           <article className="card">
             <h3>카카오톡 채널</h3>
-            {accepting && office.kakaoChannelUrl
+            {office.kakaoChannelUrl
               ? <a className="button button--primary" href={office.kakaoChannelUrl}>카카오톡으로 문의</a>
-              : <p className="note">개업 후 공개됩니다.</p>}
+              : <p className="note">준비 중입니다.</p>}
           </article>
           <article className="card">
             <h3>온라인 신청</h3>
@@ -403,6 +404,18 @@ export function ConsultPage() {
         )}
         {!accepting && <p className="note">개업 전에는 신청이 접수되지 않습니다. 상담·수임 접수는 개업 후 시작됩니다.</p>}
       </form>
+
+      {office.address && office.mapQuery && (
+        <section id="location" className="card" aria-labelledby="location-title">
+          <h2 id="location-title">오시는 길</h2>
+          <p>{office.address}</p>
+          {office.addressNote && <p className="note">{office.addressNote}</p>}
+          <div className="location-actions">
+            <a className="button button--ghost" href={mapLinks(office.mapQuery).naver} target="_blank" rel="noopener noreferrer">네이버 지도</a>
+            <a className="button button--ghost" href={mapLinks(office.mapQuery).kakao} target="_blank" rel="noopener noreferrer">카카오맵</a>
+          </div>
+        </section>
+      )}
 
       <section className="card level-urgent">
         <h2>기한이 임박했다면 기다리지 마세요</h2>
