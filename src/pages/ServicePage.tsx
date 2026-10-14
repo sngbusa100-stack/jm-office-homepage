@@ -64,7 +64,10 @@ export function ServicePage() {
   const { slug } = useParams();
   const service = slug ? findService(slug) : undefined;
   // 첫 렌더의 외부 링크에도 현재 URL의 유입정보가 바로 반영되도록 초기화한다.
-  const [attribution] = useState(() => captureAttribution(window.location.search));
+  // 빌드 때 사전 렌더링(Node)에는 window가 없으므로 빈 검색어로 대신한다.
+  const [attribution] = useState(() => captureAttribution(
+    typeof window === 'undefined' ? '' : window.location.search,
+  ));
 
   useEffect(() => {
     if (!service) return;
