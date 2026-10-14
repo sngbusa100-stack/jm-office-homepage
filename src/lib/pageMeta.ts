@@ -1,5 +1,5 @@
-import { findCheck } from '../data/checks';
-import { findService } from '../data/services';
+import { checks, findCheck } from '../data/checks';
+import { findService, services } from '../data/services';
 
 export const SITE_URL = 'https://jungmyungoffice.com';
 
@@ -100,4 +100,26 @@ export function getPageMeta(pathname: string): PageMeta {
     title: '페이지를 찾을 수 없습니다 | 정명 행정사사무소',
     description: DEFAULT_DESCRIPTION,
   }, 'noindex, nofollow');
+}
+
+/** 검색엔진에 색인시킬 경로. 사전 렌더링·sitemap·vercel.json 검사가 모두 이 목록을 쓴다. */
+export function getIndexablePaths(): string[] {
+  return [
+    ...Object.keys(STATIC_META),
+    ...services.map((service) => `/services/${service.slug}`),
+    ...Object.keys(checks).map((domain) => `/check/${domain}`),
+  ];
+}
+
+export function buildSitemapXml(paths: string[] = getIndexablePaths()): string {
+  const urls = paths
+    .map((path) => `  <url><loc>${getPageMeta(path).canonical}</loc></url>`)
+    .join('\n');
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    urls,
+    '</urlset>',
+    '',
+  ].join('\n');
 }

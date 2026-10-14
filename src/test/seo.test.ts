@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { getPageMeta } from '../lib/pageMeta';
+import { buildSitemapXml, getIndexablePaths, getPageMeta } from '../lib/pageMeta';
 
 describe('검색 노출 기반', () => {
   it('업무 상세 경로에 고유 제목·설명·canonical을 제공한다', () => {
@@ -16,14 +16,29 @@ describe('검색 노출 기반', () => {
     expect(getPageMeta('/no-such-page').robots).toBe('noindex, nofollow');
   });
 
-  it('robots와 sitemap이 실제 공개 경로를 안내한다', () => {
+  it('색인 경로 목록이 정적 페이지·업무분야·진단을 모두 포함한다', () => {
+    const paths = getIndexablePaths();
+    expect(paths).toEqual([
+      '/', '/why', '/services', '/check', '/consult', '/privacy', '/disclaimer',
+      '/services/dui', '/services/suspension', '/services/license',
+      '/services/immigration', '/services/veterans', '/services/documents',
+      '/check/dui', '/check/suspension', '/check/veterans', '/check/permit',
+    ]);
+    for (const path of paths) expect(getPageMeta(path).robots).toBe('index, follow');
+    expect(new Set(paths.map((path) => getPageMeta(path).canonical)).size).toBe(paths.length);
+  });
+
+  it('robots와 생성 sitemap이 실제 공개 경로를 안내한다', () => {
     const robots = readFileSync(join(__dirname, '../../public/robots.txt'), 'utf8');
-    const sitemap = readFileSync(join(__dirname, '../../public/sitemap.xml'), 'utf8');
+    const sitemap = buildSitemapXml();
     expect(robots).toContain('Sitemap: https://jungmyungoffice.com/sitemap.xml');
     expect(robots).not.toContain('Disallow: /check');
-    expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services</loc>');
+    expect(sitemap.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+    expect(sitemap).toContain('<loc>https://jungmyungoffice.com</loc>');
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services/immigration</loc>');
+    expect(sitemap).toContain('<loc>https://jungmyungoffice.com/check/permit</loc>');
     expect(sitemap).not.toContain('/result</loc>');
+    expect(sitemap.match(/<loc>/g)).toHaveLength(17);
   });
 
   it('알 수 없는 진단 도메인은 색인하지 않고 안전한 설명을 반환한다', () => {
