@@ -395,3 +395,14 @@ Phase 1(구조)에 이은 두 번째 단계. 분야 상세 페이지를 "읽을 
 - Vercel 권장값: apex A `216.198.79.1`·`64.29.17.1`, 메인 CNAME `df2b1eea67f784e2.vercel-dns-017.com.`, 비자 CNAME `96df3c6aaae223ad.vercel-dns-017.com.`. 가비아 DNS는 내장 브라우저에서 주인님 로그인 후 입력·저장했다.
 - DNS 반영 직후 TLS 핸드셰이크가 몇 분간 실패해 `vercel certs issue`로 5개 도메인 인증서를 직접 발급했고, 그 뒤 정상 응답을 확인했다.
 - 확인된 남은 문제: 새 도메인에서도 canonical·sitemap이 아직 `jm-office-homepage.vercel.app`을 가리킨다(3단계에서 교체). 메인 사이트는 사전 렌더링이 없어 원본 HTML의 title·canonical이 모든 경로에서 홈 기준이다. 사전 렌더링은 비자 사이트에만 있다.
+
+## 2026-10-13~14 메인 사전 렌더링 (3.5단계)
+
+- 문제: 원본 HTML의 title·canonical이 모든 경로에서 홈과 같고 본문이 비어 있어, JS를 실행하지 않는 로봇에게 하위 페이지가 홈의 중복으로 보였다.
+- 결정: (1) 요약문이 아니라 실제 컴포넌트를 `renderToString`으로 렌더링(단일 출처) (2) 클라이언트는 `createRoot` 유지, hydrate 안 함 (3) 홈은 `dist/index.html`, 빈 셸은 `dist/spa-fallback.html` (4) 셸은 noindex·canonical 없음 — 없는 주소의 soft 404도 해소 (5) vercel.json에 경로별 rewrite 명시(비자 사이트와 같은 방식) (6) sitemap은 빌드 때 생성, `public/sitemap.xml` 삭제.
+- 색인 경로는 `src/lib/pageMeta.ts`의 `getIndexablePaths()` 하나가 출처다. 업무분야·진단을 추가하면 vercel.json에도 rewrite를 넣어야 하며, 빠뜨리면 `vercelConfig.test.ts`와 verify-dist가 실패한다.
+- 빌드: `tsc → vite build → vite build --ssr src/prerender/entry.tsx → scripts/prerender.mjs`, 이어서 postbuild로 verify-dist가 자동 실행된다. Vercel 배포 로그로 Vercel이 `npm run build`(prebuild 포함)를 실행함을 확인했고, vercel.json에 framework·buildCommand·outputDirectory를 고정했다.
+- 독립 검토가 찾은 실제 위험: 개업 후 사전 렌더링된 `/consult` 폼이 스크립트 전에 제출되면 기본 GET으로 성함·연락처가 주소창·로그에 남는다 → 서버 렌더링(window 없음)에서는 폼 컨트롤을 disabled로 렌더링(`formEnabled`).
+- 실측: 끝 슬래시 `/services/dui/`도 사전 렌더링 파일을 받는다(디렉터리 index). 쿼리 붙은 주소도 같다. React 개발/운영 빌드의 사전 렌더링 출력은 17개 경로 전체에서 동일했다.
+- 테스트 수 주의: vitest가 gitignored `.claude/worktrees/admin-inquiry-system-e8017d/`의 낡은 사본 15파일·96테스트를 함께 수집한다. 실제 저장소는 33파일 239테스트(2026-10-14).
+- GitHub Pages(gh-pages)는 noindex "새 주소로 이동" 안내 페이지만 남아 있고, `--base` 빌드 절차는 더 이상 쓰지 않는다(사전 렌더링이 루트 경로 기준).
