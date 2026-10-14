@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getIndexablePaths } from '../lib/pageMeta';
 
@@ -6,6 +6,12 @@ interface Rewrite { source: string; destination: string }
 
 const vercel = JSON.parse(readFileSync(join(__dirname, '../../vercel.json'), 'utf8')) as {
   rewrites: Rewrite[];
+  framework?: string;
+  buildCommand?: string;
+  outputDirectory?: string;
+};
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8')) as {
+  scripts: Record<string, string>;
 };
 const FALLBACK_SOURCE = '/((?!api/).*)';
 
@@ -32,5 +38,20 @@ describe('Vercel 연결 규칙', () => {
       .filter((rule) => rule.source !== FALLBACK_SOURCE)
       .filter((rule) => !indexable.has(rule.source));
     expect(extra).toEqual([]);
+  });
+
+  it('Vercel이 사전 렌더링을 포함한 npm 빌드를 실행하고 dist를 배포하도록 고정한다', () => {
+    expect(vercel.framework).toBe('vite');
+    expect(vercel.buildCommand).toBe('npm run build');
+    expect(vercel.outputDirectory).toBe('dist');
+    expect(pkg.scripts.build).toContain('node scripts/prerender.mjs');
+  });
+
+  it('빌드 직후 배포 산출물 검사를 실행해 잘못된 결과물은 배포되지 않게 한다', () => {
+    expect(pkg.scripts.postbuild).toBe('node scripts/verify-dist.mjs');
+  });
+
+  it('GitHub Pages용 옛 _redirects 파일을 배포물에 넣지 않는다', () => {
+    expect(existsSync(join(__dirname, '../../public/_redirects'))).toBe(false);
   });
 });

@@ -36,3 +36,12 @@ export function toSpaFallback(template: string): string {
   html = replaceOrThrow(html, /\s*<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/, '', 'canonical');
   return html;
 }
+
+const NOT_FOUND_TEXT = '페이지를 찾을 수 없습니다';
+
+/** 색인 경로가 '없는 페이지' 화면으로 렌더링되면 빌드를 멈춘다(빈 페이지가 검색에 오르는 것 방지). */
+export function assertIndexableBody(path: string, bodyHtml: string): void {
+  if (bodyHtml.includes(NOT_FOUND_TEXT)) {
+    throw new Error(`[prerender] ${path}가 '${NOT_FOUND_TEXT}' 화면으로 렌더링되었습니다.`);
+  }
+}

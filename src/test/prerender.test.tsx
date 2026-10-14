@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyPage,
+  assertIndexableBody,
   getIndexablePaths,
   getPageMeta,
   renderPage,
@@ -67,6 +68,11 @@ describe('사전 렌더링', () => {
 
   it('교체할 태그가 없는 템플릿이면 조용히 넘어가지 않고 실패한다', () => {
     expect(() => applyPage('<html><head></head><body></body></html>', getPageMeta('/'), '')).toThrow(/title/);
+  });
+
+  it('색인 경로가 없는 페이지 화면으로 렌더링되면 빌드를 멈춘다', () => {
+    expect(() => assertIndexableBody('/no-such-page', renderPage('/no-such-page'))).toThrow(/페이지를 찾을 수 없습니다/);
+    expect(() => assertIndexableBody('/services/dui', renderPage('/services/dui'))).not.toThrow();
   });
 
   it('셸은 색인 제외이고 canonical이 없으며 빈 root를 유지한다', () => {

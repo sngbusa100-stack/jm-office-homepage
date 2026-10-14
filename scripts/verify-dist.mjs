@@ -50,6 +50,7 @@ for (const loc of locs) {
   const html = readFileSync(file, 'utf8');
   if (!html.includes(`<link rel="canonical" href="${loc}" />`)) fail(`${path} canonical이 ${loc}가 아닙니다.`);
   if (!/<main id="main"[^>]*>[\s\S]*?<h1[\s>]/.test(html)) fail(`${path} 본문(h1)이 사전 렌더링되지 않았습니다.`);
+  if (html.includes('페이지를 찾을 수 없습니다')) fail(`${path}가 없는 페이지 화면으로 사전 렌더링되었습니다.`);
   if (path !== '/') {
     const ruleIndex = rewrites.findIndex((rule) => rule.source === path && rule.destination === `${path}/index.html`);
     if (ruleIndex === -1 || ruleIndex > fallbackIndex) fail(`vercel.json에 ${path} 규칙이 없거나 catch-all 뒤에 있습니다.`);

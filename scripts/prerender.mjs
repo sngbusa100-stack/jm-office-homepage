@@ -11,7 +11,7 @@ const entry = ['entry.js', 'entry.mjs'].map((name) => resolve(ssrDir, name)).fin
 if (!entry) throw new Error('[prerender] dist-ssr에 SSR 진입점 빌드 결과가 없습니다.');
 
 const {
-  applyPage, buildSitemapXml, getIndexablePaths, getPageMeta, renderPage, toSpaFallback,
+  applyPage, assertIndexableBody, buildSitemapXml, getIndexablePaths, getPageMeta, renderPage, toSpaFallback,
 } = await import(pathToFileURL(entry).href);
 
 const template = await readFile(resolve(dist, 'index.html'), 'utf8');
@@ -22,7 +22,9 @@ const paths = getIndexablePaths();
 for (const path of paths) {
   const target = path === '/' ? resolve(dist, 'index.html') : resolve(dist, `.${path}`, 'index.html');
   await mkdir(dirname(target), { recursive: true });
-  await writeFile(target, applyPage(template, getPageMeta(path), renderPage(path)), 'utf8');
+  const body = renderPage(path);
+  assertIndexableBody(path, body);
+  await writeFile(target, applyPage(template, getPageMeta(path), body), 'utf8');
 }
 await writeFile(resolve(dist, 'sitemap.xml'), buildSitemapXml(paths), 'utf8');
 await rm(ssrDir, { recursive: true, force: true });
