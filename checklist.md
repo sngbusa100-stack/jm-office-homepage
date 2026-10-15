@@ -266,4 +266,5 @@
 - [x] 구글은 DNS TXT 대신 HTML 태그(URL 접두어) — 가비아 안전잠금으로 DNS 변경이 막힐 수 있어서
 - [x] `index.html`에 naver/google 확인 태그 — 템플릿이라 사전 렌더링 18개·셸에도 포함 확인
 - [x] 테스트 RED→GREEN, `npm run check` 통과
-- [ ] push 승인 → 주인님 소유확인 클릭 → sitemap 제출(`https://jungmyungoffice.com/sitemap.xml`)·주요 페이지 수집 요청
+- [x] master push(`3369599..c7da9f4`)·운영 확인: 홈·/location에 확인 태그, sitemap·robots 200
+- [ ] 주인님 소유확인 클릭 → sitemap 제출(`https://jungmyungoffice.com/sitemap.xml`)·주요 페이지 수집 요청
