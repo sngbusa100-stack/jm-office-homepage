@@ -267,4 +267,7 @@
 - [x] `index.html`에 naver/google 확인 태그 — 템플릿이라 사전 렌더링 18개·셸에도 포함 확인
 - [x] 테스트 RED→GREEN, `npm run check` 통과
 - [x] master push(`3369599..c7da9f4`)·운영 확인: 홈·/location에 확인 태그, sitemap·robots 200
-- [ ] 주인님 소유확인 클릭 → sitemap 제출(`https://jungmyungoffice.com/sitemap.xml`)·주요 페이지 수집 요청
+- [x] 2026-10-15 주인님: 네이버·구글 소유확인, sitemap 제출, 네이버 웹 페이지 수집 요청(홈·/location·/services), 구글 URL 검사 → 색인 생성 요청
+- [ ] 1~2주 뒤 색인 현황 확인(네이버 수집 현황, 구글 "페이지" 보고서), "정명 행정사사무소" 검색 노출 확인
+- [ ] 개업 전환 후 주요 페이지 재수집 요청("개업 준비 중" 문구 갱신)
+- [ ] RSS는 글 게시판(업무 사례·소식)이 생기면 그때 만들어 제출 — 고정 안내 페이지만 있는 지금은 불필요
