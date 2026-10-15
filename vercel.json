@@ -9,6 +9,7 @@
     { "source": "/consult", "destination": "/consult/index.html" },
     { "source": "/privacy", "destination": "/privacy/index.html" },
     { "source": "/disclaimer", "destination": "/disclaimer/index.html" },
+    { "source": "/location", "destination": "/location/index.html" },
     { "source": "/services/dui", "destination": "/services/dui/index.html" },
     { "source": "/services/suspension", "destination": "/services/suspension/index.html" },
     { "source": "/services/license", "destination": "/services/license/index.html" },

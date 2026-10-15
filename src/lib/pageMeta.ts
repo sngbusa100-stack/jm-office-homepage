@@ -41,6 +41,10 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
     title: '면책 고지 | 정명 행정사사무소',
     description: '홈페이지 정보와 셀프 진단의 이용 범위, 법령 확인 및 긴급 사안에 관한 안내입니다.',
   },
+  '/location': {
+    title: '오시는 길 | 정명 행정사사무소',
+    description: '광명KTX역 5번출구 앞 광명역자이타워에 있는 정명 행정사사무소의 주소, 지도, 연락처를 안내합니다.',
+  },
 };
 
 function buildMeta(

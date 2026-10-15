@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 const menu = [
   { to: '/why', label: '행정사가 필요한 이유' },
   { to: '/services', label: '업무분야' },
+  { to: '/location', label: '오시는 길' },
 ];
 
 export function Navbar() {

@@ -6,7 +6,7 @@ import { submitConsult } from '../lib/consultSubmit';
 import type { ConsultDiagnosis, VisaConsultDiagnosis } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
 import { readAttribution, trackFunnelEvent } from '../lib/funnel';
-import { mapLinks } from '../lib/officeContact';
+import { OfficeLocation } from '../components/OfficeLocation';
 
 const LEVEL_LABEL: Record<ResultLevel, string> = {
   urgent: '긴급 확인', documents: '서류 보완', official: '공식 확인', ready: '확인됨',
@@ -408,12 +408,7 @@ export function ConsultPage() {
       {office.address && office.mapQuery && (
         <section id="location" className="card" aria-labelledby="location-title">
           <h2 id="location-title">오시는 길</h2>
-          <p>{office.address}</p>
-          {office.addressNote && <p className="note">{office.addressNote}</p>}
-          <div className="location-actions">
-            <a className="button button--ghost" href={mapLinks(office.mapQuery).naver} target="_blank" rel="noopener noreferrer">네이버 지도</a>
-            <a className="button button--ghost" href={mapLinks(office.mapQuery).kakao} target="_blank" rel="noopener noreferrer">카카오맵</a>
-          </div>
+          <OfficeLocation />
         </section>
       )}
 

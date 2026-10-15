@@ -249,3 +249,13 @@
 - [x] 카카오톡 채널은 주인님이 나중에 개설 — 개업 전환 필수 항목(`REQUIRED_WHEN_OPEN`)은 그대로 둠
 - [x] master push(`12938e1..ef60eca`)·운영 확인: 홈 하단 전화·LegalService·개업 준비 띠 유지, 상담 전화 버튼·오시는 길·수정 문구·신청서 잠금, 개인정보처리방침 문의처, `/api/consult` 503, `/services/dui` canonical 유지
 - [ ] 네이버 지도 버튼 실기기 확인(주인님)
+
+## 2026-10-15 상단 메뉴 "오시는 길"과 전용 페이지 (설계 승인: 대화)
+
+- [x] 상단 주요 메뉴 3번째에 글자 링크 "오시는 길" (상담 문의 버튼과 시선 경쟁 피함), 모바일은 메뉴 안
+- [x] 전용 페이지 `/location`: 주소·"광명KTX역 5번출구 앞"·네이버 지도/카카오맵·전화 걸기·팩스·이메일 (명함에 없는 주차·노선 정보는 넣지 않음)
+- [x] 공용 부품 `OfficeLocation`을 오시는 길 페이지와 상담 안내가 함께 사용
+- [x] 검색 대상 18개로 확대(`getIndexablePaths` 자동), vercel.json `/location` 규칙 — 규칙 추가 전 `vercelConfig.test`가 누락을 실패로 잡음
+- [x] 테스트 `src/test/locationPage.test.tsx` 3개 RED→GREEN, 실제 저장소 35파일 252테스트·빌드·verify-dist(18개) 통과
+- [x] 브라우저: 1280·800·769px 메뉴 한 줄·로고와 겹침 없음, 375px 메뉴 안 "오시는 길"→/location 이동·가로 넘침 없음
+- [ ] push·배포 승인 대기

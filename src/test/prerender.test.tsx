@@ -27,7 +27,7 @@ const TEMPLATE = `<!doctype html>
 </html>`;
 
 describe('사전 렌더링', () => {
-  it('브라우저 객체 없이 색인 경로 17개를 모두 렌더링한다', () => {
+  it('브라우저 객체 없이 색인 경로를 모두 렌더링한다', () => {
     expect(typeof window).toBe('undefined');
     for (const path of getIndexablePaths()) {
       const html = renderPage(path);

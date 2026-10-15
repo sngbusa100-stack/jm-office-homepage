@@ -19,7 +19,7 @@ describe('검색 노출 기반', () => {
   it('색인 경로 목록이 정적 페이지·업무분야·진단을 모두 포함한다', () => {
     const paths = getIndexablePaths();
     expect(paths).toEqual([
-      '/', '/why', '/services', '/check', '/consult', '/privacy', '/disclaimer',
+      '/', '/why', '/services', '/check', '/consult', '/privacy', '/disclaimer', '/location',
       '/services/dui', '/services/suspension', '/services/license',
       '/services/immigration', '/services/veterans', '/services/documents',
       '/check/dui', '/check/suspension', '/check/veterans', '/check/permit',
@@ -38,7 +38,7 @@ describe('검색 노출 기반', () => {
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services/immigration</loc>');
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/check/permit</loc>');
     expect(sitemap).not.toContain('/result</loc>');
-    expect(sitemap.match(/<loc>/g)).toHaveLength(17);
+    expect(sitemap.match(/<loc>/g)).toHaveLength(18);
   });
 
   it('알 수 없는 진단 도메인은 색인하지 않고 안전한 설명을 반환한다', () => {
