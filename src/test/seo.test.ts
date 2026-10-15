@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildSitemapXml, getIndexablePaths, getPageMeta } from '../lib/pageMeta';
 
@@ -53,6 +53,13 @@ describe('검색 노출 기반', () => {
     const html = readFileSync(join(__dirname, '../../index.html'), 'utf8');
     expect(html).toContain('<meta name="naver-site-verification" content="f706bc559c2f4abed58ebe1b52f736a997433212" />');
     expect(html).toContain('<meta name="google-site-verification" content="EBoxaJEjGF9rPMjkKaW71qmUR4IjKOTyv5VGXTC6mJ4" />');
+  });
+
+  it('공유 미리보기 이미지는 JUNGMYUNG 표기 새 파일(og-image-v2)을 가리킨다', () => {
+    const html = readFileSync(join(__dirname, '../../index.html'), 'utf8');
+    expect(html).toContain('<meta property="og:image" content="https://jungmyungoffice.com/images/og-image-v2.png" />');
+    expect(existsSync(join(__dirname, '../../public/images/og-image-v2.png'))).toBe(true);
+    expect(existsSync(join(__dirname, '../../public/images/og-image.png'))).toBe(false);
   });
 
   it('초기 HTML에 canonical·Open Graph·구조화 데이터가 있다', () => {
