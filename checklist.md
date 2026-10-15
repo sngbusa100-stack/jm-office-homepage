@@ -258,4 +258,4 @@
 - [x] 검색 대상 18개로 확대(`getIndexablePaths` 자동), vercel.json `/location` 규칙 — 규칙 추가 전 `vercelConfig.test`가 누락을 실패로 잡음
 - [x] 테스트 `src/test/locationPage.test.tsx` 3개 RED→GREEN, 실제 저장소 35파일 252테스트·빌드·verify-dist(18개) 통과
 - [x] 브라우저: 1280·800·769px 메뉴 한 줄·로고와 겹침 없음, 375px 메뉴 안 "오시는 길"→/location 이동·가로 넘침 없음
-- [ ] push·배포 승인 대기
+- [x] master push(`b6f4b06..2fda867`)·운영 확인: /location 200·index·고유 canonical·주소·지도 버튼·전화, 홈 메뉴 링크, sitemap 18개, 상담 안내 오시는 길 유지, /api/consult 503
