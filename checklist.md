@@ -259,3 +259,11 @@
 - [x] 테스트 `src/test/locationPage.test.tsx` 3개 RED→GREEN, 실제 저장소 35파일 252테스트·빌드·verify-dist(18개) 통과
 - [x] 브라우저: 1280·800·769px 메뉴 한 줄·로고와 겹침 없음, 375px 메뉴 안 "오시는 길"→/location 이동·가로 넘침 없음
 - [x] master push(`b6f4b06..2fda867`)·운영 확인: /location 200·index·고유 canonical·주소·지도 버튼·전화, 홈 메뉴 링크, sitemap 18개, 상담 안내 오시는 길 유지, /api/consult 503
+
+## 2026-10-15 네이버 서치어드바이저·구글 서치콘솔 소유 확인 태그
+
+- [x] 결정 변경: 개업 전환 전에도 등록(색인까지 시간이 걸리고 사업자등록 불필요). 개업 전환 후 주요 페이지 재수집 요청으로 "개업 준비 중" 문구 갱신
+- [x] 구글은 DNS TXT 대신 HTML 태그(URL 접두어) — 가비아 안전잠금으로 DNS 변경이 막힐 수 있어서
+- [x] `index.html`에 naver/google 확인 태그 — 템플릿이라 사전 렌더링 18개·셸에도 포함 확인
+- [x] 테스트 RED→GREEN, `npm run check` 통과
+- [ ] push 승인 → 주인님 소유확인 클릭 → sitemap 제출(`https://jungmyungoffice.com/sitemap.xml`)·주요 페이지 수집 요청

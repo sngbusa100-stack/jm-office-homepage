@@ -49,6 +49,12 @@ describe('검색 노출 기반', () => {
     expect(getPageMeta('/check/toString/result').title).toContain('페이지를 찾을 수 없습니다');
   });
 
+  it('네이버·구글 사이트 소유 확인 태그가 초기 HTML에 있다', () => {
+    const html = readFileSync(join(__dirname, '../../index.html'), 'utf8');
+    expect(html).toContain('<meta name="naver-site-verification" content="f706bc559c2f4abed58ebe1b52f736a997433212" />');
+    expect(html).toContain('<meta name="google-site-verification" content="EBoxaJEjGF9rPMjkKaW71qmUR4IjKOTyv5VGXTC6mJ4" />');
+  });
+
   it('초기 HTML에 canonical·Open Graph·구조화 데이터가 있다', () => {
     const html = readFileSync(join(__dirname, '../../index.html'), 'utf8');
     expect(html).toContain('rel="canonical"');
