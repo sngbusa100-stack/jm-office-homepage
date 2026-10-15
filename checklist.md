@@ -279,4 +279,5 @@
 - [x] 카카오톡 등 미리보기 캐시를 피하려고 파일명을 `og-image-v2.png`로 바꾸고 `index.html` og:image 수정, 옛 파일 삭제
 - [x] 테스트 RED→GREEN, `npm run check` 통과(사전 렌더링 18개)
 - [x] 주인님 확인용 비교 이미지·새 이미지 사본: `D:\홈페이지\엠블럼, 로고\`
-- [ ] 이미지 확인·배포 승인 대기
+- [x] master push(`409286f..6711d16`)·운영 확인: 홈·/location·/services/dui og:image가 og-image-v2, 운영 이미지 바이트가 새 이미지와 동일(image/png), 검색 확인 태그·/api/consult 503 유지
+- [x] 주의(검증 방법): 없는 이미지 주소도 셸이 200으로 응답하므로 배포 반영은 상태 코드가 아니라 HTML og:image·응답 Content-Type·바이트 비교로 확인한다
