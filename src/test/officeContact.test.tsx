@@ -95,6 +95,9 @@ describe('개업 전 연락처 공개', () => {
 
     expect(main.getAllByText(/개업 후 시작됩니다/).length).toBeGreaterThan(0);
     expect(main.getByRole('button', { name: /상담 신청하기/ })).toBeDisabled();
+    // 연락처는 이미 게시했으므로 개업 전 안내는 등록번호 게시만 남은 일로 적는다.
+    expect(main.getByText(/개업과 필수 고지\(등록번호 게시\) 준비가 끝나면/)).toBeInTheDocument();
+    expect(main.queryByText(/등록번호·연락처 게시/)).toBeNull();
   });
 
   it('개인정보처리방침 문의처를 공개된 사무소 연락처로 안내한다', () => {
