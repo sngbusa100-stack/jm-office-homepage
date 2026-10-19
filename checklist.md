@@ -556,7 +556,7 @@
 ### 2026-10-19 운영 배포 (주인님: "배포해")
 
 - [x] 배포 전: 시행일 PRIVACY_EFFECTIVE_DATE·CONSENT_VERSION = 2026-10-19(배포일과 같아 변경 없음), 타입 검사·43파일 400테스트·빌드·verify-dist 통과
-- [x] master 푸시 (커밋 9개) → Vercel Production Ready(빌드 23초, guard 테스트 포함), 배포 jm-office-homepage-52uhjnll9
+- [x] master 푸시 d5b756f..054ad24 (커밋 9개) → Vercel Production Ready(빌드 23초, guard 테스트 포함), 배포 jm-office-homepage-52uhjnll9
 - [x] 운영 확인(curl, 2026-10-19)
   - 홈 title '정명 행정사사무소 | 복잡한 행정절차를 정확하고 명쾌하게'
   - /privacy '2026년 10월 19일부터 시행'·'접수 후 90일이 지나면 종결'·Telegram Messenger Inc.
