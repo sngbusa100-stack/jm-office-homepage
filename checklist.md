@@ -586,3 +586,12 @@
   - Vercel 대시보드 Cron Jobs의 Run으로 실제 메시지 수신 확인(파기도 함께 돔, 멱등)
   - 다음 날 08시대 도착 시각
 - [ ] 하지 않은 것: 로컬 사건 청구기한 임박 알림(기한은 로컬 DB에만 있음), 로컬 상태 반영(PATCH) 실패 감지(heartbeat는 GET 성공만 뜻함)
+
+### 2026-10-19 ③ 운영 요약 배포 (주인님: "배포해. 배포 뒤 확인까지 해줘")
+
+- [x] master 푸시 c58767f..cd3da1f → Vercel Production Ready(빌드 25초), 배포 jm-office-homepage-eam8navyz. jungmyungoffice.com·.co.kr(www 포함) 4개 별칭 연결
+- [x] 운영 확인(curl): 홈 200, /api/cron-purge·/api/connector 인증 없이 401
+- [x] Vercel 대시보드 Cron Jobs: Enabled, /api/cron-purge `0 23 * * *`(화면 표기 11:00 PM UTC). Hobby는 1시간 범위 안에서 실행된다는 안내 확인
+- [x] 로컬 연동기 17:15:42 정기 실행 결과 0, errors=0 — 새 배포에서 처음 성공한 GET이라 heartbeat가 기록됐어야 함(Redis 직접 조회는 하지 않음)
+- [ ] 대시보드 Run 버튼을 눌렀으나 Vercel이 "2FA 설정" 안내 창을 띄워 실행 여부를 확인하지 못함. 보안 설정이라 Claude가 선택하지 않음. `vercel logs`(production, 30분)는 0건 반환
+- [ ] 실제 Telegram 요약 수신 확인: 주인님 확인 필요(오늘 Run 결과 또는 내일 08시대 정기 실행)
