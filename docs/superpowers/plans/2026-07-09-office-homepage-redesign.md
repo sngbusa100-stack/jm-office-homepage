@@ -976,6 +976,7 @@ function collectFiles(dir: string): string[] {
   });
 }
 
+// 2026-10-18 정정: §21의2는 '수임제한' 조문이다. 광고 금지 근거는 행정사법 제22조 제4·5호(실제 테스트에 반영).
 describe('금지 표현 검사 (행정사법 §21의2, 표시광고법)', () => {
   const targets = [...collectFiles(join(__dirname, '../data')), ...collectFiles(join(__dirname, '../pages'))];
 
