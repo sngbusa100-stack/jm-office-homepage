@@ -483,3 +483,40 @@
 - [ ] Telegram 행은 초안: 소재국·연락처를 더 확인할 수 있으면 보완. 전문가 검토는 주인님 판단
 - [x] 보고서 2-1의 7개 항목 처리를 모두 마침(6번 회신 템플릿 문장은 GP-05와 함께 남음)
 - [ ] 커밋·배포는 주인님 지시 후
+
+### 2026-10-19 커밋과 기능 완결성·자동화 방향 점검 (주인님: "커밋해", "초점을 벗어난 느낌, 기능 보완·발전 방향을 찾아봐")
+
+- [x] 커밋 3개(master, 푸시 안 함): `8284e65` docs 점검 보고서·비자 설계 / `818818b` feat 홈 개편·비자 접수·법적 정정·개인정보 / `6eb94c8` docs 작업 기록. Telegram 행은 초안대로 확정(주인님)
+- [x] 방향 문서 `docs/2026-10-19-function-direction.md`. 코드로 확인한 끊긴 곳:
+  - 로컬 대기함(store.py:15-44)이 visaIntake·visaDiagnosis·attribution·consent를 저장하지 않음 → 수임 후 클라우드 파기 때 영구 유실 위험
+  - 로컬 종결이 홈페이지 접수함에 돌아가지 않음(connector PATCH = ACK만) → 120일 파기는 /admin에서 '완료'를 따로 눌러야 시작
+- [ ] 권장 순서: ①+② 접수 이후 고리 잇기 → ③ 일일 점검 알림 → ④+⑤ 회신 초안 자동화·분야별 경로 → ⑥ 개업 전환 점검. 주인님 선택 대기
+- [ ] 보고서 3절 질문 12(로컬 '종결'을 '처리 완료'로 볼지, 미처리 건 최대 보관일) 결정 필요
+
+### 2026-10-19 접수 이후 고리 잇기(①+②) 계획 — 승인 대기
+
+- [x] 주인님 결정: 로컬 '종결' = 홈페이지 '처리 완료'
+- [x] 계획 문서 `docs/2026-10-19-pipeline-link-plan.md`
+  - 홈페이지: connector PATCH `action=status`(in_progress·done, qualified·retained만 허용), `/admin`에 로컬 상태 표시, 연동 계약 파일 `api/_inquiry-contract.json`
+  - 로컬: 비자·동의·유입 JSON 열과 종결·동기화 열 추가, 매 실행 상태 동기화, 수임 건은 done·retained를 보낸 뒤 파기, '수임 안 됨 — 종결' 버튼
+- [x] (2026-10-19 승인) 미처리 기준: 첫 연락 1영업일(긴급 당일), 지연 72시간(긴급 24시간), 장기 미처리 30일 경고, 접수 후 90일 무처리 자동 종결(→ 120일 뒤 파기), 수집 이상 2시간은 ③으로
+- [ ] 홈페이지 배포 시 그동안 쌓인 커밋 3개도 함께 나가므로 시행일·CONSENT_VERSION을 배포일로 맞출 것
+
+### 2026-10-19 ①+② 1단계 — 홈페이지 쪽 구현 (주인님 승인: 계획·미처리 기준 72시간·30일·90일, 배포 안 함)
+
+- [x] `api/_store.mjs`
+  - `CONNECTOR_STATUS_RULES`: status in_progress·done / 단계 qualified·retained / 로컬 상태 closed·case_created·engaged / 종결 사유 manual·not_engaged·auto_stale
+  - `applyConnectorStatus`: 로컬로 가져간 접수만 바꿈. 종결은 done과 사유가 함께 와야 함. doneAt은 처음 완료될 때만 기록. 바뀐 것이 없으면 already. 메모·연락처는 바꾸지 않음
+- [x] `api/connector.js` PATCH: `action`이 없거나 ack면 예전 ACK(하위 호환), status면 상태 반영, 그 밖의 값은 400 unknown_action, 파기·미수집 건은 409
+- [x] 연동 계약 `api/_inquiry-contract.json`(`src/lib/inquiryContract.ts`로 생성)
+  - 담는 것: 레코드 필드 19개, 처리 과정 필드 11개, 로컬 필수 보관 15개, 상태 규칙, 미처리 기준, 비자 접수 라벨
+  - 다시 만들기 `npm run contract:inquiry`, 로컬 복사 `npm run sync:inquiry-contract`(기본 대상 `D:/행정사/1-행정심판/tests/fixtures/homepage_inquiry_contract.json`, 아직 실행 안 함)
+- [x] `/admin`: 로컬로 넘어간 접수에 "행정심판 시스템: 종결 — 90일 무처리 자동 종결 · 시각 (INQ-…)" 표시
+- [x] 개인정보처리방침 보유 기간: "처리되지 않은 상담 문의는 접수 후 90일이 지나면 종결로 보고, 그때부터 120일 뒤 파기"
+- [x] 테스트: connector 6개, 계약 5개, 관리자 1개, 방침 1개 추가. 구현 전 8개 실패와 계약 모듈 없음(RED) 확인 후 GREEN
+- [x] 검사: 타입 검사, 실제 저장소 43파일 397테스트(.claude 제외), 빌드(guard 88), verify-dist(18개 경로) 통과. 계약 모듈은 화면 번들에 들어가지 않음(dist/assets 검색 0건)
+- [ ] 배포 승인 대기. 배포 당일 할 일:
+  - 시행일·CONSENT_VERSION을 배포일로 맞추기
+  - 네이버·구글 재수집과 카카오 캐시 초기화
+  - RATE_LIMIT_SECRET 적용 확인
+- [ ] 2단계(로컬 행정심판 시스템): 계약 사본 복사 → 대기함 열 추가·상태 동기화·자동 종결·'수임 안 됨 — 종결' → 왕복 실측
