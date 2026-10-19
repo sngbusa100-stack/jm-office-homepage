@@ -160,15 +160,23 @@ export function applyConnectorStatus(record, input = {}, now = new Date()) {
   }
   if (errors.length > 0) return { ok: false, errors };
 
-  const next = { ...record, status };
+  // 90일 자동 종결은 관리자가 /admin에서 진행 중·보류로 다루던 접수의 상태를 바꾸지 않는다
+  // (로컬 처리 기록만 남김). 행정사가 직접 종결한 경우(manual·not_engaged)는 처리 완료가 된다.
+  const keepAdminStatus = closeReason === 'auto_stale' && ['in_progress', 'on_hold'].includes(record.status);
+  // 처리 완료를 연동 토큰으로 되돌리지 않는다(되돌리면 doneAt이 지워져 120일 파기가 밀린다).
+  const keepDone = record.status === 'done' && status !== 'done';
+  const nextStatus = keepAdminStatus || keepDone ? record.status : status;
+  const next = { ...record, status: nextStatus };
   // 자동 파기 기산점: applyInquiryPatch와 같은 규칙(처음 완료될 때만 기록, 완료가 풀리면 지움).
-  if (status === 'done') {
+  if (nextStatus === 'done') {
     if (record.status !== 'done') next.doneAt = now.toISOString();
     else if (!record.doneAt) next.doneAt = record.updatedAt ?? record.receivedAt ?? now.toISOString();
   } else {
     delete next.doneAt;
   }
-  if (pipelineStage !== undefined && record.pipelineStage !== pipelineStage) {
+  // 진행 단계는 앞으로만 간다(관리자가 정한 업무 완료·수임을 로컬이 낮추지 않는다).
+  const currentRank = PIPELINE_STAGES.indexOf(record.pipelineStage ?? 'inquiry');
+  if (pipelineStage !== undefined && PIPELINE_STAGES.indexOf(pipelineStage) > currentRank) {
     next.pipelineStage = pipelineStage;
     next.pipelineStageAt = now.toISOString();
   }

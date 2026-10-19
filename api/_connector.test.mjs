@@ -123,6 +123,32 @@ describe('연동기 상태 동기화 로직', () => {
     expect(result.value.memos).toEqual([]);
   });
 
+  it('진행 단계는 앞으로만 간다(관리자가 정한 업무 완료·수임을 로컬이 낮추지 않는다)', () => {
+    const record = { ...pulled(), pipelineStage: 'work_completed' };
+    const result = applyConnectorStatus(record, { status: 'in_progress', pipelineStage: 'retained', localStatus: 'engaged' }, NOW);
+    expect(result.ok).toBe(true);
+    expect(result.value.pipelineStage).toBe('work_completed');
+  });
+
+  it('90일 자동 종결은 관리자가 진행 중·보류로 다루던 접수의 상태를 바꾸지 않는다', () => {
+    const record = { ...pulled(), status: 'in_progress' };
+    const result = applyConnectorStatus(record, { status: 'done', localStatus: 'closed', closeReason: 'auto_stale' }, NOW);
+    expect(result.ok).toBe(true);
+    expect(result.value.status).toBe('in_progress');
+    expect(result.value.doneAt).toBeUndefined();
+    expect(result.value.localCloseReason).toBe('auto_stale');
+    // 행정사가 직접 종결한 경우는 처리 완료가 된다.
+    expect(applyConnectorStatus(record, { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).value.status).toBe('done');
+  });
+
+  it('처리 완료된 접수를 연동 토큰으로 진행 중으로 되돌리지 않는다(120일 파기가 밀리지 않게)', () => {
+    const done = applyConnectorStatus(pulled(), { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).value;
+    const result = applyConnectorStatus(done, { status: 'in_progress', pipelineStage: 'qualified', localStatus: 'case_created' }, NOW);
+    expect(result.ok).toBe(true);
+    expect(result.value.status).toBe('done');
+    expect(result.value.doneAt).toBe(NOW.toISOString());
+  });
+
   it('파기된 접수와 로컬로 가져가지 않은 접수는 거부한다', () => {
     const fresh = buildInquiryRecord(value, {}, { now: NOW });
     expect(applyConnectorStatus(fresh, { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).errors).toContain('not_pulled');
