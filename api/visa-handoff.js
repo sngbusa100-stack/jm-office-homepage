@@ -4,7 +4,7 @@ import {
   createVisaHandoffStore,
   sanitizeVisaHandoff,
 } from './_visa-handoff.mjs';
-import { checkRateLimit, redisConfig } from './_store.mjs';
+import { checkRateLimit, clientIp, rateLimitKey, redisConfig } from './_store.mjs';
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{20,80}$/;
 
@@ -33,11 +33,11 @@ export default async function handler(req, res) {
   const store = createVisaHandoffStore(cfg);
 
   if (req.body?.action !== 'consume') {
-    const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+    const limitKey = rateLimitKey('visa-handoff', clientIp(req));
     try {
       const allowed = await checkRateLimit(
         cfg,
-        `ratelimit:visa-handoff:${ip}`,
+        limitKey,
         { limit: 20, windowSec: 60 },
       );
       if (!allowed) {

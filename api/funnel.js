@@ -1,6 +1,6 @@
 import { applyCors } from './_cors.mjs';
 import { createFunnelStore, sanitizeFunnelEvent } from './_funnel.mjs';
-import { checkRateLimit, redisConfig } from './_store.mjs';
+import { checkRateLimit, clientIp, rateLimitKey, redisConfig } from './_store.mjs';
 
 export default async function handler(req, res) {
   if (applyCors(req, res, { methods: 'POST, OPTIONS' })) return;
@@ -22,11 +22,11 @@ export default async function handler(req, res) {
     return;
   }
 
-  const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+  const limitKey = rateLimitKey('funnel', clientIp(req));
   try {
     const allowed = await checkRateLimit(
       cfg,
-      `ratelimit:funnel:${ip}`,
+      limitKey,
       { limit: 120, windowSec: 60 },
     );
     if (!allowed) {

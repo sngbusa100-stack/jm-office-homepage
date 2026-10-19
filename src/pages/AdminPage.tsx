@@ -10,6 +10,7 @@ import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/admi
 import { buildReply, findReplyTemplate } from '../data/replyTemplates';
 import { findCheck } from '../data/checks';
 import { describeVisaDiagnosisAnswer } from '../data/visaDiagnosisLabels';
+import { describeVisaIntake } from '../data/visaIntake';
 
 const TOKEN_KEY = 'admin:token';
 
@@ -364,6 +365,22 @@ export function AdminPage() {
                       ))}
                     </ul>
                     <p className="note">고객의 결과 전달 동의를 거쳐 일회성 연결로 접수된 답변입니다.</p>
+                  </details>
+                )}
+                {item.visaIntake && (
+                  <details className="admin-item" open={Boolean(item.visaIntake.deadlineFirst)}>
+                    <summary>
+                      비자 접수 질문 — 고객 자가 응답(증빙 미확인)
+                      {item.visaIntake.deadlineFirst ? ' · 기한 우선 확인' : ''}
+                    </summary>
+                    <ul className="admin-stat-list">
+                      {describeVisaIntake(item.visaIntake).map((entry) => (
+                        <li key={entry.key}>
+                          {entry.question} — <strong>{entry.answer}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="note">고객이 선택한 내용이며 사무소가 자료로 확인한 결과가 아닙니다.</p>
                   </details>
                 )}
                 {(item.sourcePath || item.utmSource) && (

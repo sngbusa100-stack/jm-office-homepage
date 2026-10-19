@@ -115,6 +115,7 @@ describe('상담 접수 검증', () => {
           e7Wage: 'meets',
         },
       },
+      visaIntake: { requester: 'self', currentStatus: 'work', goal: 'change', stage: 'not-applied', language: 'ko' },
     });
     expect(result.ok).toBe(true);
     expect(result.value.visaDiagnosis).toMatchObject({
@@ -145,6 +146,36 @@ describe('상담 접수 검증', () => {
     });
     expect(mismatched.ok).toBe(false);
     expect(mismatched.errors).toContain('topic');
+  });
+
+  it('셀프 진단은 상담 분야와 진단 분야가 같을 때만 담고, 다르면 진단과 진단 경로를 버린다', () => {
+    const diagnosis = { domain: 'dui', answers: { 'dui-elapsed': 'd60to90' }, counts: { urgent: 1 } };
+    const matched = validateConsultPayload({ ...valid, topic: '음주운전 면허 구제', diagnosis, sourcePath: '/check/dui/result' });
+    expect(matched.value.diagnosis).toMatchObject({ domain: 'dui' });
+
+    const mismatched = validateConsultPayload({ ...valid, topic: '인허가', diagnosis, sourcePath: '/check/dui/result' });
+    expect(mismatched.ok).toBe(true);
+    expect(mismatched.value).not.toHaveProperty('diagnosis');
+    expect(mismatched.value).not.toHaveProperty('sourcePath');
+  });
+
+  it('비자 진단과 함께 온 메인 셀프 진단은 버린다(긴급 판정이 섞이지 않게)', () => {
+    const result = validateConsultPayload({
+      ...valid,
+      topic: '출입국 · 비자',
+      diagnosis: { domain: 'dui', answers: { 'dui-elapsed': 'd60to90' }, counts: { urgent: 1 } },
+      visaDiagnosis: {
+        schemaVersion: 1,
+        visaSlug: 'e7',
+        language: 'ko',
+        consent: true,
+        answers: { stayStatus: 'valid', violationStatus: 'none', e7Occupation: 'confirmed', e7Contract: 'ready', e7Wage: 'meets' },
+      },
+      visaIntake: { requester: 'self', currentStatus: 'work', goal: 'change', stage: 'not-applied', language: 'ko' },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.value).toHaveProperty('visaDiagnosis');
+    expect(result.value).not.toHaveProperty('diagnosis');
   });
 
   it('멱등성 키(submissionId)는 형식이 맞을 때만 담는다', () => {

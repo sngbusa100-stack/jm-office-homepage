@@ -6,9 +6,11 @@ import { applyCors } from './_cors.mjs';
 import {
   applyInquiryPatch,
   checkRateLimit,
+  clientIp,
   createInquiryStore,
   isRetentionExpired,
   purgeInquiryRecord,
+  rateLimitKey,
   redisConfig,
 } from './_store.mjs';
 import { createFunnelStore, emptyFunnelSummary } from './_funnel.mjs';
@@ -30,9 +32,9 @@ export default async function handler(req, res) {
     // 무차별 대입 방지: 인증 "실패"만 IP당 5분에 10회로 제한한다 (정상 사용은 계수 안 함).
     const limiterCfg = redisConfig();
     if (limiterCfg) {
-      const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+      const limitKey = rateLimitKey('adminauth', clientIp(req));
       try {
-        const allowed = await checkRateLimit(limiterCfg, `ratelimit:adminauth:${ip}`, {
+        const allowed = await checkRateLimit(limiterCfg, limitKey, {
           limit: 10,
           windowSec: 300,
         });

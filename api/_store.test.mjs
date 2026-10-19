@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import {
   PIPELINE_STAGES,
@@ -6,7 +9,9 @@ import {
   applyInquiryPatch,
   buildInquiryRecord,
   checkRateLimit,
+  clientIp,
   createInquiryStore,
+  rateLimitKey,
   generateInquiryId,
   isRetentionExpired,
   purgeInquiryRecord,
@@ -262,6 +267,41 @@ describe('요청 제한', () => {
       ['INCR', 'ratelimit:consult:1.2.3.4'],
       ['EXPIRE', 'ratelimit:consult:1.2.3.4', '60', 'NX'],
     ]);
+  });
+});
+
+describe('요청 제한 키 — 접속 IP 원문을 저장하지 않는다(보고서 2-1 3번)', () => {
+  it('비밀값이 있으면 IP를 HMAC-SHA256으로 바꾼 앞 32자만 키에 쓴다', () => {
+    const key = rateLimitKey('consult', '1.2.3.4', 'test-secret');
+    expect(key).toMatch(/^ratelimit:consult:[0-9a-f]{32}$/);
+    expect(key).not.toContain('1.2.3.4');
+    expect(rateLimitKey('consult', '1.2.3.4', 'test-secret')).toBe(key);
+    expect(rateLimitKey('consult', '1.2.3.5', 'test-secret')).not.toBe(key);
+    expect(rateLimitKey('consult', '1.2.3.4', 'other-secret')).not.toBe(key);
+    expect(rateLimitKey('funnel', '1.2.3.4', 'test-secret')).toMatch(/^ratelimit:funnel:[0-9a-f]{32}$/);
+  });
+
+  it('비밀값이 없으면 경고를 남기고 예전 키를 쓴다(요청 제한이 꺼지지 않게)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(rateLimitKey('consult', '1.2.3.4', '')).toBe('ratelimit:consult:1.2.3.4');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('x-forwarded-for의 첫 주소를 쓰고, 없으면 unknown', () => {
+    expect(clientIp({ headers: { 'x-forwarded-for': ' 1.2.3.4 , 10.0.0.1' } })).toBe('1.2.3.4');
+    expect(clientIp({ headers: {} })).toBe('unknown');
+  });
+
+  it('API 파일은 요청 제한 키를 직접 만들지 않고 rateLimitKey만 쓴다', () => {
+    const dir = dirname(fileURLToPath(import.meta.url));
+    const files = readdirSync(dir).filter((name) => /\.js$/.test(name));
+    expect(files).toEqual(expect.arrayContaining(['admin.js', 'consult.js', 'funnel.js', 'visa-handoff.js']));
+    for (const name of files) {
+      const source = readFileSync(join(dir, name), 'utf8');
+      expect(source.includes('ratelimit:'), `${name}에 요청 제한 키 직접 생성`).toBe(false);
+      expect(source.includes("headers['x-forwarded-for']"), `${name}에 IP 직접 파싱`).toBe(false);
+    }
   });
 });
 

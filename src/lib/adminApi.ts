@@ -42,6 +42,8 @@ export interface InquiryRecord {
   localCaseId?: string;
   diagnosis?: InquiryDiagnosis;
   visaDiagnosis?: InquiryVisaDiagnosis;
+  /** 출입국·비자 접수 질문(고객 자가 응답, 증빙 미확인). 설계: docs/2026-10-18-visa-intake-questions.md */
+  visaIntake?: Record<string, string | boolean> & { deadlineFirst?: boolean };
   sourcePath?: string;
   utmSource?: string;
   attribution?: {

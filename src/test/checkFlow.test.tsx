@@ -50,7 +50,7 @@ describe('진단 흐름', () => {
     }
     expect(await screen.findByText(/지금 바로 확인이 필요합니다/)).toBeInTheDocument();
     expect(screen.getAllByText(/110/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /상담 안내 보기/ })).toHaveAttribute('href', '/consult');
+    expect(screen.getByRole('link', { name: /상담 안내 보기/ })).toHaveAttribute('href', '/consult?topic=dui');
   });
 
   it('답변 없이 결과 주소로 직행하면 진단 시작을 안내한다', () => {

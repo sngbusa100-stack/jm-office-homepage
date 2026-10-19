@@ -205,13 +205,68 @@ nav#global-nav a.active {
     linear-gradient(180deg, #fff 0%, var(--bg) 100%);
   border-bottom: 1px solid var(--border);
 }
-.hero__grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.75fr); gap: 64px; align-items: center; }
+.hero__grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.72fr); gap: 56px; align-items: center; }
 .hero__content { min-width: 0; }
 .hero h1 { max-width: 760px; font-size: clamp(2.25rem, 4.4vw, 3.65rem); line-height: 1.18; margin-bottom: 20px; color: var(--text); }
 .hero__intro { max-width: 720px; color: var(--text-muted); font-size: var(--fs-lg); margin-bottom: 26px; }
-.hero__guide { background: var(--primary-dark); color: #fff; border-radius: var(--radius-lg); padding: 30px; box-shadow: var(--shadow-md); }
-.hero__guide .eyebrow { color: #f1d597; }
-.hero__guide h2 { font-size: var(--fs-xl); margin-bottom: 20px; }
+.hero__lead { display: block; color: var(--text); font-weight: 700; margin-bottom: 4px; }
+/* 슬로건의 정·명 두 글자를 상호와 잇는 강조 (명함·썸네일과 같은 장치) */
+.slogan-mark { color: var(--accent); }
+
+/* --- 첫 화면 대표 행정사 카드 --- */
+/* 사진을 맨 위에 크게, 이름·학력·경력은 아래에 작게 (주인님 요청 2026-10-16) */
+.profile-card { background: var(--primary-dark); color: #fff; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); }
+.profile-card__portrait { margin: 0; aspect-ratio: 4 / 5; background: #1a2d52; }
+.profile-card__portrait--empty { display: grid; place-items: center; background: radial-gradient(circle at 50% 42%, #24406f 0%, #13254a 55%, var(--primary-dark) 100%); }
+.profile-card__photo { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.profile-card__emblem { width: 128px; height: 128px; border-radius: var(--radius-md); box-shadow: 0 18px 40px -18px rgb(0 0 0 / 60%); }
+.profile-card__body { padding: 18px 22px 20px; }
+.profile-card__id { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding-bottom: 12px; border-bottom: 1px solid rgb(255 255 255 / 14%); }
+.profile-card__role { color: #f1d597; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.04em; }
+.profile-card__name { font-size: var(--fs-xl); letter-spacing: 0.16em; color: #fff; }
+.profile-card__en { color: #aab4c5; font-size: var(--fs-xs); letter-spacing: 0.12em; }
+.profile-card__facts { display: grid; gap: 2px; margin-top: 10px; }
+.profile-card__facts > div { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 8px; padding: 3px 0; font-size: var(--fs-sm); }
+.profile-card__facts dt { color: #aab4c5; font-size: var(--fs-xs); padding-top: 2px; }
+.profile-card__facts dd { margin: 0; color: #e6ebf3; line-height: var(--lh-snug); word-break: keep-all; }
+.profile-card__facts a,
+.profile-card__more { color: #f1d597; font-weight: 700; text-underline-offset: 4px; }
+.profile-card__more { display: inline-block; margin-top: 12px; font-size: var(--fs-sm); }
+.profile-card__facts a, .profile-card__facts .nowrap { white-space: nowrap; }
+.profile-card a:focus-visible { outline-color: #f1d597; }
+
+/* --- 대표 인사말과 약속 --- */
+.greeting { scroll-margin-top: 80px; }
+.hero__intro, .greeting p, .notice-band p, .prep-guide { word-break: keep-all; }
+.greeting__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 56px; align-items: start; }
+.greeting__letter h2 { margin-bottom: 18px; }
+.greeting__letter > p:not(.eyebrow):not(.greeting__sign):not(.greeting__hello) { color: var(--text-muted); max-width: 640px; }
+.greeting__hello { font-weight: 700; font-size: var(--fs-lg); }
+.greeting__letter > p + p { margin-top: 12px; }
+.greeting__sign { margin-top: 24px !important; }
+.greeting__sign strong { font-size: var(--fs-lg); letter-spacing: 0.14em; margin-left: 6px; }
+.promise-list { display: grid; gap: 14px; }
+.promise-list li { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-md); padding: 20px 22px; box-shadow: var(--shadow-sm); }
+.promise-list h3 { margin-bottom: 6px; }
+.promise-list p { color: var(--text-muted); }
+
+/* --- 처분·통지 안내 (예전 첫 화면 문구의 새 자리) --- */
+.notice-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr); gap: 48px; align-items: center; }
+.notice-band h2 { margin-bottom: 10px; }
+.notice-band p:not(.eyebrow) { color: var(--text-muted); max-width: 620px; }
+.notice-links { display: grid; gap: 10px; }
+.notice-links a { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); text-decoration: none; transition: border-color 0.15s ease, transform 0.15s ease; }
+.notice-links a:hover { border-color: var(--accent); transform: translateY(-1px); }
+.notice-links span { color: var(--accent-dark); font-size: var(--fs-sm); font-weight: 700; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .notice-links a { transition: none; } }
+
+/* --- 진단 선택 화면의 통지서 준비 안내 --- */
+.prep-guide { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr); gap: 32px; align-items: center; background: var(--primary-dark); color: #fff; border-radius: var(--radius-lg); padding: 28px 30px; margin-bottom: 32px; box-shadow: var(--shadow-md); }
+.prep-guide .eyebrow { color: #f1d597; }
+.prep-guide h2 { font-size: var(--fs-xl); }
+.prep-guide .guide-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.prep-guide .guide-list li { border-top: 0; border-left: 1px solid rgb(255 255 255 / 14%); padding: 4px 0 4px 18px; }
+
 .guide-list { display: grid; gap: 0; }
 .guide-list li { display: grid; gap: 2px; padding: 14px 0; border-top: 1px solid rgb(255 255 255 / 14%); }
 .guide-list strong { color: #fff; }
@@ -220,6 +275,13 @@ nav#global-nav a.active {
   .hero { padding: 52px 0; }
   .hero__grid { grid-template-columns: 1fr; gap: 36px; }
   .hero h1 { font-size: clamp(2rem, 10vw, 2.75rem); }
+  .notice-band { grid-template-columns: 1fr; gap: 24px; }
+  .prep-guide { grid-template-columns: 1fr; gap: 16px; padding: 24px; }
+  .prep-guide .guide-list { grid-template-columns: 1fr; gap: 0; }
+  .prep-guide .guide-list li { border-left: 0; border-top: 1px solid rgb(255 255 255 / 14%); padding: 12px 0; }
+}
+@media (max-width: 1024px) {
+  .greeting__grid { grid-template-columns: 1fr; gap: 32px; }
 }
 
 .trust-list { list-style: none; color: var(--text-muted); margin-top: 20px; display: grid; gap: 6px; }
@@ -399,6 +461,45 @@ th { background: var(--surface-muted); font-weight: 700; }
   font-weight: 400;
   color: var(--text-muted);
 }
+.consult-form input[type='date'],
+.consult-form input[type='month'],
+.consult-form input[type='email'] {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+.consult-form label .note { font-weight: 400; }
+
+/* --- 출입국·비자 접수 질문 (docs/2026-10-18-visa-intake-questions.md) --- */
+.visa-intake { display: flex; flex-direction: column; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-muted); word-break: keep-all; }
+.visa-intake h3 { margin: 0; }
+/* 셀프 진단 답변 선택 첨부(보고서 2-1 4번) */
+.consult-diagnosis { display: flex; flex-direction: column; gap: 8px; padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-muted); word-break: keep-all; }
+.consult-diagnosis p { margin: 0; }
+.consult-diagnosis ul { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.consult-diagnosis summary { cursor: pointer; font-weight: 600; }
+/* 개인정보처리방침 국외 이전 표 — 좁은 화면에서는 수탁자별 카드로 읽힌다 */
+.privacy-transfer-table th, .privacy-transfer-table td { vertical-align: top; word-break: keep-all; }
+@media (max-width: 640px) {
+  .privacy-transfer-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .privacy-transfer-table, .privacy-transfer-table tbody, .privacy-transfer-table tr,
+  .privacy-transfer-table th, .privacy-transfer-table td { display: block; width: auto; }
+  .privacy-transfer-table tr { margin-bottom: 16px; }
+  .privacy-transfer-table td { border-top: 0; }
+  .privacy-transfer-table td::before { content: attr(data-label); display: block; font-size: var(--fs-sm); font-weight: 700; color: var(--text-muted); }
+}
+.intake-group { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
+.intake-group legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.consult-form .intake-choice { flex-direction: row; align-items: flex-start; gap: 10px; font-weight: 400; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; }
+.consult-form .intake-choice input { margin-top: 0.3em; flex: none; }
+.intake-choice:has(input:checked) { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+.intake-optional { font-weight: 400; color: var(--text-muted); }
+.intake-inline { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.intake-proxy, .intake-dates { display: grid; gap: 10px; }
+.level-urgent-note { border-left: 4px solid var(--danger); padding-left: 10px; color: var(--text); }
 
 /* --- 접수 관리 페이지 (/admin) --- */
 .admin-stat {
@@ -541,7 +642,7 @@ th { background: var(--surface-muted); font-weight: 700; }
   .section { padding-top: 54px; padding-bottom: 54px; }
   .section-heading--row, .feature-band { grid-template-columns: 1fr; display: grid; align-items: start; gap: 18px; }
   .page-header { margin-bottom: 32px; }
-  .hero__guide { padding: 24px; }
+  .profile-card { max-width: 420px; width: 100%; justify-self: center; }
   .quick-check-grid, .related-link-grid { grid-template-columns: 1fr 1fr; }
   .official-source-list li { flex-direction: column; gap: 5px; }
   .admin-funnel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

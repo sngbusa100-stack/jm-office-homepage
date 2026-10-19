@@ -4,7 +4,9 @@ import {
   checkRateLimit,
   acquireSubmissionProcessing,
   claimSubmission,
+  clientIp,
   createInquiryStore,
+  rateLimitKey,
   redisConfig,
 } from './_store.mjs';
 import { applyCors } from './_cors.mjs';
@@ -27,9 +29,9 @@ export default async function handler(req, res) {
   // IP 단위 요청 제한 (분당 5회). 제한기 장애 시에는 접수를 막지 않는다(fail-open).
   const cfg = redisConfig();
   if (cfg) {
-    const ip = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+    const limitKey = rateLimitKey('consult', clientIp(req));
     try {
-      const allowed = await checkRateLimit(cfg, `ratelimit:consult:${ip}`);
+      const allowed = await checkRateLimit(cfg, limitKey);
       if (!allowed) {
         res.status(429).json({ ok: false, error: 'rate_limited' });
         return;
@@ -126,7 +128,7 @@ export default async function handler(req, res) {
     origin,
     inquiryId: record.id,
     storeError: !stored,
-    urgent: Boolean(record.diagnosis?.counts?.urgent),
+    urgent: Boolean(record.diagnosis?.counts?.urgent) || Boolean(record.visaIntake?.deadlineFirst),
     indexWarning: indexRepairFailed,
   });
   // 알림 실패(네트워크 예외 포함)가 500으로 번져 고객이 재제출→중복 접수가 되지 않도록 감싼다.

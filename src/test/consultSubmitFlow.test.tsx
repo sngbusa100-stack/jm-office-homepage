@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { StrictMode } from 'react';
@@ -25,6 +25,34 @@ function renderPage(initialEntry = '/consult') {
       <ConsultPage />
     </MemoryRouter>,
   );
+}
+
+/** 출입국·비자 분야의 필수 질문에 국내 본인 기준으로 답한다(docs/2026-10-18-visa-intake-questions.md). */
+async function answerVisaIntake(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByLabelText('제 비자 문제입니다'));
+  const stay = screen.queryByLabelText('한국에 있음 · 체류기간이 유효함');
+  if (stay) await user.click(stay);
+  await user.selectOptions(screen.getByLabelText(/지금 가지고 있는 체류자격/), 'work');
+  await user.click(screen.getByLabelText('다른 체류자격으로 바꾸기(변경)'));
+  await user.click(screen.getByLabelText('아직 신청 전'));
+}
+
+/** 진단 결과 화면이 세션에 남기는 음주운전 진단(답변 3개). */
+const DUI_DIAGNOSIS = {
+  domain: 'dui',
+  answers: { 'dui-disposition': 'revoke', 'dui-bac': 'low', 'dui-elapsed': 'd60to90' },
+  counts: { urgent: 1, official: 1, ready: 1 },
+};
+
+async function fillContact(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(/성함/), '홍길동');
+  await user.type(screen.getByLabelText(/연락처/), '01012345678');
+  await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
+}
+
+function consultBody(fetchMock: ReturnType<typeof vi.fn>) {
+  const call = fetchMock.mock.calls.find(([url]) => url === 'https://example.test/api/consult');
+  return JSON.parse((call?.[1] as RequestInit).body as string);
 }
 
 function renderStrictPage(initialEntry = '/consult') {
@@ -65,10 +93,27 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(select.value).toBe('출입국 · 비자');
   });
 
-  it('알 수 없는 topic 슬러그는 무시하고 기본값을 유지한다', () => {
+  it('알 수 없는 topic 슬러그는 무시하고 분야를 비워 둔다(음주운전이 기본값이 되지 않게)', () => {
     renderPage('/consult?topic=weird');
     const select = screen.getByLabelText('분야') as HTMLSelectElement;
-    expect(select.value).toBe('음주운전 면허 구제');
+    expect(select.value).toBe('');
+    expect(select).toBeRequired();
+    expect(screen.getByRole('option', { name: '분야를 선택해 주세요' })).toBeDisabled();
+  });
+
+  it('분야를 고르지 않으면 접수를 보내지 않고 선택을 안내한다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText(/성함/), '홍길동');
+    await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
+    fireEvent.submit(screen.getByRole('button', { name: /상담 신청하기/ }).closest('form')!);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('상담 분야를 선택해 주세요');
+    expect(fetchMock.mock.calls.some(([url]) => url === 'https://example.test/api/consult')).toBe(false);
   });
 
   it('입력값을 formEndpoint로 POST하고 성공 안내를 보여준다', async () => {
@@ -85,6 +130,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
 
     await user.type(screen.getByLabelText(/성함/), '홍길동');
     await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
     await user.type(screen.getByLabelText(/상담 내용/), '문의합니다');
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
@@ -97,6 +143,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     const body = JSON.parse((options as RequestInit).body as string);
     expect(body.name).toBe('홍길동');
     expect(body.phone).toBe('01012345678');
+    expect(body.topic).toBe('음주운전 면허 구제');
     expect(body.consent).toBe(true);
     expect(body.company).toBe('');
     expect(body.attribution).toEqual({
@@ -121,6 +168,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
 
     await user.type(screen.getByLabelText(/성함/), '홍길동');
     await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
 
@@ -134,11 +182,72 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
 
     await user.type(screen.getByLabelText(/성함/), '홍길동');
     await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('전송에 실패');
     expect(sessionStorage.getItem('consult:submission')).toMatch(/^[A-Za-z0-9-]{8,64}$/);
+  });
+
+  it('저장된 셀프 진단이 없으면 함께 보내기 선택지를 보여 주지 않는다', () => {
+    renderPage('/consult?topic=dui');
+    expect(screen.queryByRole('checkbox', { name: /셀프 진단 답변 \d+개 함께 보내기/ })).toBeNull();
+  });
+
+  it('진단 분야와 상담 분야가 같으면 함께 보내기를 보여 주고, 보낼 답변을 펼쳐 볼 수 있다', async () => {
+    sessionStorage.setItem('consult:diagnosis', JSON.stringify(DUI_DIAGNOSIS));
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, id: 'JM-DIAG' }) });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage('/consult?topic=dui');
+
+    const attach = screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기\(선택\)/ });
+    expect(attach).toBeChecked();
+    expect(screen.getByText('보낼 답변 보기')).toBeInTheDocument();
+    expect(screen.getByText(/어떤 처분을 받으셨나요\?/)).toBeInTheDocument();
+    expect(screen.getByText(/면허 취소/)).toBeInTheDocument();
+
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/JM-DIAG/);
+    const body = consultBody(fetchMock);
+    expect(body.diagnosis).toEqual(DUI_DIAGNOSIS);
+    expect(body.sourcePath).toBe('/check/dui/result');
+  });
+
+  it('함께 보내기를 해제하면 진단 답변과 진단 경로를 보내지 않는다', async () => {
+    sessionStorage.setItem('consult:diagnosis', JSON.stringify(DUI_DIAGNOSIS));
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, id: 'JM-NODIAG' }) });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage('/consult?topic=dui');
+
+    await user.click(screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기/ }));
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/JM-NODIAG/);
+    const body = consultBody(fetchMock);
+    expect(body).not.toHaveProperty('diagnosis');
+    expect(body).not.toHaveProperty('sourcePath');
+  });
+
+  it('상담 분야가 진단 분야와 다르면 함께 보내기를 끄고 이유를 안내하며 보내지 않는다', async () => {
+    sessionStorage.setItem('consult:diagnosis', JSON.stringify(DUI_DIAGNOSIS));
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, id: 'JM-OTHER' }) });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage('/consult?topic=permit');
+
+    const attach = screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기/ });
+    expect(attach).not.toBeChecked();
+    expect(attach).toBeDisabled();
+    expect(screen.getByText(/진단 분야\(음주운전 면허 구제\)와 상담 분야가 달라 함께 보내지 않습니다/)).toBeInTheDocument();
+
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/JM-OTHER/);
+    expect(consultBody(fetchMock)).not.toHaveProperty('diagnosis');
   });
 
   it('비자 세부 코드가 있으면 상담 조회 퍼널도 같은 세부 분야로 집계한다', async () => {
@@ -177,22 +286,27 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
       return { ok: true, json: async () => ({ ok: true, id: 'JM-20260725-E7AA' }) };
     });
     vi.stubGlobal('fetch', fetchMock);
+    // 예전에 한 메인 셀프 진단이 세션에 남아 있어도 비자 진단 건에는 붙이지 않는다.
+    sessionStorage.setItem('consult:diagnosis', JSON.stringify(DUI_DIAGNOSIS));
     const user = userEvent.setup();
     renderPage('/consult?topic=visa&visa=e7&handoff=abcdefghijklmnopqrstuvwx');
 
     expect(await screen.findByText(/진단 결과가 상담 화면에 안전하게 연결/)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /셀프 진단 답변 \d+개 함께 보내기/ })).toBeNull();
     expect((screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement).value).toContain('E-7');
     expect(screen.getByLabelText('분야')).toBeDisabled();
 
     await user.type(screen.getByLabelText(/성함/), '홍길동');
     await user.type(screen.getByLabelText(/연락처/), '01012345678');
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
+    await answerVisaIntake(user);
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
 
     expect(await screen.findByText(/JM-20260725-E7AA/)).toBeInTheDocument();
     const consultCall = fetchMock.mock.calls.find(([url]) => url === 'https://example.test/api/consult');
     const body = JSON.parse((consultCall?.[1] as RequestInit).body as string);
     expect(body.visaDiagnosis).toEqual(visaDiagnosis);
+    expect(body).not.toHaveProperty('diagnosis');
     expect(body.sourcePath).toBe('/result?visa=e7');
     expect(sessionStorage.getItem('consult:visaDiagnosis')).toBeNull();
   });
@@ -233,6 +347,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
 
     resolveHandoff({ ok: true, status: 200, json: async () => ({ ok: true, visaDiagnosis }) });
     expect(await screen.findByText(/진단 결과가 상담 화면에 안전하게 연결/)).toBeInTheDocument();
+    await answerVisaIntake(user);
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
     await screen.findByText(/JM-E7-LOADED/);
     const consultCall = fetchMock.mock.calls.find(([url]) => url === 'https://example.test/api/consult');
@@ -277,13 +392,14 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
 
     await user.type(screen.getByLabelText(/성함/), '홍길동');
     await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.selectOptions(screen.getByLabelText('분야'), '인허가');
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
     await screen.findByText(/JM-GENERAL/);
     const consultCall = fetchMock.mock.calls.find(([url]) => url === 'https://example.test/api/consult');
     const body = JSON.parse((consultCall?.[1] as RequestInit).body as string);
     expect(body).not.toHaveProperty('visaDiagnosis');
-    expect(body.topic).toBe('음주운전 면허 구제');
+    expect(body.topic).toBe('인허가');
   });
 
   it('만료되거나 이미 사용한 비자 토큰은 안내하고 일반 상담은 막지 않는다', async () => {

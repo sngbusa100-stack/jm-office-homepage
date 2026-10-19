@@ -1,5 +1,6 @@
 import { checks, findCheck } from '../data/checks';
 import { findService, services } from '../data/services';
+import { SLOGAN } from '../data/profile';
 
 export const SITE_URL = 'https://jungmyungoffice.com';
 
@@ -11,11 +12,12 @@ export interface PageMeta {
 }
 
 const DEFAULT_DESCRIPTION = '정명 행정사사무소의 음주운전 면허 구제, 영업정지 행정심판, 인허가, 국가보훈 업무 안내와 셀프 진단.';
+const HOME_DESCRIPTION = '광명KTX역 앞 정명 행정사사무소(대표 행정사 정재훈). 인허가, 출입국·비자, 영업정지 행정심판, 음주운전 면허 구제, 국가보훈 업무 안내와 셀프 진단.';
 
 const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
   '/': {
-    title: '정명 행정사사무소 | 정확함으로 길을 밝히다',
-    description: DEFAULT_DESCRIPTION,
+    title: `정명 행정사사무소 | ${SLOGAN}`,
+    description: HOME_DESCRIPTION,
   },
   '/why': {
     title: '행정사가 필요한 이유 | 정명 행정사사무소',

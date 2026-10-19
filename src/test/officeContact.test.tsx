@@ -102,7 +102,7 @@ describe('개업 전 연락처 공개', () => {
 
   it('개인정보처리방침 문의처를 공개된 사무소 연락처로 안내한다', () => {
     renderAt('/privacy');
-    const contact = within(screen.getByRole('region', { name: '문의' }));
+    const contact = within(screen.getByRole('region', { name: '개인정보 보호책임자' }));
     expect(contact.getByRole('link', { name: 'sngbusa10@naver.com' })).toHaveAttribute('href', 'mailto:sngbusa10@naver.com');
     expect(contact.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
     expect(contact.queryByText(/개업 후 이 사이트와 사무소 안내에 공개되는 연락처/)).toBeNull();

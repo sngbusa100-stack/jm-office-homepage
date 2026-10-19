@@ -49,6 +49,25 @@ describe('퍼널 이벤트 API', () => {
     expect(JSON.stringify(commands)).not.toContain('/services/dui');
   });
 
+  it('비밀값이 있으면 저장소로 보내는 요청 제한 키에 접속 IP 원문이 없다', async () => {
+    vi.stubEnv('RATE_LIMIT_SECRET', 'test-secret');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ result: 1 }, { result: 1 }],
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const res = response();
+    await handler({
+      method: 'POST',
+      headers: { origin: 'http://localhost:5173', 'x-forwarded-for': '1.2.3.4' },
+      body: { event: 'landing_view', domain: 'dui' },
+    }, res);
+    expect(res.statusCode).toBe(202);
+    const sent = fetchMock.mock.calls.map(([, options]) => options.body).join('\n');
+    expect(sent).toMatch(/ratelimit:funnel:[0-9a-f]{32}/);
+    expect(sent).not.toContain('1.2.3.4');
+  });
+
   it('허용되지 않은 이벤트는 400', async () => {
     vi.stubGlobal('fetch', vi.fn());
     const res = response();

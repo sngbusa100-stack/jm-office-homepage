@@ -7,6 +7,13 @@ import type { ConsultDiagnosis, VisaConsultDiagnosis } from '../lib/consultSubmi
 import type { ResultLevel } from '../types/content';
 import { readAttribution, trackFunnelEvent } from '../lib/funnel';
 import { OfficeLocation } from '../components/OfficeLocation';
+import { VisaIntakeFields } from '../components/VisaIntakeFields';
+import { findCheck } from '../data/checks';
+import { EMPTY_VISA_INTAKE, buildVisaIntakePayload, intakeWording } from '../data/visaIntake';
+import type { VisaIntakeAnswers } from '../data/visaIntake';
+
+const VISA_TOPIC = '출입국 · 비자';
+const DIAGNOSIS_LANGUAGES = ['ko', 'en', 'zh', 'vi', 'ja'];
 
 const LEVEL_LABEL: Record<ResultLevel, string> = {
   urgent: '긴급 확인', documents: '서류 보완', official: '공식 확인', ready: '확인됨',
@@ -143,6 +150,16 @@ function readDiagnosis(): ConsultDiagnosis | undefined {
   return undefined;
 }
 
+/** 함께 보낼 진단 답변을 문항·선택지 문장으로 풀어 보여 준다(진단 정의에 없는 답은 뺀다). */
+function describeDiagnosis(diagnosis: ConsultDiagnosis): { question: string; answer: string }[] {
+  const definition = findCheck(diagnosis.domain);
+  if (!definition) return [];
+  return definition.questions.flatMap((question) => {
+    const option = question.options.find((item) => item.id === diagnosis.answers[question.id]);
+    return option ? [{ question: question.text, answer: option.label }] : [];
+  });
+}
+
 function buildPrefill(): string {
   const raw = safeSessionGet('consult:summary');
   if (!raw) return '';
@@ -190,10 +207,37 @@ export function ConsultPage() {
     && handoffState.status === 'loaded'
     ? handoffState.value
     : undefined;
+  // 분야는 기본값 없이 비워 둔다. 첫 항목(음주운전)이 기본값이면 다른 분야 문의가
+  // 음주운전으로 접수되고, 로컬 연동기의 사건 유형·회신 템플릿까지 잘못 고른다.
+  // 진단 결과 화면에서 남긴 셀프 진단. 자동으로 보내지 않고, 같은 분야일 때
+  // 화면의 '함께 보내기'를 고른 경우에만 접수에 붙인다(보고서 2-1 4번).
+  const [storedDiagnosis] = useState<ConsultDiagnosis | undefined>(readDiagnosis);
+  const diagnosisTopic = storedDiagnosis ? TOPIC_SLUGS[storedDiagnosis.domain] : undefined;
+  const diagnosisItems = storedDiagnosis ? describeDiagnosis(storedDiagnosis) : [];
+  const [attachChoice, setAttachChoice] = useState(true);
+  const [selectedTopic, setSelectedTopic] = useState<string>(presetTopic ?? diagnosisTopic ?? '');
+  const [topicMissing, setTopicMissing] = useState(false);
+  const topic = visaDiagnosis ? VISA_TOPIC : selectedTopic;
+  // 주소의 ?topic=이 바뀌면(다른 화면에서 다시 진입) 분야 선택도 그 값으로 되돌린다.
+  useEffect(() => { setSelectedTopic(presetTopic ?? diagnosisTopic ?? ''); }, [presetTopic, diagnosisTopic]);
+  const showDiagnosisAttach = Boolean(diagnosisTopic) && diagnosisItems.length > 0 && !visaDiagnosis;
+  const diagnosisMatches = diagnosisTopic === topic;
+  const attachDiagnosis = showDiagnosisAttach && diagnosisMatches && attachChoice;
+  const [visaIntake, setVisaIntake] = useState<VisaIntakeAnswers>(EMPTY_VISA_INTAKE);
+  const diagnosisStay = typeof visaDiagnosis?.answers.stayStatus === 'string' ? visaDiagnosis.answers.stayStatus : '';
+  const diagnosisViolation = typeof visaDiagnosis?.answers.violationStatus === 'string' ? visaDiagnosis.answers.violationStatus : '';
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
   // 새로고침 뒤에도 실패한 제출은 같은 키를 써서 중복 등록을 막는다.
   const [submissionId] = useState<string>(readOrCreateSubmissionId);
+
+  // 비자 진단에서 쓴 언어를 연락 언어로 미리 골라 둔다(바꿀 수 있음).
+  useEffect(() => {
+    const language = visaDiagnosis?.language;
+    if (language && DIAGNOSIS_LANGUAGES.includes(language)) {
+      setVisaIntake((current) => (current.language === 'ko' ? { ...current, language } : current));
+    }
+  }, [visaDiagnosis?.language]);
 
   useEffect(() => {
     void trackFunnelEvent({
@@ -256,16 +300,20 @@ export function ConsultPage() {
       || status === 'sending'
       || (validHandoffToken && (handoffStatus === 'idle' || handoffStatus === 'loading'))
     ) return;
+    if (!topic) {
+      setTopicMissing(true);
+      return;
+    }
     const form = new FormData(event.currentTarget);
     setStatus('sending');
-    const diagnosis = readDiagnosis();
+    const diagnosis = attachDiagnosis ? storedDiagnosis : undefined;
     const utmSource = safeSessionGet('consult:utm') ?? undefined;
     const attribution = readAttribution();
     const result = await submitConsult(office.formEndpoint, {
       name: String(form.get('name') ?? ''),
       phone: String(form.get('phone') ?? ''),
       email: String(form.get('email') ?? ''),
-      topic: String(form.get('topic') ?? ''),
+      topic,
       message,
       consent: form.get('consent') === 'on',
       company: String(form.get('company') ?? ''),
@@ -274,6 +322,7 @@ export function ConsultPage() {
         visaDiagnosis,
         sourcePath: `/result?visa=${encodeURIComponent(visaDiagnosis.visaSlug)}`,
       } : {}),
+      ...(topic === VISA_TOPIC ? { visaIntake: buildVisaIntakePayload(visaIntake, diagnosisStay) } : {}),
       ...(utmSource ? { utmSource } : {}),
       ...(Object.keys(attribution).length > 0 ? { attribution } : {}),
       submissionId,
@@ -354,11 +403,13 @@ export function ConsultPage() {
         </label>
         <label>분야
           <select
-            key={presetTopic ?? 'default'}
             name="topic"
-            defaultValue={presetTopic}
+            value={topic}
+            onChange={(e) => { setSelectedTopic(e.target.value); setTopicMissing(false); }}
             disabled={!formEnabled || Boolean(visaDiagnosis)}
+            required
           >
+            <option value="" disabled>분야를 선택해 주세요</option>
             <option>음주운전 면허 구제</option>
             <option>영업정지 · 행정심판</option>
             <option>인허가</option>
@@ -368,18 +419,63 @@ export function ConsultPage() {
           </select>
           {visaDiagnosis && <input type="hidden" name="topic" value="출입국 · 비자" />}
         </label>
+        {topicMissing && !topic && <p className="note" role="alert">상담 분야를 선택해 주세요.</p>}
+        {topic === VISA_TOPIC && (
+          <VisaIntakeFields
+            answers={visaIntake}
+            onChange={(patch) => setVisaIntake((current) => ({ ...current, ...patch }))}
+            disabled={!formEnabled}
+            fromDiagnosis={visaDiagnosis ? { stayStatus: diagnosisStay, violation: diagnosisViolation } : null}
+          />
+        )}
         <label>상담 내용
+          <span className="note">
+            지금 가장 걱정되는 점이나 정해진 날짜를 한두 줄로 적어 주세요. 주민등록번호·외국인등록번호·여권번호·운전면허번호,
+            계좌번호, 신분증·여권 사진, 병명 같은 진단 내용은 적거나 보내지 마세요. 필요한 자료는 상담 후 따로 안내드립니다.
+          </span>
           <textarea
             name="message"
             rows={5}
+            maxLength={2000}
+            placeholder={topic === VISA_TOPIC ? intakeWording(visaIntake.requester).messageExample : undefined}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             disabled={!formEnabled}
           />
         </label>
+        {showDiagnosisAttach && (
+          <div className="consult-diagnosis">
+            <label className="agree">
+              <input
+                type="checkbox"
+                checked={attachDiagnosis}
+                onChange={(e) => setAttachChoice(e.target.checked)}
+                disabled={!formEnabled || !diagnosisMatches}
+              />
+              셀프 진단 답변 {diagnosisItems.length}개 함께 보내기(선택)
+            </label>
+            <p className="note">
+              {diagnosisMatches
+                ? '고르시면 아래 답변이 상담 내용과 함께 전송되어 상담 준비에 쓰입니다. 고르지 않아도 상담을 받으실 수 있습니다.'
+                : `진단 분야(${diagnosisTopic})와 상담 분야가 달라 함께 보내지 않습니다.`}
+            </p>
+            <details>
+              <summary>보낼 답변 보기</summary>
+              <ul>
+                {diagnosisItems.map((item) => (
+                  <li key={item.question}>{item.question} — {item.answer}</li>
+                ))}
+              </ul>
+            </details>
+          </div>
+        )}
         <label className="agree">
           <input type="checkbox" name="consent" required disabled={!formEnabled} />
-          개인정보 수집·이용에 동의합니다 (상담 회신 목적, 처리 완료 후 120일 보관 뒤 파기)
+          개인정보 수집·이용에 동의합니다 — 수집 항목: 이름·전화번호·이메일(선택)·분야·문의 글, 함께 보내기를 고른 경우 진단 답변, 출입국·비자
+          분야는 위 질문의 답(선택 항목은 답한 경우만). 목적: 상담 회신. 보관: 처리 완료 후 120일 뒤 파기.
+          국외 이전: 접수 서버·저장소 Vercel·Upstash(미국), 접수 알림 Telegram에 처리를 맡깁니다.
+          동의하지 않으실 수 있으나, 이 경우 온라인 신청은 접수되지 않습니다(전화 문의 가능). 선택 항목은 답하지
+          않아도 상담을 받으실 수 있습니다. 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 확인해 주세요.
         </label>
         <button
           className="button button--accent"

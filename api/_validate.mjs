@@ -1,6 +1,7 @@
 // 상담 접수 검증·포맷 (api/consult.js에서 사용, _접두사라 엔드포인트로 노출되지 않음)
 import CHECK_LEVELS from './_check-levels.mjs';
 import { sanitizeVisaHandoff } from './_visa-handoff.mjs';
+import { sanitizeVisaIntake } from './_visa-intake.mjs';
 
 export const TOPICS = [
   '음주운전 면허 구제',
@@ -10,6 +11,14 @@ export const TOPICS = [
   '국가보훈',
   '토지보상 · 내용증명 · 계약서',
 ];
+
+/** 셀프 진단 분야 → 상담 분야. 진단은 같은 분야 상담에만 붙인다(보고서 2-1 4번). */
+const DIAGNOSIS_TOPIC = {
+  dui: '음주운전 면허 구제',
+  suspension: '영업정지 · 행정심판',
+  permit: '인허가',
+  veterans: '국가보훈',
+};
 
 // 진단 정의(도메인→문항→선택지→등급). scripts/gen-check-levels.ts로 생성 —
 // src/data/checks와의 동기화는 src/test/checkLevels.sync.test.ts가 보증한다.
@@ -60,11 +69,17 @@ export function validateConsultPayload(body) {
   const message = typeof data.message === 'string' ? data.message.trim() : '';
   const consent = data.consent === true;
   const honeypot = typeof data.company === 'string' ? data.company.trim() : '';
-  const diagnosis = sanitizeDiagnosis(data.diagnosis);
-  const sourcePath = typeof data.sourcePath === 'string' ? data.sourcePath.trim().slice(0, 120) : '';
+  const visaDiagnosis = sanitizeVisaHandoff(data.visaDiagnosis);
+  // 셀프 진단은 상담 분야와 같은 분야일 때만 담는다. 다른 분야의 예전 진단이나
+  // 비자 진단과 함께 온 메인 진단은 긴급 판정을 바꾸므로 버린다(접수는 막지 않음).
+  const rawDiagnosis = sanitizeDiagnosis(data.diagnosis);
+  const diagnosis = rawDiagnosis && !visaDiagnosis && DIAGNOSIS_TOPIC[rawDiagnosis.domain] === topic
+    ? rawDiagnosis
+    : null;
+  const rawSourcePath = typeof data.sourcePath === 'string' ? data.sourcePath.trim().slice(0, 120) : '';
+  const sourcePath = !diagnosis && rawSourcePath.startsWith('/check/') ? '' : rawSourcePath;
   const utmSource = typeof data.utmSource === 'string' ? data.utmSource.trim().slice(0, 80) : '';
   const attribution = sanitizeAttribution(data.attribution);
-  const visaDiagnosis = sanitizeVisaHandoff(data.visaDiagnosis);
   // 멱등성 키 — 응답 유실 후 재제출을 같은 접수로 묶는다. 형식이 틀리면 무시(선택 값).
   const rawSubmissionId = typeof data.submissionId === 'string' ? data.submissionId.trim() : '';
   const submissionId = /^[A-Za-z0-9-]{8,64}$/.test(rawSubmissionId) ? rawSubmissionId : '';
@@ -77,6 +92,13 @@ export function validateConsultPayload(body) {
   if (email && (email.length > 100 || !/^\S+@\S+\.\S+$/.test(email))) errors.push('email');
   if (!TOPICS.includes(topic)) errors.push('topic');
   if (visaDiagnosis && topic !== '출입국 · 비자' && !errors.includes('topic')) errors.push('topic');
+  // 출입국·비자 분야는 설계안(docs/2026-10-18-visa-intake-questions.md)의 필수 질문을 함께 받는다.
+  let visaIntake = null;
+  if (topic === '출입국 · 비자') {
+    const intake = sanitizeVisaIntake(data.visaIntake, { visaDiagnosis });
+    if (intake.ok) visaIntake = intake.value;
+    else errors.push('visaIntake');
+  }
   if (message.length > 2000) errors.push('message');
   if (!consent) errors.push('consent');
 
@@ -94,6 +116,7 @@ export function validateConsultPayload(body) {
       ...(utmSource ? { utmSource } : {}),
       ...(attribution ? { attribution } : {}),
       ...(visaDiagnosis ? { visaDiagnosis } : {}),
+      ...(visaIntake ? { visaIntake } : {}),
       ...(submissionId ? { submissionId } : {}),
     },
   };

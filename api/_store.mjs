@@ -1,3 +1,5 @@
+import { createHmac } from 'node:crypto';
+
 // 상담 접수 데이터 저장소 (_접두사라 엔드포인트로 노출되지 않음)
 // - 순수 로직(레코드 생성·패치·파기)과 Upstash Redis REST 호출을 분리해 테스트한다.
 // - 저장소 미설정(환경변수 없음) 시에도 접수 자체는 동작하도록 호출부에서 redisConfig()로 분기한다.
@@ -5,11 +7,11 @@
 export const STATUSES = ['new', 'in_progress', 'done', 'on_hold'];
 export const PIPELINE_STAGES = ['inquiry', 'qualified', 'retained', 'work_completed'];
 
-/** 접수 레코드 구조 버전. v5: 동의 기반 비자 진단 첨부 추가. */
-export const SCHEMA_VERSION = 5;
+/** 접수 레코드 구조 버전. v5: 동의 기반 비자 진단 첨부, v6: 출입국·비자 접수 질문(visaIntake) 추가. */
+export const SCHEMA_VERSION = 6;
 
 /** 개인정보 수집 동의 문구 버전 — 개인정보처리방침 개정일과 맞춘다. */
-export const CONSENT_VERSION = '2026-07-19';
+export const CONSENT_VERSION = '2026-10-19';
 
 /** 처리 완료(done) 후 개인정보 보존 일수 — 행정심판 청구기간(90일)과 후속 절차 대응을 고려해 120일. */
 export const RETENTION_DAYS = 120;
@@ -42,6 +44,7 @@ export function buildInquiryRecord(value, meta = {}, { id, now = new Date() } = 
     message: value.message ?? '',
     ...(value.diagnosis ? { diagnosis: value.diagnosis } : {}),
     ...(value.visaDiagnosis ? { visaDiagnosis: value.visaDiagnosis } : {}),
+    ...(value.visaIntake ? { visaIntake: value.visaIntake } : {}),
     ...(value.sourcePath ? { sourcePath: value.sourcePath } : {}),
     ...(value.utmSource ? { utmSource: value.utmSource } : {}),
     ...(value.attribution ? { attribution: value.attribution } : {}),
@@ -221,6 +224,31 @@ export async function acquireSubmissionProcessing(
   const key = `dedup:processing:${submissionId}`;
   const result = await command(cfg, ['SET', key, '1', 'NX', 'EX', String(ttlSec)], fetchImpl);
   return result === 'OK';
+}
+
+/** 요청을 보낸 접속 IP(x-forwarded-for의 첫 주소). 없으면 'unknown'. */
+export function clientIp(req) {
+  return String(req.headers?.['x-forwarded-for'] ?? '').split(',')[0].trim() || 'unknown';
+}
+
+let warnedMissingSecret = false;
+
+/**
+ * 요청 제한 키. 접속 IP 원문을 미국 Upstash에 남기지 않도록 RATE_LIMIT_SECRET으로
+ * HMAC-SHA256을 만들어 앞 32자(128비트)만 쓴다(보고서 2-1 3번).
+ * 비밀값이 없으면 비밀 없는 해시는 IPv4 전체를 쉽게 되돌릴 수 있어 의미가 없으므로,
+ * 경고만 남기고 예전 키를 써서 요청 제한이 꺼지지 않게 한다.
+ */
+export function rateLimitKey(scope, ip, secret = process.env.RATE_LIMIT_SECRET) {
+  if (!secret) {
+    if (!warnedMissingSecret) {
+      console.warn('[rate-limit] RATE_LIMIT_SECRET이 없어 접속 IP 원문으로 요청 제한 키를 만듭니다.');
+      warnedMissingSecret = true;
+    }
+    return `ratelimit:${scope}:${ip}`;
+  }
+  const digest = createHmac('sha256', secret).update(ip).digest('hex').slice(0, 32);
+  return `ratelimit:${scope}:${digest}`;
 }
 
 /**

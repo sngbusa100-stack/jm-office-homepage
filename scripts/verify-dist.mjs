@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findForbidden, htmlToCheckedText } from './forbidden-phrases.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dist = resolve(here, '../dist');
@@ -62,4 +63,18 @@ if (!shell.includes('content="noindex, nofollow"') || shell.includes('rel="canon
   fail('spa-fallback.html이 색인 제외 빈 셸이 아닙니다.');
 }
 
-console.log(`[verify-dist] 배포 산출물 검증 통과 (사전 렌더링 ${locs.length}개 경로)`);
+// 금지 표현: 방문자·검색엔진에 보이는 글(본문·title·meta·alt·JSON-LD)만 검사한다. 하나라도 있으면 배포를 멈춘다.
+function listHtml(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = resolve(dir, entry.name);
+    if (entry.isDirectory()) return listHtml(full);
+    return entry.name.endsWith('.html') ? [full] : [];
+  });
+}
+const htmlFiles = listHtml(dist);
+for (const file of htmlFiles) {
+  const found = findForbidden(htmlToCheckedText(readFileSync(file, 'utf8')));
+  if (found.length > 0) fail(`${file.slice(dist.length + 1)}에 금지 표현이 있습니다: ${found.join(', ')}`);
+}
+
+console.log(`[verify-dist] 배포 산출물 검증 통과 (사전 렌더링 ${locs.length}개 경로, 금지 표현 검사 HTML ${htmlFiles.length}개)`);
