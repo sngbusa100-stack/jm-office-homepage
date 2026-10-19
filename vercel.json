@@ -36,5 +36,5 @@
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
   ],
-  "crons": [{ "path": "/api/cron-purge", "schedule": "0 18 * * *" }]
+  "crons": [{ "path": "/api/cron-purge", "schedule": "0 23 * * *" }]
 }

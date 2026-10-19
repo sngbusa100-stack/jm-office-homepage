@@ -1,5 +1,5 @@
 // 로컬 연동기(행정심판 시스템) 전용 API — CONNECTOR_TOKEN Bearer 인증 (ADMIN_TOKEN과 별도)
-// GET: 아직 pull되지 않은 접수 목록 / PATCH: ACK(pulledAt·localCaseId 기록, 멱등)
+// GET: 아직 pull되지 않은 접수 목록(성공 시 연동기 마지막 접속 시각 기록) / PATCH: ACK(pulledAt·localCaseId 기록, 멱등)
 // PATCH action=status: 로컬 처리 결과(종결·사건 전환·수임)를 접수 상태에 반영(멱등, docs/2026-10-19-pipeline-link-plan.md)
 // DELETE: 수임 확정·이관 완료 후 클라우드 레코드 파기 (통계 필드만 보존, 멱등)
 // 브라우저가 아닌 로컬 스크립트 전용이므로 CORS를 적용하지 않는다.
@@ -29,6 +29,12 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const items = (await store.list()).filter((r) => !r.purged && !r.pulledAt);
+      // 생존 신호 기록 실패가 접수 수집을 막지 않게 한다.
+      try {
+        await store.markConnectorSeen(new Date());
+      } catch {
+        // 아침 운영 요약에서 '연동기 접속' 경고로 드러난다.
+      }
       res.status(200).json({ ok: true, items });
       return;
     }

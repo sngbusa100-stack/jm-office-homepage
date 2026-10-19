@@ -9,6 +9,7 @@ const vercel = JSON.parse(readFileSync(join(__dirname, '../../vercel.json'), 'ut
   framework?: string;
   buildCommand?: string;
   outputDirectory?: string;
+  crons?: { path: string; schedule: string }[];
 };
 const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8')) as {
   scripts: Record<string, string>;
@@ -16,6 +17,10 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8
 const FALLBACK_SOURCE = '/((?!api/).*)';
 
 describe('Vercel 연결 규칙', () => {
+  it('파기·운영 요약 cron은 매일 한국 08시대(UTC 23시)에 하나만 돈다', () => {
+    expect(vercel.crons).toEqual([{ path: '/api/cron-purge', schedule: '0 23 * * *' }]);
+  });
+
   it('사전 렌더링하지 않는 경로는 색인 제외 셸로 보낸다', () => {
     const last = vercel.rewrites.at(-1);
     expect(last).toEqual({ source: FALLBACK_SOURCE, destination: '/spa-fallback.html' });

@@ -18,6 +18,8 @@ export const RETENTION_DAYS = 120;
 
 const KEY_PREFIX = 'inquiry:';
 const INDEX_KEY = 'inquiry:index';
+/** 로컬 연동기가 마지막으로 접수 목록을 가져간 시각(아침 운영 요약의 생존 신호). */
+const CONNECTOR_SEEN_KEY = 'connector:lastSeenAt';
 
 /** 접수번호: JM-YYYYMMDD-XXXX (KST 날짜 + 무작위 4자). 전화 안내에서 부르기 쉬운 형식. */
 export function generateInquiryId(now = new Date(), random = Math.random) {
@@ -374,6 +376,14 @@ export function createInquiryStore(cfg, fetchImpl = fetch) {
       if (!Array.isArray(ids) || ids.length === 0) return [];
       const raws = await command(cfg, ['MGET', ...ids.map(key)], fetchImpl);
       return raws.filter(Boolean).map((raw) => JSON.parse(raw));
+    },
+    /** 연동기 GET 성공 시각을 남긴다. */
+    async markConnectorSeen(now = new Date()) {
+      await command(cfg, ['SET', CONNECTOR_SEEN_KEY, now.toISOString()], fetchImpl);
+    },
+    /** 연동기 마지막 접속 시각(ISO). 기록이 없으면 null. */
+    async getConnectorLastSeen() {
+      return (await command(cfg, ['GET', CONNECTOR_SEEN_KEY], fetchImpl)) ?? null;
     },
     /** cron 전량 파기용 전체 목록. ID와 본문을 작은 묶음으로 읽는다. */
     async listAll(batchSize = 100) {

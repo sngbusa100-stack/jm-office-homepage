@@ -199,6 +199,41 @@ describe('연동기 API 핸들러', () => {
     expect(res.body.items.map((i) => i.id)).toEqual(['JM-1']);
   });
 
+  it('GET이 성공하면 연동기 마지막 접속 시각을 남기고, 인증 실패는 남기지 않는다', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    try {
+      const { data } = stubRedis();
+      await handler({ method: 'GET', headers: {} }, mockRes());
+      expect(data.has('connector:lastSeenAt')).toBe(false);
+
+      const res = mockRes();
+      await handler({ method: 'GET', headers: AUTH }, res);
+      expect(res.statusCode).toBe(200);
+      expect(data.get('connector:lastSeenAt')).toBe(NOW.toISOString());
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('접속 시각 기록에 실패해도 GET은 접수 목록을 돌려준다', async () => {
+    const { data, index } = stubRedis();
+    data.set('inquiry:JM-1', JSON.stringify(buildInquiryRecord(value, {}, { id: 'JM-1', now: NOW })));
+    index.push('JM-1');
+    const inner = globalThis.fetch;
+    vi.stubGlobal('fetch', vi.fn(async (url, options) => {
+      const body = JSON.parse(options.body);
+      if (body[0] === 'SET' && body[1] === 'connector:lastSeenAt') throw new Error('redis down');
+      return inner(url, options);
+    }));
+
+    const res = mockRes();
+    await handler({ method: 'GET', headers: AUTH }, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.items.map((i) => i.id)).toEqual(['JM-1']);
+    expect(data.has('connector:lastSeenAt')).toBe(false);
+  });
+
   it('PATCH는 ACK를 저장하고, 재시도는 멱등 성공한다', async () => {
     const record = buildInquiryRecord(value, {}, { id: 'JM-1', now: NOW });
     const { data } = stubRedis();
