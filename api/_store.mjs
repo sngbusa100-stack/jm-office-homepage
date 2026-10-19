@@ -125,6 +125,68 @@ export function applyConnectorAck(record, localCaseId, now = new Date()) {
 }
 
 /**
+ * 로컬 연동기가 홈페이지 접수함에 돌려줄 수 있는 상태 값.
+ * 연동 토큰으로는 이 값만 바꿀 수 있다(메모·연락처 등은 불가). 계약 파일 api/_inquiry-contract.json에도 실린다.
+ */
+export const CONNECTOR_STATUS_RULES = {
+  statuses: ['in_progress', 'done'],
+  pipelineStages: ['qualified', 'retained'],
+  localStatuses: ['closed', 'case_created', 'engaged'],
+  closeReasons: ['manual', 'not_engaged', 'auto_stale'],
+};
+
+/**
+ * 로컬 처리 결과(종결·사건 전환·수임)를 홈페이지 접수 상태에 반영한다(docs/2026-10-19-pipeline-link-plan.md).
+ * 로컬 '종결'은 홈페이지 '처리 완료'로 보며(2026-10-19 주인님 결정), doneAt은 처음 완료될 때만 기록해
+ * 120일 보존 기산점이 재시도로 밀리지 않게 한다. 바뀐 것이 없으면 already로 돌려준다(멱등).
+ */
+export function applyConnectorStatus(record, input = {}, now = new Date()) {
+  if (!record || typeof record !== 'object') return { ok: false, errors: ['not_found'] };
+  if (record.purged) return { ok: false, errors: ['purged'] };
+  if (!record.pulledAt) return { ok: false, errors: ['not_pulled'] };
+
+  const { statuses, pipelineStages, localStatuses, closeReasons } = CONNECTOR_STATUS_RULES;
+  const errors = [];
+  const status = input.status;
+  const pipelineStage = input.pipelineStage;
+  const localStatus = input.localStatus;
+  const closeReason = localStatus === 'closed' ? input.closeReason : undefined;
+  if (!statuses.includes(status)) errors.push('status');
+  if (pipelineStage !== undefined && !pipelineStages.includes(pipelineStage)) errors.push('pipeline_stage');
+  if (!localStatuses.includes(localStatus)) errors.push('local_status');
+  if (localStatus === 'closed') {
+    if (status !== 'done' && !errors.includes('status')) errors.push('status');
+    if (!closeReasons.includes(closeReason)) errors.push('close_reason');
+  }
+  if (errors.length > 0) return { ok: false, errors };
+
+  const next = { ...record, status };
+  // 자동 파기 기산점: applyInquiryPatch와 같은 규칙(처음 완료될 때만 기록, 완료가 풀리면 지움).
+  if (status === 'done') {
+    if (record.status !== 'done') next.doneAt = now.toISOString();
+    else if (!record.doneAt) next.doneAt = record.updatedAt ?? record.receivedAt ?? now.toISOString();
+  } else {
+    delete next.doneAt;
+  }
+  if (pipelineStage !== undefined && record.pipelineStage !== pipelineStage) {
+    next.pipelineStage = pipelineStage;
+    next.pipelineStageAt = now.toISOString();
+  }
+  if (record.localStatus !== localStatus || record.localCloseReason !== closeReason) {
+    next.localStatus = localStatus;
+    next.localStatusAt = now.toISOString();
+    if (closeReason) next.localCloseReason = closeReason;
+    else delete next.localCloseReason;
+  }
+
+  const changed = ['status', 'doneAt', 'pipelineStage', 'localStatus', 'localCloseReason']
+    .some((key) => next[key] !== record[key]);
+  if (!changed) return { ok: true, value: record, already: true };
+  next.updatedAt = now.toISOString();
+  return { ok: true, value: next };
+}
+
+/**
  * 개인정보 파기: 처리방침("상담 분야·접수일만 남는다")과 일치하도록
  * 이름·연락처·상담 내용·메모·진단·동의 기록은 물론 origin·유입경로(임의
  * 문자열이라 식별값이 실릴 수 있음)까지 제거하고 통계 필드만 남긴다.

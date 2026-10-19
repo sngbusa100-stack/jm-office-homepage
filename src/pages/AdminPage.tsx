@@ -44,6 +44,18 @@ function describeDiagnosis(diagnosis: InquiryDiagnosis): { key: string; question
   });
 }
 
+/** 로컬 처리 상태 표시(연동기가 PATCH action=status로 돌려준 값). */
+const LOCAL_STATUS_LABEL: Record<NonNullable<InquiryRecord['localStatus']>, string> = {
+  closed: '종결',
+  case_created: '사건 전환',
+  engaged: '수임',
+};
+const LOCAL_CLOSE_REASON_LABEL: Record<NonNullable<InquiryRecord['localCloseReason']>, string> = {
+  manual: '행정사 종결',
+  not_engaged: '수임 안 됨',
+  auto_stale: '90일 무처리 자동 종결',
+};
+
 function formatDateTime(iso: string): string {
   try {
     return new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
@@ -327,7 +339,14 @@ export function AdminPage() {
                   )}
                 </p>
                 {item.localCaseId && (
-                  <p className="note">행정심판 시스템 등록: {item.localCaseId}</p>
+                  <p className="note">
+                    행정심판 시스템: {item.localStatus ? LOCAL_STATUS_LABEL[item.localStatus] : '대기함 등록'}
+                    {item.localStatus === 'closed' && item.localCloseReason
+                      ? ` — ${LOCAL_CLOSE_REASON_LABEL[item.localCloseReason]}`
+                      : ''}
+                    {item.localStatusAt ? ` · ${formatDateTime(item.localStatusAt)}` : ''}
+                    {` (${item.localCaseId})`}
+                  </p>
                 )}
                 {item.message && <p className="admin-message">{item.message}</p>}
 

@@ -17,6 +17,8 @@
     "test:guard": "vitest run --exclude \".claude/**\" src/test/forbiddenPhrases.test.ts src/test/seo.test.ts src/test/vercelConfig.test.ts src/test/prerender.test.tsx src/test/designTokens.test.ts",
     "typecheck": "tsc --noEmit --pretty false",
     "sync:visa-contract": "node scripts/sync-visa-handoff-contract.mjs",
+    "contract:inquiry": "node scripts/update-inquiry-contract.mjs",
+    "sync:inquiry-contract": "node scripts/sync-inquiry-contract.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "check": "npm run typecheck && npm run test:run && npm run build"
   },

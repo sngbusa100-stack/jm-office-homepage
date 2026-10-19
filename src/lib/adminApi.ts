@@ -40,6 +40,10 @@ export interface InquiryRecord {
   message?: string;
   pulledAt?: string;
   localCaseId?: string;
+  /** 로컬 행정심판 시스템에서 돌려준 처리 상태(docs/2026-10-19-pipeline-link-plan.md). */
+  localStatus?: 'closed' | 'case_created' | 'engaged';
+  localStatusAt?: string;
+  localCloseReason?: 'manual' | 'not_engaged' | 'auto_stale';
   diagnosis?: InquiryDiagnosis;
   visaDiagnosis?: InquiryVisaDiagnosis;
   /** 출입국·비자 접수 질문(고객 자가 응답, 증빙 미확인). 설계: docs/2026-10-18-visa-intake-questions.md */

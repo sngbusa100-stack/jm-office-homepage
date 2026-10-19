@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import handler from './connector.js';
-import { applyConnectorAck, buildInquiryRecord } from './_store.mjs';
+import { applyConnectorAck, applyConnectorStatus, buildInquiryRecord } from './_store.mjs';
 
 const NOW = new Date('2026-07-19T03:00:00.000Z');
 
@@ -74,6 +74,59 @@ describe('연동기 ACK 로직', () => {
     const record = buildInquiryRecord(value, {}, { now: NOW });
     expect(applyConnectorAck({ ...record, purged: true }, 'C', NOW).errors).toContain('purged');
     expect(applyConnectorAck(record, '  ', NOW).errors).toContain('local_case_id');
+  });
+});
+
+// 로컬 처리 결과를 홈페이지 접수함에 돌려준다(docs/2026-10-19-pipeline-link-plan.md 3-1).
+describe('연동기 상태 동기화 로직', () => {
+  const LATER = new Date('2026-07-20T03:00:00.000Z');
+  const pulled = () => applyConnectorAck(buildInquiryRecord(value, {}, { now: NOW }), 'INQ-0001', NOW).value;
+
+  it('로컬 종결은 처리 완료로 바꾸고 doneAt을 처음 한 번만 기록한다', () => {
+    const first = applyConnectorStatus(pulled(), { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW);
+    expect(first.ok).toBe(true);
+    expect(first.value.status).toBe('done');
+    expect(first.value.doneAt).toBe(NOW.toISOString());
+    expect(first.value.localStatus).toBe('closed');
+    expect(first.value.localCloseReason).toBe('manual');
+    expect(first.value.localStatusAt).toBe(NOW.toISOString());
+
+    const again = applyConnectorStatus(first.value, { status: 'done', localStatus: 'closed', closeReason: 'manual' }, LATER);
+    expect(again.ok).toBe(true);
+    expect(again.already).toBe(true);
+    expect(again.value.doneAt).toBe(NOW.toISOString());
+  });
+
+  it('사건 전환은 진행 중·사건 전환 단계로, 수임은 수임 단계로 바꾼다', () => {
+    const converted = applyConnectorStatus(pulled(), { status: 'in_progress', pipelineStage: 'qualified', localStatus: 'case_created' }, NOW);
+    expect(converted.value).toMatchObject({ status: 'in_progress', pipelineStage: 'qualified', pipelineStageAt: NOW.toISOString() });
+    expect(converted.value.doneAt).toBeUndefined();
+
+    const engaged = applyConnectorStatus(converted.value, { status: 'done', pipelineStage: 'retained', localStatus: 'engaged' }, LATER);
+    expect(engaged.value).toMatchObject({ status: 'done', pipelineStage: 'retained', doneAt: LATER.toISOString(), localStatus: 'engaged' });
+  });
+
+  it('허용하지 않은 값과 맞지 않는 조합을 거부한다', () => {
+    const record = pulled();
+    expect(applyConnectorStatus(record, { status: 'new', localStatus: 'closed', closeReason: 'manual' }, NOW).errors).toContain('status');
+    expect(applyConnectorStatus(record, { status: 'in_progress', pipelineStage: 'work_completed', localStatus: 'case_created' }, NOW).errors).toContain('pipeline_stage');
+    expect(applyConnectorStatus(record, { status: 'done', localStatus: 'deleted' }, NOW).errors).toContain('local_status');
+    // 종결은 처리 완료와 종결 사유가 함께 와야 한다.
+    expect(applyConnectorStatus(record, { status: 'in_progress', localStatus: 'closed', closeReason: 'manual' }, NOW).errors).toContain('status');
+    expect(applyConnectorStatus(record, { status: 'done', localStatus: 'closed', closeReason: 'later' }, NOW).errors).toContain('close_reason');
+  });
+
+  it('메모·연락처 같은 다른 필드는 바꾸지 않는다', () => {
+    const record = pulled();
+    const result = applyConnectorStatus(record, { status: 'done', localStatus: 'closed', closeReason: 'auto_stale', name: '바뀜', memo: 'x' }, NOW);
+    expect(result.value.name).toBe('홍길동');
+    expect(result.value.memos).toEqual([]);
+  });
+
+  it('파기된 접수와 로컬로 가져가지 않은 접수는 거부한다', () => {
+    const fresh = buildInquiryRecord(value, {}, { now: NOW });
+    expect(applyConnectorStatus(fresh, { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).errors).toContain('not_pulled');
+    expect(applyConnectorStatus({ ...pulled(), purged: true }, { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).errors).toContain('purged');
   });
 });
 
@@ -159,6 +212,38 @@ describe('연동기 API 핸들러', () => {
     await handler({ method: 'DELETE', headers: AUTH, body: { id: 'JM-1' } }, res2);
     expect(res2.statusCode).toBe(200);
     expect(res2.body.already).toBe(true);
+  });
+
+  it('PATCH action=status는 상태를 저장하고, 파기된 접수는 409, 잘못된 값은 400', async () => {
+    const record = applyConnectorAck(buildInquiryRecord(value, {}, { id: 'JM-1', now: NOW }), 'INQ-0001', NOW).value;
+    const { data } = stubRedis();
+    data.set('inquiry:JM-1', JSON.stringify(record));
+    data.set('inquiry:JM-2', JSON.stringify({ ...record, id: 'JM-2', purged: true }));
+
+    const res = mockRes();
+    await handler({
+      method: 'PATCH',
+      headers: AUTH,
+      body: { id: 'JM-1', action: 'status', status: 'done', localStatus: 'closed', closeReason: 'auto_stale' },
+    }, res);
+    expect(res.statusCode).toBe(200);
+    const saved = JSON.parse(data.get('inquiry:JM-1'));
+    expect(saved.status).toBe('done');
+    expect(saved.doneAt).toBeTruthy();
+    expect(saved.localCloseReason).toBe('auto_stale');
+
+    const purged = mockRes();
+    await handler({ method: 'PATCH', headers: AUTH, body: { id: 'JM-2', action: 'status', status: 'done', localStatus: 'closed', closeReason: 'manual' } }, purged);
+    expect(purged.statusCode).toBe(409);
+
+    const bad = mockRes();
+    await handler({ method: 'PATCH', headers: AUTH, body: { id: 'JM-1', action: 'status', status: 'new', localStatus: 'closed' } }, bad);
+    expect(bad.statusCode).toBe(400);
+
+    const unknown = mockRes();
+    await handler({ method: 'PATCH', headers: AUTH, body: { id: 'JM-1', action: 'erase' } }, unknown);
+    expect(unknown.statusCode).toBe(400);
+    expect(unknown.body.error).toBe('unknown_action');
   });
 
   it('없는 접수는 404, id 누락은 400', async () => {

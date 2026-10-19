@@ -69,6 +69,12 @@ describe('개인정보처리방침 법정 기재사항', () => {
     expect(section.getByText(/접수번호, 접수일시, 상담 분야, 최종 상태, 진행 단계, 메모 개수/)).toBeInTheDocument();
   });
 
+  it('처리되지 않은 문의는 접수 후 90일에 종결로 보고 그때부터 120일 뒤 파기한다고 적는다', () => {
+    renderAt('/privacy');
+    const section = within(screen.getByRole('region', { name: '보유 기간과 파기' }));
+    expect(section.getByText(/처리되지 않은 상담 문의는 접수 후 90일이 지나면 종결로 보고, 그때부터 120일 뒤 파기합니다/)).toBeInTheDocument();
+  });
+
   it('안전조치는 실제로 구현된 것만 적는다(HTTPS·관리자 인증·연동 토큰 분리·자동 파기·IP 해시)', () => {
     renderAt('/privacy');
     const text = screen.getByRole('region', { name: '안전성 확보 조치' }).textContent ?? '';

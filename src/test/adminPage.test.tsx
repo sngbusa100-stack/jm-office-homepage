@@ -39,7 +39,23 @@ const ITEMS = [
   },
 ];
 
-function stubAdminFetch() {
+/** 로컬 행정심판 시스템에서 90일 무처리로 자동 종결되어 상태가 돌아온 접수. */
+const LOCAL_CLOSED = {
+  id: 'JM-20260716-CL01',
+  receivedAt: '2026-07-16T03:00:00.000Z',
+  name: '김종결',
+  phone: '010-0000-0000',
+  topic: '인허가',
+  status: 'done',
+  memos: [],
+  pulledAt: '2026-07-16T03:30:00.000Z',
+  localCaseId: 'INQ-0007',
+  localStatus: 'closed',
+  localCloseReason: 'auto_stale',
+  localStatusAt: '2026-10-14T03:00:00.000Z',
+};
+
+function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
   const fetchMock = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
     if (options.method === 'GET') {
       return {
@@ -47,7 +63,7 @@ function stubAdminFetch() {
         status: 200,
         json: async () => ({
           ok: true,
-          items: ITEMS,
+          items,
           funnel: {
             days: 30,
             totals: {
@@ -172,5 +188,11 @@ describe('접수 관리 페이지', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('올바르지 않습니다');
     expect(screen.getByLabelText(/관리자 토큰/)).toBeInTheDocument();
     expect(sessionStorage.getItem('admin:token')).toBeNull();
+  });
+  it('로컬 처리 상태(종결 사유·시각)를 접수마다 보여 준다', async () => {
+    await login(stubAdminFetch([...ITEMS, LOCAL_CLOSED]));
+    const item = screen.getByText(/JM-20260716-CL01/).closest('details')!;
+    expect(within(item).getByText(/행정심판 시스템: 종결 — 90일 무처리 자동 종결/)).toBeInTheDocument();
+    expect(within(item).getByText(/INQ-0007/)).toBeInTheDocument();
   });
 });

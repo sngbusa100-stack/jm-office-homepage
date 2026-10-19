@@ -1,11 +1,13 @@
 // 로컬 연동기(행정심판 시스템) 전용 API — CONNECTOR_TOKEN Bearer 인증 (ADMIN_TOKEN과 별도)
 // GET: 아직 pull되지 않은 접수 목록 / PATCH: ACK(pulledAt·localCaseId 기록, 멱등)
+// PATCH action=status: 로컬 처리 결과(종결·사건 전환·수임)를 접수 상태에 반영(멱등, docs/2026-10-19-pipeline-link-plan.md)
 // DELETE: 수임 확정·이관 완료 후 클라우드 레코드 파기 (통계 필드만 보존, 멱등)
 // 브라우저가 아닌 로컬 스크립트 전용이므로 CORS를 적용하지 않는다.
 
 import { isAuthorized } from './admin.js';
 import {
   applyConnectorAck,
+  applyConnectorStatus,
   createInquiryStore,
   purgeInquiryRecord,
   redisConfig,
@@ -45,10 +47,18 @@ export default async function handler(req, res) {
       }
 
       if (req.method === 'PATCH') {
-        const result = applyConnectorAck(record, body.localCaseId);
+        // action이 없으면 예전 연동기와 같은 ACK로 처리한다(하위 호환).
+        const action = body.action ?? 'ack';
+        if (action !== 'ack' && action !== 'status') {
+          res.status(400).json({ ok: false, error: 'unknown_action' });
+          return;
+        }
+        const result = action === 'status'
+          ? applyConnectorStatus(record, body)
+          : applyConnectorAck(record, body.localCaseId);
         if (!result.ok) {
           res
-            .status(result.errors.includes('purged') ? 409 : 400)
+            .status(result.errors.includes('purged') || result.errors.includes('not_pulled') ? 409 : 400)
             .json({ ok: false, errors: result.errors });
           return;
         }

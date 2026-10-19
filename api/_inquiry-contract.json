@@ -1,0 +1,190 @@
+{
+  "note": "홈페이지(api/_store.mjs)와 로컬(admin_appeal/connector/store.py)의 연동 계약. 직접 고치지 말고 npm run contract:inquiry로 다시 만든다.",
+  "schemaVersion": 6,
+  "recordFields": [
+    "id",
+    "schemaVersion",
+    "receivedAt",
+    "name",
+    "phone",
+    "email",
+    "topic",
+    "message",
+    "diagnosis",
+    "visaDiagnosis",
+    "visaIntake",
+    "sourcePath",
+    "utmSource",
+    "attribution",
+    "consent",
+    "origin",
+    "status",
+    "pipelineStage",
+    "memos"
+  ],
+  "lifecycleFields": [
+    "updatedAt",
+    "doneAt",
+    "pipelineStageAt",
+    "pulledAt",
+    "localCaseId",
+    "localStatus",
+    "localStatusAt",
+    "localCloseReason",
+    "purged",
+    "purgedAt",
+    "memoCount"
+  ],
+  "localMustKeep": [
+    "id",
+    "schemaVersion",
+    "receivedAt",
+    "name",
+    "phone",
+    "email",
+    "topic",
+    "message",
+    "diagnosis",
+    "visaDiagnosis",
+    "visaIntake",
+    "sourcePath",
+    "utmSource",
+    "attribution",
+    "consent"
+  ],
+  "connectorStatus": {
+    "statuses": [
+      "in_progress",
+      "done"
+    ],
+    "pipelineStages": [
+      "qualified",
+      "retained"
+    ],
+    "localStatuses": [
+      "closed",
+      "case_created",
+      "engaged"
+    ],
+    "closeReasons": [
+      "manual",
+      "not_engaged",
+      "auto_stale"
+    ]
+  },
+  "staleRules": {
+    "delayHours": 72,
+    "urgentDelayHours": 24,
+    "warnDays": 30,
+    "autoCloseDays": 90
+  },
+  "visaIntakeLabels": {
+    "requester": {
+      "question": "누구의 일",
+      "options": {
+        "self": "제 비자 문제입니다",
+        "family-sponsor": "한국에 사는 가족(배우자 등)을 초청하거나 함께 살려고 합니다",
+        "company": "회사에서 외국인 직원을 채용하거나 관리합니다",
+        "other": "그 밖의 사람(지인 등)입니다"
+      }
+    },
+    "staffCount": {
+      "question": "처리할 직원 수",
+      "options": {
+        "1": "1명",
+        "2-5": "2~5명",
+        "6plus": "6명 이상"
+      }
+    },
+    "stayStatus": {
+      "question": "체류 상태",
+      "options": {
+        "overseas": "현재 해외에 있음",
+        "valid": "한국에 있음 · 체류기간이 유효함",
+        "near-expiry": "한국에 있음 · 만료가 임박함(약 2개월 이내, 사무소 안내 기준)",
+        "expired": "한국에 있음 · 이미 만료됨",
+        "unsure": "잘 모르겠음"
+      }
+    },
+    "expiryDate": {
+      "question": "체류기간 만료일"
+    },
+    "currentStatus": {
+      "question": "현재 체류자격",
+      "options": {
+        "visa-free-short": "비자 없이 입국(무비자) 또는 짧은 방문(C-3·C-4)",
+        "study": "유학·어학연수(D-2·D-4)",
+        "job-seeking": "구직(D-10)",
+        "work": "취업(E-7·E-9·H-2 등)",
+        "family-residence": "결혼·거주·동포·영주(F-2·F-4·F-5·F-6)",
+        "other": "그 밖의 자격(코드 직접 입력)",
+        "unsure": "잘 모르겠음",
+        "declined": "답하지 않음"
+      }
+    },
+    "currentStatusCode": {
+      "question": "현재 체류자격 코드"
+    },
+    "goal": {
+      "question": "하려는 일",
+      "options": {
+        "first-entry": "처음 한국에 오기(비자 받기·초청)",
+        "extend": "지금 체류기간 늘리기(연장)",
+        "change": "다른 체류자격으로 바꾸기(변경)",
+        "permanent": "영주(F-5) 또는 귀화",
+        "family": "가족을 초청하거나 함께 지내기",
+        "unsure": "잘 모르겠음"
+      }
+    },
+    "desiredStatusCode": {
+      "question": "원하는 체류자격"
+    },
+    "targetMonth": {
+      "question": "목표 시점"
+    },
+    "stage": {
+      "question": "진행 단계",
+      "options": {
+        "not-applied": "아직 신청 전",
+        "waiting": "신청하고 결과를 기다리는 중",
+        "supplement": "서류를 더 내라는 요청(보완)이나 출석 요청을 받음",
+        "denied": "허가되지 않았다(불허)는 결과를 받음",
+        "departure-notice": "출국하라는 안내(출국기한·출국명령)를 받음",
+        "appeal-ongoing": "행정심판이나 소송을 이미 하고 있음",
+        "unsure": "잘 모르겠음"
+      }
+    },
+    "receivedDate": {
+      "question": "받은 날짜"
+    },
+    "deadlineDate": {
+      "question": "문서에 적힌 마감일"
+    },
+    "violation": {
+      "question": "출입국 관련 기록",
+      "options": {
+        "none": "없음",
+        "past": "예전에 있었고 끝남",
+        "current": "지금 해결되지 않은 문제가 있음",
+        "unsure": "잘 모르겠음"
+      }
+    },
+    "language": {
+      "question": "연락 언어",
+      "options": {
+        "ko": "한국어",
+        "en": "English",
+        "zh": "中文",
+        "vi": "Tiếng Việt",
+        "ja": "日本語",
+        "other": "그 밖의 언어"
+      }
+    },
+    "languageOther": {
+      "question": "그 밖의 언어"
+    },
+    "nationality": {
+      "question": "국적"
+    }
+  }
+}
