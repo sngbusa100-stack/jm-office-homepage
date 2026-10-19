@@ -1,3 +1,5 @@
+import { office } from '../data/office';
+
 export function DisclaimerPage() {
   return (
     <div className="page-shell section narrow-page">
@@ -33,16 +35,18 @@ export function DisclaimerPage() {
       <section className="card level-urgent" aria-labelledby="urgent">
         <h2 id="urgent">긴급한 사안이라면</h2>
         <p>
-          법정 기한이 임박하는 등 긴급한 사안은 이 사이트의 개업을 기다리지 마시고 국민권익위원회
+          법정 기한이 임박하는 등 긴급한 사안은 {office.isOpen ? '상담 회신을 기다리지 마시고' : '이 사이트의 개업을 기다리지 마시고'} 국민권익위원회
           상담전화(국번 없이 <a href="tel:110">110</a>) 또는 해당 처분을 한 관할 기관에 즉시
           확인하시기 바랍니다.
         </p>
       </section>
 
-      <section aria-labelledby="pre-opening">
-        <h2 id="pre-opening">사전 공개 사이트 안내</h2>
-        <p>이 사이트는 개업 준비 중에 미리 공개한 사이트입니다.</p>
-      </section>
+      {!office.isOpen && (
+        <section aria-labelledby="pre-opening">
+          <h2 id="pre-opening">사전 공개 사이트 안내</h2>
+          <p>이 사이트는 개업 준비 중에 미리 공개한 사이트입니다.</p>
+        </section>
+      )}
     </div>
   );
 }

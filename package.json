@@ -20,6 +20,7 @@
     "contract:inquiry": "node scripts/update-inquiry-contract.mjs",
     "sync:inquiry-contract": "node scripts/sync-inquiry-contract.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
+    "go-live:check": "node scripts/go-live-check.mjs",
     "check": "npm run typecheck && npm run test:run && npm run build"
   },
   "dependencies": {

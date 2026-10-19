@@ -1,3 +1,4 @@
+import { office } from '../data/office';
 import { Link, useParams } from 'react-router-dom';
 import { findCheck } from '../data/checks';
 import type { ResultLevel } from '../types/content';
@@ -62,8 +63,9 @@ export function CheckResultPage() {
         <section className="card level-urgent">
           <h2>지금 바로 확인이 필요합니다</h2>
           <p>
-            법정 기한과 관련된 항목이 있습니다. 이 사이트의 개업을 기다리지 마시고
-            국민권익위원회 상담전화(국번 없이 110) 또는 관할 기관에 즉시 확인하세요.
+            법정 기한과 관련된 항목이 있습니다.{' '}
+            {office.isOpen ? '상담 회신을 기다리지 마시고' : '이 사이트의 개업을 기다리지 마시고'} 국민권익위원회
+            상담전화(국번 없이 110) 또는 관할 기관에 즉시 확인하세요.
           </p>
         </section>
       )}

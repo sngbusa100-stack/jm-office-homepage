@@ -1,5 +1,6 @@
 import type { CheckDomain } from '../types/content';
 import type { FunnelDomain } from '../lib/funnel';
+import { office } from './office';
 
 export interface ServiceFaq { q: string; a: string }
 export interface ServiceQuickCheck { label: string; value: string; note?: string }
@@ -128,7 +129,7 @@ export const services: Service[] = [
     process: ['체류 목적과 현재 자격 확인', '자격별 요건·서류 확인', '신청·변경 절차 준비'],
     documents: ['여권·외국인등록증', '체류 자격별 요건 서류'],
     faqs: [
-      { q: '비자 사전 확인은 어디에서 하나요?', a: '정명 비자 진단센터에서 비자별 일반 정보와 준비·공식 확인 항목을 확인할 수 있습니다. 개별 상담 접수는 개업 후 시작됩니다.' },
+      { q: '비자 사전 확인은 어디에서 하나요?', a: `정명 비자 진단센터에서 비자별 일반 정보와 준비·공식 확인 항목을 확인할 수 있습니다. ${office.isOpen ? '개별 상담은 상담 신청 화면에서 신청하실 수 있습니다.' : '개별 상담 접수는 개업 후 시작됩니다.'}` },
     ],
     quickChecks: [
       { label: '현재 자격', value: '체류자격·만료일·체류 상태' },

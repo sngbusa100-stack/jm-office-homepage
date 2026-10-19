@@ -2,6 +2,8 @@ import raw from './office.json';
 
 export interface Office {
   isOpen: boolean;
+  /** 개업일(YYYY-MM-DD). 개업하는 날 isOpen과 함께 채운다 — 방침 시행일 점검 기준(npm run go-live:check). */
+  openedOn?: string | null;
   representative?: string | null;
   phone: string | null;
   fax?: string | null;
@@ -19,7 +21,7 @@ export interface Office {
   formEndpoint: string | null;
 }
 
-const REQUIRED_WHEN_OPEN: (keyof Office)[] = [
+export const REQUIRED_WHEN_OPEN: (keyof Office)[] = [
   'phone', 'kakaoChannelUrl', 'address', 'registrationNumber', 'businessNumber', 'formEndpoint',
 ];
 
