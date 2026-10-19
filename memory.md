@@ -464,3 +464,9 @@ Phase 1(구조)에 이은 두 번째 단계. 분야 상세 페이지를 "읽을 
   - 연동기 생존 신호는 Redis 키 `connector:lastSeenAt`(connector GET 성공 시각)이다. 2시간 넘게 갱신되지 않으면 요약에 ⚠️가 뜬다. 주인님 PC는 24시간 켜 둔다(2026-10-19 확인). 그래서 08시 경고는 실제 이상을 뜻한다.
   - 요약에는 건수와 지연 건 접수번호(최대 3개)만 넣는다. 이름·전화·문의 내용을 넣으면 테스트가 실패한다.
   - cron 응답은 Telegram 발송이 실패해도 502다. 파기가 성공했더라도 `summarySent:false`면 502다.
+
+- 2026-10-19 ④+⑤ 1단계를 구현했다(홈페이지 커밋, 미배포). 회신 초안은 `api/_reply-draft.mjs` 하나가 기준이고, /admin과 connector GET(로컬 대기함용)이 같은 함수를 쓴다.
+  - 템플릿 문항을 고칠 때는 `REPLY_TEMPLATES`의 `from`(진단 문항 id·되짚기 라벨·값별 표현)을 함께 본다. 진단 선택지나 비자 질문을 바꾸면 `npx vite-node scripts/gen-reply-labels.ts`로 `api/_reply-labels.mjs`를 다시 만들어야 동기화 테스트가 통과한다.
+  - 분야 경로(TOPIC_ROUTES)는 연동 계약 `topics`로 로컬에 전달된다. 바꾸면 `npm run contract:inquiry` 후 sync해야 한다.
+  - 회신함(replied)은 첫 로컬 상태일 때만 기록된다. 회신 후 무응답 종결(no_reply)은 로컬이 회신함으로 만든 진행 중 건만 처리 완료로 바꾼다.
+  - 주인님 결정: 서명은 대표 행정사 정재훈 + 사무실 전화·이메일(휴대폰 없음). 초안은 자동 발송하지 않는다.

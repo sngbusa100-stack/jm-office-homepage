@@ -7,7 +7,7 @@ import {
   summarizeInquiries,
 } from '../lib/adminApi';
 import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/adminApi';
-import { buildReply, findReplyTemplate } from '../data/replyTemplates';
+import { buildReplyDraft } from '../../api/_reply-draft.mjs';
 import { findCheck } from '../data/checks';
 import { describeVisaDiagnosisAnswer } from '../data/visaDiagnosisLabels';
 import { describeVisaIntake } from '../data/visaIntake';
@@ -49,11 +49,13 @@ const LOCAL_STATUS_LABEL: Record<NonNullable<InquiryRecord['localStatus']>, stri
   closed: '종결',
   case_created: '사건 전환',
   engaged: '수임',
+  replied: '회신함',
 };
 const LOCAL_CLOSE_REASON_LABEL: Record<NonNullable<InquiryRecord['localCloseReason']>, string> = {
   manual: '행정사 종결',
   not_engaged: '수임 안 됨',
   auto_stale: '90일 무처리 자동 종결',
+  no_reply: '회신 후 무응답 자동 종결',
 };
 
 function formatDateTime(iso: string): string {
@@ -73,6 +75,7 @@ export function AdminPage() {
   const [filter, setFilter] = useState<'all' | InquiryRecord['status']>('all');
   const [memoDrafts, setMemoDrafts] = useState<Record<string, string>>({});
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyNotes, setReplyNotes] = useState<Record<string, string[]>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const load = useCallback(async (activeToken: string) => {
@@ -152,12 +155,11 @@ export function AdminPage() {
   }
 
   function handleBuildReply(item: InquiryRecord) {
-    const template = findReplyTemplate(item.topic);
-    if (!template || !item.name) return;
-    setReplyDrafts((prev) => ({
-      ...prev,
-      [item.id]: buildReply(template, { name: item.name ?? '', id: item.id }),
-    }));
+    // 접수 답변을 채운 초안(api/_reply-draft.mjs — 로컬 대기함과 같은 초안). 자동 발송하지 않는다.
+    const draft = buildReplyDraft(item);
+    if (!draft) return;
+    setReplyDrafts((prev) => ({ ...prev, [item.id]: draft.text }));
+    setReplyNotes((prev) => ({ ...prev, [item.id]: draft.notes }));
   }
 
   async function handleCopyReply(id: string) {
@@ -474,6 +476,11 @@ export function AdminPage() {
                   </button>
                   {replyDrafts[item.id] && (
                     <>
+                      {(replyNotes[item.id] ?? []).map((note) => (
+                        <p className="note" key={note}>
+                          {note}
+                        </p>
+                      ))}
                       <label>
                         회신문 초안 (확인 질문 포함)
                         <textarea

@@ -173,6 +173,30 @@ describe('접수 관리 페이지', () => {
     expect(draft.value).toContain('홍길동 님');
     expect(draft.value).toContain('JM-20260717-AB12');
     expect(draft.value).toContain('혈중알코올농도');
+    expect(draft.value).toContain('정명 행정사사무소 대표 행정사 정재훈입니다.');
+    expect(draft.value).toContain('이메일 sngbusa10@naver.com');
+  });
+
+  it('비자 접수 답변은 다시 묻지 않고, 연락 언어가 한국어가 아니면 번역 검수 메모를 보여준다', async () => {
+    const visa = {
+      id: 'JM-20260718-VS01',
+      receivedAt: '2026-07-18T03:00:00.000Z',
+      name: 'Nguyen',
+      phone: '010-2222-3333',
+      topic: '출입국 · 비자',
+      message: '연장 문의',
+      status: 'new',
+      memos: [],
+      visaIntake: { requester: 'self', stayStatus: 'valid', expiryDate: '2026-12-31', currentStatus: 'study', goal: 'change', stage: 'not-applied', language: 'vi' },
+    };
+    const { user } = await login(stubAdminFetch([visa]));
+    const item = screen.getByText(/JM-20260718-VS01/).closest('details')!;
+    await user.click(within(item).getByRole('button', { name: '회신문 생성' }));
+
+    const draft = within(item).getByLabelText(/회신문 초안/) as HTMLTextAreaElement;
+    expect(draft.value).toContain('- 체류기간 만료일: 2026-12-31');
+    expect(draft.value).not.toContain('Tiếng Việt');
+    expect(within(item).getByText(/연락 언어: Tiếng Việt — 발송 전 번역·검수 필요/)).toBeInTheDocument();
   });
 
   it('잘못된 토큰이면 오류를 보여주고 다시 입력을 받는다', async () => {

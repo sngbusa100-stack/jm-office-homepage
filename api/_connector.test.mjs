@@ -149,6 +149,56 @@ describe('연동기 상태 동기화 로직', () => {
     expect(result.value.doneAt).toBe(NOW.toISOString());
   });
 
+  it('회신함은 진행 중으로 바꾸고 단계는 그대로 두며, 처리 완료·보류는 되돌리지 않는다', () => {
+    const replied = applyConnectorStatus(pulled(), { status: 'in_progress', localStatus: 'replied' }, NOW);
+    expect(replied.ok).toBe(true);
+    expect(replied.value).toMatchObject({ status: 'in_progress', pipelineStage: 'inquiry', localStatus: 'replied' });
+    expect(replied.value.doneAt).toBeUndefined();
+    // 회신함은 진행 중으로만 보낸다.
+    expect(applyConnectorStatus(pulled(), { status: 'done', localStatus: 'replied' }, NOW).errors).toContain('status');
+
+    const done = applyConnectorStatus(pulled(), { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).value;
+    expect(applyConnectorStatus(done, { status: 'in_progress', localStatus: 'replied' }, LATER).value.status).toBe('done');
+    const onHold = { ...pulled(), status: 'on_hold' };
+    expect(applyConnectorStatus(onHold, { status: 'in_progress', localStatus: 'replied' }, LATER).value.status).toBe('on_hold');
+  });
+
+  it('회신함은 사건 전환·종결·수임처럼 이미 더 나아간 로컬 상태를 덮어쓰지 않는다', () => {
+    const converted = applyConnectorStatus(pulled(), { status: 'in_progress', pipelineStage: 'qualified', localStatus: 'case_created' }, NOW).value;
+    const afterReply = applyConnectorStatus(converted, { status: 'in_progress', localStatus: 'replied' }, LATER);
+    expect(afterReply.already).toBe(true);
+    expect(afterReply.value.localStatus).toBe('case_created');
+    // 사건 전환된 건은 회신 후 무응답 종결로 처리 완료가 되지 않는다.
+    const noReply = applyConnectorStatus(converted, { status: 'done', localStatus: 'closed', closeReason: 'no_reply' }, LATER);
+    expect(noReply.value.status).toBe('in_progress');
+
+    const closed = applyConnectorStatus(pulled(), { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).value;
+    const closedThenReply = applyConnectorStatus(closed, { status: 'in_progress', localStatus: 'replied' }, LATER);
+    expect(closedThenReply.already).toBe(true);
+    expect(closedThenReply.value).toMatchObject({ localStatus: 'closed', localCloseReason: 'manual' });
+  });
+
+  it('회신 뒤 관리자가 수임 단계로 올린 건은 회신 후 무응답 종결로 처리 완료가 되지 않는다', () => {
+    const replied = applyConnectorStatus(pulled(), { status: 'in_progress', localStatus: 'replied' }, NOW).value;
+    const retainedByAdmin = { ...replied, pipelineStage: 'retained' };
+    const result = applyConnectorStatus(retainedByAdmin, { status: 'done', localStatus: 'closed', closeReason: 'no_reply' }, LATER);
+    expect(result.value.status).toBe('in_progress');
+  });
+
+  it('회신 후 무응답 종결은 로컬이 회신함으로 올린 진행 중 건만 처리 완료로 바꾼다', () => {
+    const replied = applyConnectorStatus(pulled(), { status: 'in_progress', localStatus: 'replied' }, NOW).value;
+    const closed = applyConnectorStatus(replied, { status: 'done', localStatus: 'closed', closeReason: 'no_reply' }, LATER);
+    expect(closed.value).toMatchObject({ status: 'done', doneAt: LATER.toISOString(), localCloseReason: 'no_reply' });
+
+    // 관리자가 /admin에서 진행 중·보류로 다루던 건은 그대로 둔다(auto_stale과 같은 보호).
+    for (const status of ['in_progress', 'on_hold']) {
+      const admin = { ...pulled(), status };
+      const result = applyConnectorStatus(admin, { status: 'done', localStatus: 'closed', closeReason: 'no_reply' }, LATER);
+      expect(result.value.status, status).toBe(status);
+      expect(result.value.localCloseReason).toBe('no_reply');
+    }
+  });
+
   it('파기된 접수와 로컬로 가져가지 않은 접수는 거부한다', () => {
     const fresh = buildInquiryRecord(value, {}, { now: NOW });
     expect(applyConnectorStatus(fresh, { status: 'done', localStatus: 'closed', closeReason: 'manual' }, NOW).errors).toContain('not_pulled');
@@ -197,6 +247,18 @@ describe('연동기 API 핸들러', () => {
     await handler({ method: 'GET', headers: AUTH }, res);
     expect(res.statusCode).toBe(200);
     expect(res.body.items.map((i) => i.id)).toEqual(['JM-1']);
+  });
+
+  it('GET은 접수마다 회신 초안을 계산해 붙이고 저장하지는 않는다', async () => {
+    const { data, index } = stubRedis();
+    data.set('inquiry:JM-1', JSON.stringify(buildInquiryRecord(value, {}, { id: 'JM-1', now: NOW })));
+    index.push('JM-1');
+    const res = mockRes();
+    await handler({ method: 'GET', headers: AUTH }, res);
+    const [item] = res.body.items;
+    expect(item.replyDraft.text).toContain('홍길동 님, 안녕하세요.');
+    expect(item.replyDraft.notes).toEqual([]);
+    expect(JSON.parse(data.get('inquiry:JM-1')).replyDraft).toBeUndefined();
   });
 
   it('GET이 성공하면 연동기 마지막 접속 시각을 남기고, 인증 실패는 남기지 않는다', async () => {

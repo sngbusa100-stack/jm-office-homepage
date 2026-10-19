@@ -133,8 +133,10 @@ export function applyConnectorAck(record, localCaseId, now = new Date()) {
 export const CONNECTOR_STATUS_RULES = {
   statuses: ['in_progress', 'done'],
   pipelineStages: ['qualified', 'retained'],
-  localStatuses: ['closed', 'case_created', 'engaged'],
-  closeReasons: ['manual', 'not_engaged', 'auto_stale'],
+  // replied: 로컬에서 첫 회신을 마침(진행 중). no_reply: 회신 뒤 90일 무응답 자동 종결
+  // (docs/2026-10-19-reply-draft-routing-plan.md 2-3).
+  localStatuses: ['closed', 'case_created', 'engaged', 'replied'],
+  closeReasons: ['manual', 'not_engaged', 'auto_stale', 'no_reply'],
 };
 
 /**
@@ -156,15 +158,30 @@ export function applyConnectorStatus(record, input = {}, now = new Date()) {
   if (!statuses.includes(status)) errors.push('status');
   if (pipelineStage !== undefined && !pipelineStages.includes(pipelineStage)) errors.push('pipeline_stage');
   if (!localStatuses.includes(localStatus)) errors.push('local_status');
+  if (localStatus === 'replied' && status !== 'in_progress' && !errors.includes('status')) errors.push('status');
   if (localStatus === 'closed') {
     if (status !== 'done' && !errors.includes('status')) errors.push('status');
     if (!closeReasons.includes(closeReason)) errors.push('close_reason');
   }
   if (errors.length > 0) return { ok: false, errors };
 
+  // 회신함은 첫 로컬 상태일 때만 기록한다. 사건 전환·수임·종결 뒤에 늦게 온 회신함이
+  // 더 나아간 상태(와 종결 사유)를 덮지 않게 한다.
+  if (localStatus === 'replied' && record.localStatus && record.localStatus !== 'replied') {
+    return { ok: true, value: record, already: true };
+  }
+
   // 90일 자동 종결은 관리자가 /admin에서 진행 중·보류로 다루던 접수의 상태를 바꾸지 않는다
   // (로컬 처리 기록만 남김). 행정사가 직접 종결한 경우(manual·not_engaged)는 처리 완료가 된다.
-  const keepAdminStatus = closeReason === 'auto_stale' && ['in_progress', 'on_hold'].includes(record.status);
+  // 회신 후 무응답 종결(no_reply)도 같지만, 로컬이 회신함으로 진행 중을 만든 건은 처리 완료로 바꾼다
+  // (그러지 않으면 처리 완료가 되지 않아 120일 파기가 영영 시작되지 않는다).
+  // 회신함(replied)은 관리자가 보류로 둔 건을 진행 중으로 바꾸지 않는다.
+  const repliedByLocal = record.status === 'in_progress' && record.localStatus === 'replied'
+    && (record.pipelineStage ?? 'inquiry') === 'inquiry';
+  const keepAdminStatus =
+    (closeReason === 'auto_stale' && ['in_progress', 'on_hold'].includes(record.status))
+    || (closeReason === 'no_reply' && ['in_progress', 'on_hold'].includes(record.status) && !repliedByLocal)
+    || (localStatus === 'replied' && record.status === 'on_hold');
   // 처리 완료를 연동 토큰으로 되돌리지 않는다(되돌리면 doneAt이 지워져 120일 파기가 밀린다).
   const keepDone = record.status === 'done' && status !== 'done';
   const nextStatus = keepAdminStatus || keepDone ? record.status : status;

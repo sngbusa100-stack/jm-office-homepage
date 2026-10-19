@@ -4,6 +4,7 @@
 import { VISA_INTAKE_LABELS } from '../data/visaIntake';
 // @ts-expect-error — 서버 모듈(.mjs)은 타입 선언이 없다.
 import { buildInquiryRecord, CONNECTOR_STATUS_RULES, SCHEMA_VERSION } from '../../api/_store.mjs';
+import { TOPIC_ROUTES } from '../../api/_reply-draft.mjs';
 
 /** 미처리 건 기준(2026-10-19 주인님 승인). 로컬 연동기가 지연 표시·경고·자동 종결에 쓴다. */
 export const STALE_RULES = { delayHours: 72, urgentDelayHours: 24, warnDays: 30, autoCloseDays: 90 };
@@ -49,6 +50,10 @@ export function buildInquiryContract() {
     localMustKeep: LOCAL_MUST_KEEP,
     connectorStatus: CONNECTOR_STATUS_RULES as Record<string, string[]>,
     staleRules: STALE_RULES,
+    // 상담 분야 → 처리 경로(case: 로컬 사건 유형으로 전환 / reply: 회신 처리). 로컬 라우팅의 기준이다.
+    topics: TOPIC_ROUTES,
+    // 연동기 GET 응답에만 붙고 레코드에는 저장하지 않는 필드(replyDraft: { text, notes } | null).
+    connectorGetExtras: ['replyDraft'],
     visaIntakeLabels,
   };
 }

@@ -5,6 +5,8 @@ import { buildInquiryContract } from '../lib/inquiryContract';
 import { CONNECTOR_STATUS_RULES } from '../../api/_store.mjs';
 // @ts-expect-error — 서버 모듈(.mjs)
 import { VISA_INTAKE_VALUES } from '../../api/_visa-intake.mjs';
+// @ts-expect-error — 서버 모듈(.mjs)
+import { TOPICS } from '../../api/_validate.mjs';
 
 const CONTRACT_PATH = join(__dirname, '../../api/_inquiry-contract.json');
 
@@ -40,6 +42,16 @@ describe('접수 연동 계약 (api/_inquiry-contract.json)', () => {
         expect(options[value], `${key}.${value} 라벨 없음`).toBeTruthy();
       }
     }
+  });
+
+  it('상담 분야 6개 모두 처리 경로가 있다(사건 전환 2개, 회신 처리 4개)', () => {
+    expect(Object.keys(contract.topics).sort()).toEqual([...TOPICS].sort());
+    expect(Object.values(contract.topics).filter((r) => (r as { route: string }).route === 'case')).toHaveLength(2);
+  });
+
+  it('연동기 GET은 저장하지 않는 회신 초안을 함께 돌려준다', () => {
+    expect(contract.connectorGetExtras).toEqual(['replyDraft']);
+    expect(contract.recordFields).not.toContain('replyDraft');
   });
 
   it('미처리 기준은 주인님이 승인한 값이다(2026-10-19: 72시간 지연, 긴급 24시간, 30일 경고, 90일 자동 종결)', () => {

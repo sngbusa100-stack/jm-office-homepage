@@ -64,12 +64,14 @@
     "localStatuses": [
       "closed",
       "case_created",
-      "engaged"
+      "engaged",
+      "replied"
     ],
     "closeReasons": [
       "manual",
       "not_engaged",
-      "auto_stale"
+      "auto_stale",
+      "no_reply"
     ]
   },
   "staleRules": {
@@ -78,6 +80,31 @@
     "warnDays": 30,
     "autoCloseDays": 90
   },
+  "topics": {
+    "음주운전 면허 구제": {
+      "route": "case",
+      "caseType": "driver_license"
+    },
+    "영업정지 · 행정심판": {
+      "route": "case",
+      "caseType": "business_suspension"
+    },
+    "인허가": {
+      "route": "reply"
+    },
+    "출입국 · 비자": {
+      "route": "reply"
+    },
+    "국가보훈": {
+      "route": "reply"
+    },
+    "토지보상 · 내용증명 · 계약서": {
+      "route": "reply"
+    }
+  },
+  "connectorGetExtras": [
+    "replyDraft"
+  ],
   "visaIntakeLabels": {
     "requester": {
       "question": "누구의 일",
