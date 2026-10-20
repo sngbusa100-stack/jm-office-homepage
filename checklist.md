@@ -658,3 +658,8 @@
 - [x] 검사: 타입 검사, 50파일 515테스트(.claude 제외), 빌드, verify-dist 통과
 - [ ] 배포 승인 대기. 지금은 화면 변화가 없다(isOpen=false)
 - [ ] 별도 과제: 비자 사이트 개업 후 문구(5개 언어, 번역 검수)
+
+### 2026-10-20 ⑥ 배포 (주인님: "배포해. 배포 뒤 go-live:check로 확인까지 해줘")
+
+- [x] master 푸시 9208ca4..6ee0034 → Vercel Production Ready(빌드 23초), jungmyungoffice.com·www 별칭 연결
+- [x] 배포 뒤 `npm run go-live:check`(2026-10-20 01:13 UTC): 통과 8 · 실패 1(개업 전에 채울 값) · 사람 확인 7 · 건너뜀 0. 운영 화면 개업 전 상태 유지, 접수 API 닫힘, 보호 API 401, 로컬 연동기 정상
