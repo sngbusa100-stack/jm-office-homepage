@@ -1,6 +1,6 @@
 {
   "note": "홈페이지(api/_store.mjs)와 로컬(admin_appeal/connector/store.py)의 연동 계약. 직접 고치지 말고 npm run contract:inquiry로 다시 만든다.",
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "recordFields": [
     "id",
     "schemaVersion",
@@ -13,6 +13,7 @@
     "diagnosis",
     "visaDiagnosis",
     "visaIntake",
+    "deadlineReport",
     "sourcePath",
     "utmSource",
     "attribution",
@@ -47,6 +48,7 @@
     "diagnosis",
     "visaDiagnosis",
     "visaIntake",
+    "deadlineReport",
     "sourcePath",
     "utmSource",
     "attribution",
@@ -103,7 +105,8 @@
     }
   },
   "connectorGetExtras": [
-    "replyDraft"
+    "replyDraft",
+    "urgentReasons"
   ],
   "visaIntakeLabels": {
     "requester": {
@@ -213,5 +216,20 @@
     "nationality": {
       "question": "국적"
     }
+  },
+  "deadlineReportLabels": {
+    "question": "받으신 처분서·통지서에 적힌 기한이 있나요?",
+    "options": {
+      "soon": "2주 안이거나 이미 지났습니다",
+      "later": "있지만 2주 넘게 남았습니다",
+      "unknown": "기한이 있는지, 언제인지 모릅니다",
+      "none": "받은 통지서가 없습니다"
+    }
+  },
+  "urgentReasonLabels": {
+    "diagnosis": "셀프 진단",
+    "visaIntake": "비자 접수 답변",
+    "visaDiagnosis": "비자 사전진단",
+    "selfReported": "고객 직접 선택"
   }
 }

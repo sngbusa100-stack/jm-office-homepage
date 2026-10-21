@@ -524,6 +524,16 @@ th { background: var(--surface-muted); font-weight: 700; }
 .admin-item summary {
   cursor: pointer;
 }
+.admin-badge-urgent {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--danger);
+  border-radius: 999px;
+  color: var(--danger);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
 .admin-item label {
   display: flex;
   flex-direction: column;

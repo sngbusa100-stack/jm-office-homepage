@@ -113,6 +113,18 @@ describe('상담 API 핸들러', () => {
     expect(backend.telegramTexts[0]).toContain(`접수번호: ${res.body.id}`);
     expect(backend.telegramTexts[0]).not.toContain('홍길동');
     expect(backend.telegramTexts[0]).not.toContain('010-1234-5678');
+    expect(backend.telegramTexts[0]).not.toContain('⏰');
+  });
+
+  it('기한 자가 응답을 저장하고 알림에 고객 직접 선택 긴급 줄을 넣는다', async () => {
+    const backend = createBackend();
+    vi.stubGlobal('fetch', backend.fetch);
+    const res = await invoke({ ...validBody, deadlineReport: 'unknown' });
+    expect(res.statusCode).toBe(200);
+    const saved = JSON.parse(backend.values.get(`inquiry:${res.body.id}`));
+    expect(saved.deadlineReport).toBe('unknown');
+    expect(saved).not.toHaveProperty('urgentReasons');
+    expect(backend.telegramTexts[0]).toContain('직접 선택');
   });
 
   it('저장된 동일 제출은 새 알림 없이 기존 접수번호를 돌려준다', async () => {

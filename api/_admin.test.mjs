@@ -187,6 +187,30 @@ describe('관리자 API 핸들러', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.items).toHaveLength(1);
     expect(res.body.items[0].id).toBe('JM-20260717-AAAA');
+    expect(res.body.items[0].urgentReasons).toEqual([]);
+  });
+
+  it('GET 목록 항목마다 긴급 근거를 붙이고, 파기된 접수는 빈 목록이며 저장하지 않는다', async () => {
+    const urgent = buildInquiryRecord(
+      { name: '홍길동', phone: '010-1234-5678', topic: '인허가', message: 'm', deadlineReport: 'soon' },
+      {},
+      { id: 'JM-20260717-URGT', now: new Date('2026-07-17T03:00:00Z') },
+    );
+    const purged = {
+      id: 'JM-20260101-PRGD', schemaVersion: 6, receivedAt: '2026-01-01T03:00:00.000Z', topic: '인허가',
+      status: 'done', pipelineStage: 'inquiry', memoCount: 0, purged: true, purgedAt: '2026-05-01T00:00:00.000Z',
+    };
+    const { data, index } = stubRedis();
+    data.set(`inquiry:${urgent.id}`, JSON.stringify(urgent));
+    data.set(`inquiry:${purged.id}`, JSON.stringify(purged));
+    index.push(urgent.id, purged.id);
+
+    const res = mockRes();
+    await handler({ method: 'GET', headers: AUTH }, res);
+    const byId = Object.fromEntries(res.body.items.map((i) => [i.id, i]));
+    expect(byId[urgent.id].urgentReasons).toEqual(['selfReported']);
+    expect(byId[purged.id].urgentReasons).toEqual([]);
+    expect(JSON.parse(data.get(`inquiry:${urgent.id}`)).urgentReasons).toBeUndefined();
   });
 
   it('PATCH는 상태·메모를 반영해 저장한다', async () => {
@@ -213,6 +237,27 @@ describe('관리자 API 핸들러', () => {
 
     const saved = JSON.parse(data.get('inquiry:JM-20260717-BBBB'));
     expect(saved.status).toBe('in_progress');
+  });
+
+  it('PATCH·DELETE 응답 항목에도 긴급 근거를 붙여 화면 배지가 유지되고, 저장하지는 않는다', async () => {
+    const record = buildInquiryRecord(
+      { name: '홍길동', phone: '010-1234-5678', topic: '인허가', message: '', deadlineReport: 'soon' },
+      {},
+      { id: 'JM-20260717-CCCC', now: new Date('2026-07-17T03:00:00Z') },
+    );
+    const { data } = stubRedis();
+    data.set('inquiry:JM-20260717-CCCC', JSON.stringify(record));
+
+    const patched = mockRes();
+    await handler({ method: 'PATCH', headers: AUTH, body: { id: record.id, status: 'in_progress' } }, patched);
+    expect(patched.body.item.urgentReasons).toEqual(['selfReported']);
+    expect(JSON.parse(data.get(`inquiry:${record.id}`)).urgentReasons).toBeUndefined();
+
+    const deleted = mockRes();
+    await handler({ method: 'DELETE', headers: AUTH, body: { id: record.id } }, deleted);
+    expect(deleted.body.item.purged).toBe(true);
+    expect(deleted.body.item.urgentReasons).toEqual([]);
+    expect(JSON.parse(data.get(`inquiry:${record.id}`)).urgentReasons).toBeUndefined();
   });
 
   it('없는 접수는 404, 잘못된 패치는 400', async () => {

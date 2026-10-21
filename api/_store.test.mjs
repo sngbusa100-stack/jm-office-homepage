@@ -124,7 +124,9 @@ describe('접수 패치(상태·메모·수임 단계)', () => {
 
 describe('개인정보 파기', () => {
   it('이름·연락처·내용·메모를 제거하고 통계 필드만 남긴다', () => {
-    const record = buildInquiryRecord(value, { origin: 'o' }, { now: NOW });
+    const record = buildInquiryRecord({ ...value, deadlineReport: 'soon' }, { origin: 'o' }, { now: NOW });
+    expect(record.deadlineReport).toBe('soon');
+    expect(record.schemaVersion).toBe(7);
     record.memos.push({ at: NOW.toISOString(), text: '메모' });
     const purged = purgeInquiryRecord(record, NOW);
     expect(purged).toEqual({

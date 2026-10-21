@@ -8,6 +8,8 @@ import type { ResultLevel } from '../types/content';
 import { readAttribution, trackFunnelEvent } from '../lib/funnel';
 import { OfficeLocation } from '../components/OfficeLocation';
 import { VisaIntakeFields } from '../components/VisaIntakeFields';
+import { DeadlineReportField } from '../components/DeadlineReportField';
+import type { DeadlineReport } from '../data/deadlineReport';
 import { findCheck } from '../data/checks';
 import { EMPTY_VISA_INTAKE, buildVisaIntakePayload, intakeWording } from '../data/visaIntake';
 import type { VisaIntakeAnswers } from '../data/visaIntake';
@@ -224,6 +226,11 @@ export function ConsultPage() {
   const diagnosisMatches = diagnosisTopic === topic;
   const attachDiagnosis = showDiagnosisAttach && diagnosisMatches && attachChoice;
   const [visaIntake, setVisaIntake] = useState<VisaIntakeAnswers>(EMPTY_VISA_INTAKE);
+  // 기한 자가 응답은 비자 외 분야에서만 묻고 보낸다(비자는 접수 질문이 따로 있다).
+  const [deadlineReport, setDeadlineReport] = useState<DeadlineReport | ''>('');
+  const asksDeadline = Boolean(topic) && topic !== VISA_TOPIC;
+  // 업무 페이지의 '기한이 급하면 상담부터'(법정 기한이 있는 분야만)로 들어오면 긴급 안내를 폼 위에 둔다.
+  const urgentEntry = searchParams.get('priority') === 'urgent';
   const diagnosisStay = typeof visaDiagnosis?.answers.stayStatus === 'string' ? visaDiagnosis.answers.stayStatus : '';
   const diagnosisViolation = typeof visaDiagnosis?.answers.violationStatus === 'string' ? visaDiagnosis.answers.violationStatus : '';
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -323,6 +330,7 @@ export function ConsultPage() {
         sourcePath: `/result?visa=${encodeURIComponent(visaDiagnosis.visaSlug)}`,
       } : {}),
       ...(topic === VISA_TOPIC ? { visaIntake: buildVisaIntakePayload(visaIntake, diagnosisStay) } : {}),
+      ...(asksDeadline && deadlineReport ? { deadlineReport } : {}),
       ...(utmSource ? { utmSource } : {}),
       ...(Object.keys(attribution).length > 0 ? { attribution } : {}),
       submissionId,
@@ -383,6 +391,8 @@ export function ConsultPage() {
         </div>
       </section>
 
+      {urgentEntry && urgentNotice}
+
       <form className="card consult-form" onSubmit={handleSubmit}>
         <h2>상담 신청</h2>
         {handoffStatus === 'loading' && <p className="note" role="status">비자 진단 결과를 안전하게 불러오는 중입니다.</p>}
@@ -428,6 +438,9 @@ export function ConsultPage() {
             fromDiagnosis={visaDiagnosis ? { stayStatus: diagnosisStay, violation: diagnosisViolation } : null}
           />
         )}
+        {asksDeadline && (
+          <DeadlineReportField value={deadlineReport} onChange={setDeadlineReport} disabled={!formEnabled} />
+        )}
         <label>상담 내용
           <span className="note">
             지금 가장 걱정되는 점이나 정해진 날짜를 한두 줄로 적어 주세요. 주민등록번호·외국인등록번호·여권번호·운전면허번호,
@@ -471,8 +484,8 @@ export function ConsultPage() {
         )}
         <label className="agree">
           <input type="checkbox" name="consent" required disabled={!formEnabled} />
-          개인정보 수집·이용에 동의합니다 — 수집 항목: 이름·전화번호·이메일(선택)·분야·문의 글, 함께 보내기를 고른 경우 진단 답변, 출입국·비자
-          분야는 위 질문의 답(선택 항목은 답한 경우만). 목적: 상담 회신. 보관: 처리 완료 후 120일 뒤 파기.
+          개인정보 수집·이용에 동의합니다 — 수집 항목: 이름·전화번호·이메일(선택)·분야·문의 글, 기한 질문의 답(답한 경우),
+          함께 보내기를 고른 경우 진단 답변, 출입국·비자 분야는 위 질문의 답(선택 항목은 답한 경우만). 목적: 상담 회신. 보관: 처리 완료 후 120일 뒤 파기.
           국외 이전: 접수 서버·저장소 Vercel·Upstash(미국), 접수 알림 Telegram에 처리를 맡깁니다.
           동의하지 않으실 수 있으나, 이 경우 온라인 신청은 접수되지 않습니다(전화 문의 가능). 선택 항목은 답하지
           않아도 상담을 받으실 수 있습니다. 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 확인해 주세요.
@@ -508,16 +521,20 @@ export function ConsultPage() {
         </section>
       )}
 
-      <section className="card level-urgent">
-        <h2>기한이 임박했다면 기다리지 마세요</h2>
-        <p>
-          행정심판 기한 등 긴급한 사안은 국민권익위원회 상담전화(국번 없이 110) 또는
-          해당 처분을 한 기관에 바로 확인하실 수 있습니다.
-        </p>
-      </section>
+      {!urgentEntry && urgentNotice}
     </div>
   );
 }
+
+const urgentNotice = (
+  <section className="card level-urgent">
+    <h2>기한이 임박했다면 기다리지 마세요</h2>
+    <p>
+      행정심판 기한 등 긴급한 사안은 국민권익위원회 상담전화(국번 없이 110) 또는
+      해당 처분을 한 기관에 바로 확인하실 수 있습니다.
+    </p>
+  </section>
+);
 
 function createSubmissionId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {

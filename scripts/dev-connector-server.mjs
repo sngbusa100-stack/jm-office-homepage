@@ -4,7 +4,7 @@
 // 로컬 행정심판 시스템에서: CONNECTOR_BASE_URL=http://127.0.0.1:3399/api/connector CONNECTOR_TOKEN=dev-connector
 //   python -m admin_appeal.connector.pull_inquiries --db <임시 DB 경로>
 //   ⚠ --db를 빼면 운영 DB(data/admin_appeal.db)에 시험 접수가 들어가고 91일 건은 자동 종결된다. 반드시 임시 DB를 쓴다.
-// 시험용 접수 3건(비자·음주운전·91일 지난 인허가)을 미리 넣는다. GET /__dump?id=… 로 저장 상태를 본다.
+// 시험용 접수 4건(비자·음주운전·91일 지난 인허가·기한 자가 응답 영업정지)을 미리 넣는다. GET /__dump?id=… 로 저장 상태를 본다.
 import http from 'node:http';
 
 const port = Number(process.argv[2] ?? 3399);
@@ -89,4 +89,8 @@ await store.save(buildInquiryRecord({
 await store.save(buildInquiryRecord({
   name: '김오래(시험)', phone: '010-0000-0003', topic: '인허가', message: '91일 전 문의',
 }, {}, { id: 'JM-DEV-OLD', now: new Date(Date.now() - 91 * day) }));
-console.log(`[dev-connector] http://127.0.0.1:${port}/api/connector (token dev-connector) — 시험 접수 3건 준비`);
+// 기한 자가 응답(docs/2026-10-21-deadline-signal-plan.md): GET에 urgentReasons ['selfReported']가 붙는다.
+await store.save(buildInquiryRecord({
+  name: '이급함(시험)', phone: '010-0000-0004', topic: '영업정지 · 행정심판', message: '사전통지 받음', deadlineReport: 'unknown',
+}, {}, { id: 'JM-DEV-DEADLINE', now: new Date(Date.now() - 30 * 60 * 60 * 1000) }));
+console.log(`[dev-connector] http://127.0.0.1:${port}/api/connector (token dev-connector) — 시험 접수 4건 준비`);

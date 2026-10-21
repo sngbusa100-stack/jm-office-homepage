@@ -1,6 +1,7 @@
 // 접수 관리 API 클라이언트 + 통계 집계 (관리자 페이지 전용)
 
 import { office } from '../data/office';
+import type { DeadlineReport, UrgentReason } from '../data/deadlineReport';
 
 export interface InquiryMemo {
   at: string;
@@ -48,6 +49,10 @@ export interface InquiryRecord {
   visaDiagnosis?: InquiryVisaDiagnosis;
   /** 출입국·비자 접수 질문(고객 자가 응답, 증빙 미확인). 설계: docs/2026-10-18-visa-intake-questions.md */
   visaIntake?: Record<string, string | boolean> & { deadlineFirst?: boolean };
+  /** 처분서·통지서 기한 자가 응답(출입국·비자 외 분야, 선택, 증빙 미확인). */
+  deadlineReport?: DeadlineReport;
+  /** 서버가 목록 응답에서만 계산하는 긴급 근거(api/_urgency.mjs). 저장되지 않는다. */
+  urgentReasons?: UrgentReason[];
   sourcePath?: string;
   utmSource?: string;
   attribution?: {

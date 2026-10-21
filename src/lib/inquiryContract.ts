@@ -2,6 +2,7 @@
 // 이 모듈은 테스트(src/test/inquiryContract.test.ts)가 api/_inquiry-contract.json을 만들고 대조할 때만 쓴다.
 // 앱 화면 번들에는 들어가지 않는다(서버 모듈을 가져오기 때문).
 import { VISA_INTAKE_LABELS } from '../data/visaIntake';
+import { DEADLINE_REPORT_OPTIONS, DEADLINE_REPORT_QUESTION, URGENT_REASON_LABELS } from '../data/deadlineReport';
 // @ts-expect-error — 서버 모듈(.mjs)은 타입 선언이 없다.
 import { buildInquiryRecord, CONNECTOR_STATUS_RULES, SCHEMA_VERSION } from '../../api/_store.mjs';
 import { TOPIC_ROUTES } from '../../api/_reply-draft.mjs';
@@ -18,7 +19,7 @@ const LIFECYCLE_FIELDS = [
 /** 로컬이 반드시 보관해야 하는 고객 제공·동의 필드. 수임 뒤 클라우드를 파기하면 로컬 사본만 남는다. */
 const LOCAL_MUST_KEEP = [
   'id', 'schemaVersion', 'receivedAt', 'name', 'phone', 'email', 'topic', 'message',
-  'diagnosis', 'visaDiagnosis', 'visaIntake', 'sourcePath', 'utmSource', 'attribution', 'consent',
+  'diagnosis', 'visaDiagnosis', 'visaIntake', 'deadlineReport', 'sourcePath', 'utmSource', 'attribution', 'consent',
 ];
 
 export function buildInquiryContract() {
@@ -26,7 +27,7 @@ export function buildInquiryContract() {
   const sample = buildInquiryRecord(
     {
       name: 'x', phone: 'x', email: 'x', topic: 'x', message: 'x',
-      diagnosis: {}, visaDiagnosis: {}, visaIntake: {}, sourcePath: 'x', utmSource: 'x', attribution: {},
+      diagnosis: {}, visaDiagnosis: {}, visaIntake: {}, deadlineReport: 'x', sourcePath: 'x', utmSource: 'x', attribution: {},
     },
     { origin: 'x' },
     { id: 'JM-CONTRACT', now: new Date('2026-01-01T00:00:00.000Z') },
@@ -52,8 +53,14 @@ export function buildInquiryContract() {
     staleRules: STALE_RULES,
     // 상담 분야 → 처리 경로(case: 로컬 사건 유형으로 전환 / reply: 회신 처리). 로컬 라우팅의 기준이다.
     topics: TOPIC_ROUTES,
-    // 연동기 GET 응답에만 붙고 레코드에는 저장하지 않는 필드(replyDraft: { text, notes } | null).
-    connectorGetExtras: ['replyDraft'],
+    // 연동기 GET 응답에만 붙고 레코드에는 저장하지 않는 필드
+    // (replyDraft: { text, notes } | null, urgentReasons: api/_urgency.mjs 순서의 긴급 근거 목록).
+    connectorGetExtras: ['replyDraft', 'urgentReasons'],
     visaIntakeLabels,
+    deadlineReportLabels: {
+      question: DEADLINE_REPORT_QUESTION,
+      options: Object.fromEntries(DEADLINE_REPORT_OPTIONS.map((o) => [o.value, o.label])),
+    },
+    urgentReasonLabels: URGENT_REASON_LABELS,
   };
 }

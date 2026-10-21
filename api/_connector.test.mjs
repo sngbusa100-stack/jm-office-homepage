@@ -261,6 +261,22 @@ describe('연동기 API 핸들러', () => {
     expect(JSON.parse(data.get('inquiry:JM-1')).replyDraft).toBeUndefined();
   });
 
+  it('GET은 접수마다 긴급 근거를 계산해 붙이고 저장하지는 않는다', async () => {
+    const { data, index } = stubRedis();
+    data.set('inquiry:JM-1', JSON.stringify(buildInquiryRecord(
+      { ...value, deadlineReport: 'unknown' }, {}, { id: 'JM-1', now: NOW },
+    )));
+    data.set('inquiry:JM-2', JSON.stringify(buildInquiryRecord(value, {}, { id: 'JM-2', now: NOW })));
+    index.push('JM-1', 'JM-2');
+    const res = mockRes();
+    await handler({ method: 'GET', headers: AUTH }, res);
+    const byId = Object.fromEntries(res.body.items.map((i) => [i.id, i]));
+    expect(byId['JM-1'].urgentReasons).toEqual(['selfReported']);
+    expect(byId['JM-1'].deadlineReport).toBe('unknown');
+    expect(byId['JM-2'].urgentReasons).toEqual([]);
+    expect(JSON.parse(data.get('inquiry:JM-1')).urgentReasons).toBeUndefined();
+  });
+
   it('GET이 성공하면 연동기 마지막 접속 시각을 남기고, 인증 실패는 남기지 않는다', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);

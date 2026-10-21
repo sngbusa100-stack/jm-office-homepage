@@ -6,6 +6,7 @@
 
 import { isAuthorized } from './admin.js';
 import { buildReplyDraft } from './_reply-draft.mjs';
+import { urgentReasons } from './_urgency.mjs';
 import {
   applyConnectorAck,
   applyConnectorStatus,
@@ -45,10 +46,14 @@ export default async function handler(req, res) {
       } catch {
         // 아침 운영 요약에서 '연동기 접속' 경고로 드러난다.
       }
-      // 회신 초안은 저장하지 않고 응답에서만 계산한다(클라우드에 개인정보 사본을 늘리지 않음).
+      // 회신 초안·긴급 근거는 저장하지 않고 응답에서만 계산한다(클라우드에 개인정보 사본을 늘리지 않음).
       res.status(200).json({
         ok: true,
-        items: items.map((item) => ({ ...item, replyDraft: safeReplyDraft(item) })),
+        items: items.map((item) => ({
+          ...item,
+          replyDraft: safeReplyDraft(item),
+          urgentReasons: urgentReasons(item),
+        })),
       });
       return;
     }

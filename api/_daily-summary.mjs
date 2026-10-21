@@ -1,5 +1,6 @@
 // 매일 아침 운영 요약 — 접수·연동기·자동 파기 상태를 Telegram 한 통으로 알린다
 // (docs/2026-10-19-daily-ops-summary-plan.md). 건수와 접수번호만 담고 이름·연락처·문의 내용은 넣지 않는다.
+import { isUrgent } from './_urgency.mjs';
 
 /** 미처리 기준. 연동 계약 api/_inquiry-contract.json의 staleRules와 같아야 한다(테스트로 고정). */
 export const STALE_RULES = { delayHours: 72, urgentDelayHours: 24, warnDays: 30, autoCloseDays: 90 };
@@ -14,11 +15,6 @@ const MAX_LISTED_IDS = 3;
 const HOUR = 60 * 60 * 1000;
 const KST_OFFSET = 9 * HOUR;
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
-
-/** 접수 알림과 같은 긴급 판정(api/consult.js). */
-function isUrgent(record) {
-  return Boolean(record.diagnosis?.counts?.urgent) || Boolean(record.visaIntake?.deadlineFirst);
-}
 
 function ageHours(record, now) {
   const received = Date.parse(record.receivedAt ?? '');

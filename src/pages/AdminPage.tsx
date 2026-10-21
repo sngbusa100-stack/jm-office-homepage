@@ -11,6 +11,7 @@ import { buildReplyDraft } from '../../api/_reply-draft.mjs';
 import { findCheck } from '../data/checks';
 import { describeVisaDiagnosisAnswer } from '../data/visaDiagnosisLabels';
 import { describeVisaIntake } from '../data/visaIntake';
+import { DEADLINE_REPORT_OPTIONS, URGENT_REASON_LABELS } from '../data/deadlineReport';
 
 const TOKEN_KEY = 'admin:token';
 
@@ -58,6 +59,15 @@ const LOCAL_CLOSE_REASON_LABEL: Record<NonNullable<InquiryRecord['localCloseReas
   no_reply: '회신 후 무응답 자동 종결',
 };
 
+/** 긴급 근거는 서버(api/_urgency.mjs)가 목록·PATCH 응답에 붙인 값만 쓴다. 화면에서 다시 판정하지 않는다. */
+function isUrgentItem(item: InquiryRecord): boolean {
+  return (item.urgentReasons?.length ?? 0) > 0;
+}
+
+function urgentTitle(item: InquiryRecord): string {
+  return `근거: ${(item.urgentReasons ?? []).map((reason) => URGENT_REASON_LABELS[reason] ?? reason).join(' · ')}`;
+}
+
 function formatDateTime(iso: string): string {
   try {
     return new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
@@ -72,7 +82,7 @@ export function AdminPage() {
   const [items, setItems] = useState<InquiryRecord[] | null>(null);
   const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | InquiryRecord['status']>('all');
+  const [filter, setFilter] = useState<'all' | 'urgent' | InquiryRecord['status']>('all');
   const [memoDrafts, setMemoDrafts] = useState<Record<string, string>>({});
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [replyNotes, setReplyNotes] = useState<Record<string, string[]>>({});
@@ -174,8 +184,15 @@ export function AdminPage() {
   }
 
   const stats = useMemo(() => summarizeInquiries(items ?? []), [items]);
+  const urgentCount = useMemo(() => (items ?? []).filter(isUrgentItem).length, [items]);
+  // 미처리(신규) 긴급 건을 맨 위로 올리고, 나머지는 서버가 준 순서를 그대로 둔다(안정 정렬).
   const visible = useMemo(
-    () => (items ?? []).filter((item) => filter === 'all' || item.status === filter),
+    () => (items ?? [])
+      .filter((item) => filter === 'all'
+        || (filter === 'urgent' ? isUrgentItem(item) : item.status === filter))
+      .map((item, order) => ({ item, order, top: item.status === 'new' && isUrgentItem(item) }))
+      .sort((a, b) => Number(b.top) - Number(a.top) || a.order - b.order)
+      .map(({ item }) => item),
     [items, filter],
   );
 
@@ -312,6 +329,13 @@ export function AdminPage() {
               {STATUS_LABEL[key]} ({stats.byStatus[key] ?? 0})
             </button>
           ))}
+          <button
+            className={`button ${filter === 'urgent' ? 'button--primary' : ''}`}
+            type="button"
+            onClick={() => setFilter('urgent')}
+          >
+            기한 우선 ({urgentCount})
+          </button>
         </div>
 
         {items === null && !error && <p className="note">불러오는 중...</p>}
@@ -320,6 +344,9 @@ export function AdminPage() {
         {visible.map((item) => (
           <details className="card admin-item" key={item.id}>
             <summary>
+              {isUrgentItem(item) && (
+                <span className="admin-badge-urgent" title={urgentTitle(item)}>⏰ 기한 우선</span>
+              )}
               <strong>{item.id}</strong> · {item.topic} ·{' '}
               {item.purged ? '(개인정보 파기됨)' : item.name} · {formatDateTime(item.receivedAt)} ·{' '}
               {STATUS_LABEL[item.status]}
@@ -348,6 +375,14 @@ export function AdminPage() {
                       : ''}
                     {item.localStatusAt ? ` · ${formatDateTime(item.localStatusAt)}` : ''}
                     {` (${item.localCaseId})`}
+                  </p>
+                )}
+                {item.deadlineReport && (
+                  <p className="note">
+                    처분서·통지서 기한 — 고객 자가 응답(증빙 미확인):{' '}
+                    <strong>
+                      {DEADLINE_REPORT_OPTIONS.find((o) => o.value === item.deadlineReport)?.label ?? item.deadlineReport}
+                    </strong>
                   </p>
                 )}
                 {item.message && <p className="admin-message">{item.message}</p>}

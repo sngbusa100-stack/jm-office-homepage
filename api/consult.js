@@ -10,6 +10,7 @@ import {
   redisConfig,
 } from './_store.mjs';
 import { applyCors } from './_cors.mjs';
+import { urgentReasons } from './_urgency.mjs';
 
 export default async function handler(req, res) {
   const origin = req.headers.origin ?? '';
@@ -128,7 +129,7 @@ export default async function handler(req, res) {
     origin,
     inquiryId: record.id,
     storeError: !stored,
-    urgent: Boolean(record.diagnosis?.counts?.urgent) || Boolean(record.visaIntake?.deadlineFirst),
+    urgentReasons: urgentReasons(record),
     indexWarning: indexRepairFailed,
   });
   // 알림 실패(네트워크 예외 포함)가 500으로 번져 고객이 재제출→중복 접수가 되지 않도록 감싼다.

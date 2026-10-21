@@ -663,3 +663,35 @@
 
 - [x] master 푸시 9208ca4..6ee0034 → Vercel Production Ready(빌드 23초), jungmyungoffice.com·www 별칭 연결
 - [x] 배포 뒤 `npm run go-live:check`(2026-10-20 01:13 UTC): 통과 8 · 실패 1(개업 전에 채울 값) · 사람 확인 7 · 건너뜀 0. 운영 화면 개업 전 상태 유지, 접수 API 닫힘, 보호 API 401, 로컬 연동기 정상
+
+### 2026-10-21 기한·긴급 신호 잇기 계획 (보고서 2-2 8번, 주인님: "후보 1번으로 계획을 세워줘") — 승인됨(추천안 전부)
+
+- [x] 현황 실측: 비자 만료·임박은 10-18 deadlineFirst로 이미 알림에 반영됨(보고서 기술은 낡음). 남은 끊김 7개 — priority=urgent 미사용·고객 자가 응답 칸 없음·판정식 4곳 복제(consult.js·_daily-summary·_reply-draft·로컬 store.py)·비자 사전진단 urgent 미반영·/admin 목록 배지·정렬 없음·저장 실패 폴백에 긴급 줄 없음·110 카드가 페이지 맨 끝
+- [x] 계획 `docs/2026-10-21-deadline-signal-plan.md`: 판정 함수 하나(`api/_urgency.mjs`, 저장 없이 매번 계산), 선택 항목 deadlineReport(비자 외 분야), 알림 근거 2종 구분(분야 미노출), /admin 배지·정렬·필터, 계약·connector urgentReasons, 로컬은 홈페이지 배포 뒤(리뷰 뒤 "배포 전"으로 정정 제안)
+- [x] 주인님 결정(2026-10-21): 3절 질문 5개 모두 추천안 — 단, 5번(방침 개정 없음)은 근거가 틀린 것으로 리뷰에서 드러나 재결정 대기(아래 절)
+- [x] 구현은 아래 절
+- [ ] 미푸시: 홈페이지 528e03a(문서), 비자 사이트 dd553bd(문서) — 푸시 승인 대기
+
+### 2026-10-21 기한·긴급 신호 잇기 구현 1~5단계 (주인님: "질문 5개 모두 추천안대로, 1~5단계 구현해. 커밋·배포는 다시 물어봐") — 미커밋
+
+- [x] 1단계: 판정 함수 `api/_urgency.mjs`(URGENT_REASONS·DEADLINE_REPORTS·urgentReasons·isUrgent, 저장 안 함). consult.js·_daily-summary·_reply-draft의 복제 판정식 제거. 접수 검증 `deadlineReport`(비자 분야·틀린 값은 버림), 저장(SCHEMA_VERSION 6→7, 파기는 허용 목록이라 함께 지워짐). 텔레그램 긴급 줄 2종(고객 답변 기준 / 고객 직접 선택), 저장 실패 폴백에도 긴급 줄. 회신 초안: 자가 응답만 있고 기한 질문이 없는 분야는 "처분서·통지서에 적힌 기한 날짜"를 첫 질문으로
+- [x] 2단계: connector GET·/api/admin GET·PATCH·DELETE 응답에 `urgentReasons`(저장 안 함). 연동 계약 재생성(localMustKeep에 deadlineReport, connectorGetExtras에 urgentReasons, 라벨 2종). **로컬로 sync하지 않음**
+- [x] 3단계: 상담 화면 기한 질문(비자 외 분야, 선택, 기본값 없음 — `src/components/DeadlineReportField.tsx`, 라벨 `src/data/deadlineReport.ts`), `?priority=urgent`이면 110 카드를 폼 위로, 동의 문구에 "기한 질문의 답(답한 경우)" 추가. 업무 페이지는 법정 기한이 있는 분야(음주운전·영업정지·국가보훈)만 priority=urgent
+- [x] 4단계: /admin 요약 줄 '⏰ 기한 우선' 배지(근거는 title), 신규 긴급 건 맨 위(안정 정렬), '기한 우선 (N)' 필터, 자가 응답을 '고객 자가 응답(증빙 미확인)'으로 표시
+- [x] 5단계 검사: 타입 검사, 51파일 556테스트(.claude 제외, 이전 50파일 515에서 +1파일 +41), 빌드·test:guard·verify-dist(18경로) 통과
+- [x] 브라우저(dist 미리보기 4180): dui 하단 버튼만 priority=urgent, 인허가 없음, 상담 화면 110 카드가 폼 위·기한 질문 표시(개업 전이라 비활성), 375px 가로 넘침 없음. 개발 서버는 /api 프록시 때문에 화면 번들의 `api/_reply-draft.mjs` import를 못 불러와(이번 변경 전부터) dist로 확인. /admin은 컴포넌트 테스트로만 확인
+- [x] 리뷰 에이전트 1회: Critical 없음. Important 2건 확인(사실)
+  - ① 홈페이지를 먼저 배포하면 6단계 전까지 들어온 접수의 deadlineReport가 로컬에 영영 안 남는다(로컬은 정해진 열만 INSERT OR IGNORE, 가져간 건은 다시 안 내려옴) → 6단계를 홈페이지 배포 "전"으로 옮기자고 제안(계획서 2-6 정정)
+  - ② 계획서 3절 질문 5(방침 개정 없음)의 근거가 틀렸다(`privacyPolicy.ts:30`은 국외 이전 표). 실제 수집 항목 `PrivacyPage.tsx:47`·파기 방법 `:60`에 기한 질문의 답이 없어 동의 문구와 어긋남 → 주인님 재결정 필요
+- [ ] 주인님 결정: 방침 두 곳 보완(+배포일 시행일·CONSENT_VERSION·변경 이력) 여부, 6단계 선행 여부
+- [ ] 리뷰 사소한 지적 미반영(계획서 7절): 상태 변경 시 재정렬로 위치 튐, 필터 수가 완료·보류 포함, 배지 근거가 툴팁뿐, 답 지우기 불가, 비자 외 분야끼리 바꿔도 답 유지, 자가 응답 줄이 '비자 아님'을 간접 노출
+- [ ] 커밋·배포는 주인님 지시 후
+
+### 2026-10-21 리뷰 반영 — 방침 보완·6단계 선행 (주인님: "방침 두 곳에 기한 질문의 답을 넣고, 6단계를 홈페이지 배포 전에… 시행일·CONSENT_VERSION은 배포일에 맞추고, 커밋·배포는 다시 물어봐") — 미커밋
+
+- [x] 방침 `PrivacyPage.tsx` 선택 항목·파기 방법에 기한 질문의 답 추가, 시행일·CONSENT_VERSION 2026-10-21(임시), 변경 이력에 이전 방침 2026-10-19. 테스트 2개 RED→GREEN
+- [x] 로컬 6단계(worktree `D:\행정사\wt-deadline-signal`, 브랜치 feat/deadline-signal): 열 2개·판정·대기함 표시·파기 대상. 로컬 테스트·왕복 실측은 로컬 checklist 참고
+- [x] `scripts/dev-connector-server.mjs` 시험 접수 4건(기한 자가 응답 영업정지 추가)
+- [x] 검사: 타입 검사, 51파일 558테스트(.claude 제외), 빌드·verify-dist 통과, 사전 렌더링 /privacy에 새 문구·시행일
+- [ ] 배포 당일: 배포일이 2026-10-21이 아니면 `PRIVACY_EFFECTIVE_DATE`·`CONSENT_VERSION`을 배포일로
+- [ ] 승인 대기: ① 로컬 병합·커밋(운영 즉시) → 다음 30분 실행 확인 ② 홈페이지 커밋·푸시(운영 배포). 미푸시 문서 커밋 528e03a도 함께 나감

@@ -43,6 +43,16 @@ describe('운영 요약 집계', () => {
     expect(STALE_RULES).toEqual(contract.staleRules);
   });
 
+  it('비자 사전진단 긴급 등급과 고객 기한 자가 응답도 긴급으로 센다(24시간 기준)', () => {
+    const s = summarizeInquiries([
+      inquiry('JM-VD', { receivedAt: hoursAgo(30), visaDiagnosis: { level: 'urgent' } }),
+      inquiry('JM-SR', { receivedAt: hoursAgo(30), deadlineReport: 'unknown' }),
+      inquiry('JM-LATER', { receivedAt: hoursAgo(30), deadlineReport: 'later' }),
+    ], BASE_CTX);
+    expect(s.urgent).toBe(2);
+    expect(s.overdue.map((o) => o.id)).toEqual(['JM-VD', 'JM-SR']);
+  });
+
   it('미처리·긴급·지연·30일 경과·미수집·진행 중·보류를 나눠 센다', () => {
     const items = [
       inquiry('JM-FRESH'), // 1시간: 미처리, 지연 아님

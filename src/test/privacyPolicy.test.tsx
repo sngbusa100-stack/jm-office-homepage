@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
 // @ts-expect-error — 서버 모듈(.mjs)은 타입 선언 없이 값만 비교한다.
 import { CONSENT_VERSION } from '../../api/_store.mjs';
-import { OVERSEAS_TRANSFERS, PRIVACY_EFFECTIVE_DATE } from '../data/privacyPolicy';
+import { OVERSEAS_TRANSFERS, PRIVACY_EFFECTIVE_DATE, PRIVACY_HISTORY } from '../data/privacyPolicy';
 
 function renderAt(path: string) {
   return render(
@@ -79,6 +79,19 @@ describe('개인정보처리방침 법정 기재사항', () => {
     renderAt('/privacy');
     const text = screen.getByRole('region', { name: '안전성 확보 조치' }).textContent ?? '';
     for (const word of ['HTTPS', '관리자', '연동', '자동 파기', '해시']) expect(text).toContain(word);
+  });
+
+  it('상담 화면의 기한 질문 답을 수집 항목과 파기 대상에 적는다(동의 문구와 일치)', () => {
+    renderAt('/privacy');
+    const items = screen.getByRole('region', { name: '처리하는 개인정보 항목' }).textContent ?? '';
+    expect(items).toContain('처분서·통지서 기한 질문의 답');
+    const retention = screen.getByRole('region', { name: '보유 기간과 파기' }).textContent ?? '';
+    expect(retention).toMatch(/파기 방법:[^\n]*기한 질문의 답/);
+  });
+
+  it('기한 질문 추가로 바뀐 방침은 이전 시행일(2026-10-19)을 변경 이력에 남긴다', () => {
+    expect(PRIVACY_EFFECTIVE_DATE > '2026-10-19').toBe(true);
+    expect(PRIVACY_HISTORY.map((entry) => entry.date)).toContain('2026-10-19');
   });
 
   it('시행일이 동의 문구 버전과 같고 화면에 표시된다', () => {

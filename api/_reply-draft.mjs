@@ -5,6 +5,7 @@
 // 화면 번들에도 들어가므로 서버 전용 모듈(_validate 등)을 가져오지 않는다.
 
 import LABELS from './_reply-labels.mjs';
+import { isUrgent, urgentReasons } from './_urgency.mjs';
 
 /**
  * 상담 분야 → 처리 경로. case는 로컬 행정심판 사건 유형으로 전환할 수 있는 분야, reply는 회신으로 처리하는 분야.
@@ -173,6 +174,7 @@ export const REPLY_TEMPLATES = [
 ];
 
 const URGENT_LINE = '기한이 지나면 진행할 수 있는 절차가 줄어들 수 있어, 날짜부터 먼저 여쭙습니다.';
+const SELF_REPORTED_DEADLINE_ASK = '처분서·통지서에 적힌 기한 날짜';
 const CLOSING =
   '위 내용을 알려 주시면 확인 후 진행 가능한 절차와 준비 서류를 구체적으로 안내드리겠습니다. ' +
   '사안마다 사실관계가 달라 결과를 미리 단정해 드리기는 어렵고, 확인된 내용을 기준으로 정확하게 말씀드리겠습니다. 감사합니다.';
@@ -302,10 +304,6 @@ function planVisa(record) {
   return { recap, asks, notes };
 }
 
-function isUrgent(record) {
-  return Boolean(record.diagnosis?.counts?.urgent) || Boolean(record.visaIntake?.deadlineFirst);
-}
-
 /**
  * 첫 회신 초안을 만든다. 파기됐거나 이름이 없거나 모르는 분야면 null.
  * @returns {{ text: string, notes: string[] } | null} notes는 행정사용 내부 메모(발송 본문에 넣지 않음)
@@ -317,6 +315,10 @@ export function buildReplyDraft(record) {
   const { office } = LABELS;
 
   const plan = template.visa ? planVisa(record) : planDiagnosis(template, record);
+  // 고객이 기한 '급함·모름'을 골랐는데 이 분야 질문에 기한 질문이 없으면 기한 날짜부터 묻는다.
+  if (urgentReasons(record).includes('selfReported') && !plan.asks.some((a) => a.deadline)) {
+    plan.asks.unshift({ text: SELF_REPORTED_DEADLINE_ASK, deadline: true });
+  }
   const urgent = isUrgent(record) && plan.asks.some((a) => a.deadline);
   const asks = urgent
     ? [...plan.asks.filter((a) => a.deadline), ...plan.asks.filter((a) => !a.deadline)]

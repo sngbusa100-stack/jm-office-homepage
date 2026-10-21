@@ -159,6 +159,29 @@ describe('기한 우선', () => {
     expect(questions(text)[0]).toContain('통지서를 받으신 정확한 날짜');
   });
 
+  it("고객이 기한 '급함·모름'을 고른 분야에 기한 질문이 없으면 기한 날짜를 첫 질문으로 묻는다", () => {
+    const { text } = buildReplyDraft(record('토지보상 · 내용증명 · 계약서', { deadlineReport: 'soon' }));
+    expect(text).toContain('날짜부터 먼저 여쭙습니다');
+    expect(questions(text)[0]).toBe('1) 처분서·통지서에 적힌 기한 날짜');
+    const permit = buildReplyDraft(record('인허가', { deadlineReport: 'unknown' })).text;
+    expect(questions(permit)[0]).toBe('1) 처분서·통지서에 적힌 기한 날짜');
+  });
+
+  it('기한 질문이 이미 있는 분야는 자가 응답으로 질문을 늘리지 않고 그 질문을 앞에 둔다', () => {
+    const { text } = buildReplyDraft(record('음주운전 면허 구제', { deadlineReport: 'soon' }));
+    expect(text).not.toContain('처분서·통지서에 적힌 기한 날짜');
+    expect(text).toContain('날짜부터 먼저 여쭙습니다');
+    expect(questions(text)[0]).toContain('통지서를 받으신 정확한 날짜');
+  });
+
+  it("기한 자가 응답이 '여유 있음'·'통지서 없음'이면 긴급 회신이 아니다", () => {
+    for (const deadlineReport of ['later', 'none']) {
+      const { text } = buildReplyDraft(record('토지보상 · 내용증명 · 계약서', { deadlineReport }));
+      expect(text).not.toContain('날짜부터 먼저 여쭙습니다');
+      expect(text).not.toContain('처분서·통지서에 적힌 기한 날짜');
+    }
+  });
+
   it('긴급이 아니면 기한 안내 문장이 없다', () => {
     const { text } = buildReplyDraft(record('음주운전 면허 구제'));
     expect(text).not.toContain('날짜부터 먼저 여쭙습니다');

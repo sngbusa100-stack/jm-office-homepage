@@ -83,6 +83,20 @@ describe('분야 상세의 단계 안내', () => {
     expect(bottom.querySelectorAll('a').length).toBe(2);
   });
 
+  it.each(['dui', 'suspension', 'veterans'])('법정 기한이 있는 분야(%s)의 하단 상담 버튼만 기한 우선 진입(priority=urgent)이다', (slug) => {
+    renderPage(slug);
+    const bottom = document.querySelector('.service-actions--bottom')!;
+    const consult = [...bottom.querySelectorAll('a')].find((a) => a.getAttribute('href')?.startsWith('/consult'))!;
+    expect(consult.getAttribute('href')).toContain('priority=urgent');
+  });
+
+  it.each(['license', 'immigration', 'documents'])('법정 기한이 없는 분야(%s)의 상담 버튼에는 priority가 없다', (slug) => {
+    renderPage(slug);
+    for (const link of document.querySelectorAll('a[href^="/consult"]')) {
+      expect(link.getAttribute('href')).not.toContain('priority');
+    }
+  });
+
   it('법정 기한이 있는 분야는 기한 섹션이 조회 카드보다 먼저 나온다', () => {
     renderPage('dui');
     const headings = [...document.querySelectorAll('h2')].map((h) => h.textContent ?? '');

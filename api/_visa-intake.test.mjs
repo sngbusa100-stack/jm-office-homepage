@@ -130,9 +130,15 @@ describe('상담 접수에 비자 질문 연결', () => {
     expect(result.value).not.toHaveProperty('visaIntake');
   });
 
+  it('비자 분야에 붙어 온 기한 자가 응답은 버린다(비자는 접수 질문이 따로 있다)', () => {
+    const result = validateConsultPayload({ ...consult, visaIntake: base, deadlineReport: 'soon' });
+    expect(result.ok).toBe(true);
+    expect(result.value).not.toHaveProperty('deadlineReport');
+  });
+
   it('텔레그램 알림에는 비자 답변을 싣지 않고 기한 우선 표시만 한 줄 남긴다', () => {
-    const text = formatTelegramMessage({ ...consult, visaIntake: { ...base, nationality: '베트남' } }, { inquiryId: 'JM-1', urgent: true });
-    expect(text).toContain('긴급');
+    const text = formatTelegramMessage({ ...consult, visaIntake: { ...base, nationality: '베트남' } }, { inquiryId: 'JM-1', urgentReasons: ['visaIntake'] });
+    expect(text).toContain('기한 우선 확인');
     expect(text).not.toContain('베트남');
     expect(text).not.toContain('work');
   });

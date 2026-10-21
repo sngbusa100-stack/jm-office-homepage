@@ -2,9 +2,11 @@
 // 시행일은 배포일로 정한다(2026-10-19 주인님 결정). 배포 당일 이 값과 api/_store.mjs의
 // CONSENT_VERSION을 함께 배포일로 바꾼다 — 두 값이 다르면 privacyPolicy·visaIntake.sync 테스트가 실패한다.
 
-export const PRIVACY_EFFECTIVE_DATE = '2026-10-19';
+// 2026-10-21: 상담 화면 기한 질문 추가로 수집 항목·파기 방법이 바뀌었다. 지금 값은 임시이고, 배포 당일 배포일로 바꾼다.
+export const PRIVACY_EFFECTIVE_DATE = '2026-10-21';
 
 export const PRIVACY_HISTORY = [
+  { date: '2026-10-19', note: '이전 방침(법정 기재사항·국외 이전 표 정비)' },
   { date: '2026-07-19', note: '이전 방침(상담 접수·국외 이전 고지)' },
 ];
 

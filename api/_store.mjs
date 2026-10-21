@@ -7,11 +7,14 @@ import { createHmac } from 'node:crypto';
 export const STATUSES = ['new', 'in_progress', 'done', 'on_hold'];
 export const PIPELINE_STAGES = ['inquiry', 'qualified', 'retained', 'work_completed'];
 
-/** 접수 레코드 구조 버전. v5: 동의 기반 비자 진단 첨부, v6: 출입국·비자 접수 질문(visaIntake) 추가. */
-export const SCHEMA_VERSION = 6;
+/**
+ * 접수 레코드 구조 버전. v5: 동의 기반 비자 진단 첨부, v6: 출입국·비자 접수 질문(visaIntake) 추가,
+ * v7: 처분서·통지서 기한 자가 응답(deadlineReport) 추가.
+ */
+export const SCHEMA_VERSION = 7;
 
 /** 개인정보 수집 동의 문구 버전 — 개인정보처리방침 개정일과 맞춘다. */
-export const CONSENT_VERSION = '2026-10-19';
+export const CONSENT_VERSION = '2026-10-21';
 
 /** 처리 완료(done) 후 개인정보 보존 일수 — 행정심판 청구기간(90일)과 후속 절차 대응을 고려해 120일. */
 export const RETENTION_DAYS = 120;
@@ -47,6 +50,7 @@ export function buildInquiryRecord(value, meta = {}, { id, now = new Date() } = 
     ...(value.diagnosis ? { diagnosis: value.diagnosis } : {}),
     ...(value.visaDiagnosis ? { visaDiagnosis: value.visaDiagnosis } : {}),
     ...(value.visaIntake ? { visaIntake: value.visaIntake } : {}),
+    ...(value.deadlineReport ? { deadlineReport: value.deadlineReport } : {}),
     ...(value.sourcePath ? { sourcePath: value.sourcePath } : {}),
     ...(value.utmSource ? { utmSource: value.utmSource } : {}),
     ...(value.attribution ? { attribution: value.attribution } : {}),

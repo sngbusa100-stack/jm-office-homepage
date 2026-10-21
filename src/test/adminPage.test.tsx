@@ -55,6 +55,21 @@ const LOCAL_CLOSED = {
   localStatusAt: '2026-10-14T03:00:00.000Z',
 };
 
+/** 미처리 긴급 건(가장 오래된 접수). 서버가 목록 응답에 urgentReasons를 붙인다. */
+const URGENT_OLD = {
+  id: 'JM-20260601-UR01',
+  receivedAt: '2026-06-01T03:00:00.000Z',
+  name: '이급함',
+  phone: '010-1111-2222',
+  topic: '영업정지 · 행정심판',
+  message: '',
+  status: 'new',
+  memos: [],
+  deadlineReport: 'soon',
+  diagnosis: { domain: 'suspension', answers: {}, counts: { urgent: 1 } },
+  urgentReasons: ['diagnosis', 'selfReported'],
+};
+
 function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
   const fetchMock = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
     if (options.method === 'GET') {
@@ -218,5 +233,30 @@ describe('접수 관리 페이지', () => {
     const item = screen.getByText(/JM-20260716-CL01/).closest('details')!;
     expect(within(item).getByText(/행정심판 시스템: 종결 — 90일 무처리 자동 종결/)).toBeInTheDocument();
     expect(within(item).getByText(/INQ-0007/)).toBeInTheDocument();
+  });
+
+  it('기한 우선 건은 요약 줄에 배지를 달고, 미처리 긴급 건을 접수 순서와 상관없이 맨 위에 둔다', async () => {
+    await login(stubAdminFetch([...ITEMS, LOCAL_CLOSED, URGENT_OLD]));
+    const summaries = [...document.querySelectorAll('details.admin-item > summary')]
+      .filter((el) => /JM-\d{8}-/.test(el.textContent ?? ''));
+    expect(summaries[0]).toHaveTextContent('JM-20260601-UR01');
+    const badge = within(summaries[0] as HTMLElement).getByText('⏰ 기한 우선');
+    expect(badge).toHaveAttribute('title', '근거: 셀프 진단 · 고객 직접 선택');
+    for (const other of summaries.slice(1)) expect(other).not.toHaveTextContent('기한 우선');
+  });
+
+  it('기한 우선 필터는 긴급 건만 보여 주고, 파기된 접수가 섞여도 오류가 없다', async () => {
+    const { user } = await login(stubAdminFetch([...ITEMS, URGENT_OLD]));
+    await user.click(screen.getByRole('button', { name: '기한 우선 (1)' }));
+    expect(screen.getByText(/JM-20260601-UR01/)).toBeInTheDocument();
+    expect(screen.queryByText(/JM-20260717-AB12/)).toBeNull();
+    expect(screen.queryByText(/JM-20260701-ZZ99/)).toBeNull();
+  });
+
+  it('기한 자가 응답은 고객 자가 응답(증빙 미확인)으로 보여 준다', async () => {
+    await login(stubAdminFetch([URGENT_OLD]));
+    const item = screen.getByText(/JM-20260601-UR01/).closest('details')!;
+    expect(within(item).getByText(/처분서·통지서 기한 — 고객 자가 응답\(증빙 미확인\)/)).toBeInTheDocument();
+    expect(within(item).getByText('2주 안이거나 이미 지났습니다')).toBeInTheDocument();
   });
 });

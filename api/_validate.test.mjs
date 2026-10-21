@@ -204,6 +204,27 @@ describe('상담 접수 검증', () => {
     expect(result.ok).toBe(true);
     expect(result.value).not.toHaveProperty('diagnosis');
   });
+
+  it('기한 자가 응답(deadlineReport)은 허용값만 담고, 틀린 값은 접수를 막지 않고 버린다', () => {
+    for (const report of ['soon', 'later', 'unknown', 'none']) {
+      const result = validateConsultPayload({ ...valid, deadlineReport: report });
+      expect(result.ok).toBe(true);
+      expect(result.value.deadlineReport).toBe(report);
+    }
+    for (const bad of ['urgent', '', 1, true, { v: 'soon' }]) {
+      const result = validateConsultPayload({ ...valid, deadlineReport: bad });
+      expect(result.ok).toBe(true);
+      expect(result.value).not.toHaveProperty('deadlineReport');
+    }
+    expect(validateConsultPayload(valid).value).not.toHaveProperty('deadlineReport');
+  });
+
+  it('주소의 priority 값만으로는 긴급 자가 응답이 생기지 않는다', () => {
+    const result = validateConsultPayload({ ...valid, priority: 'urgent' });
+    expect(result.ok).toBe(true);
+    expect(result.value).not.toHaveProperty('deadlineReport');
+    expect(result.value).not.toHaveProperty('priority');
+  });
 });
 
 describe('진단 데이터 정리 (진단 정의 대조·등급 재계산)', () => {
@@ -263,11 +284,42 @@ describe('텔레그램 메시지 포맷', () => {
     expect(text).not.toContain('https://example.com');
   });
 
-  it('긴급 진단 항목이 있으면 긴급 표시 줄을 넣는다', () => {
-    const urgent = formatTelegramMessage(sample, { inquiryId: 'JM-1', urgent: true });
-    expect(urgent).toContain('긴급 확인 항목');
+  it('긴급 근거는 고객 답변 기준과 고객 직접 선택을 나눠 한 줄씩 넣는다', () => {
+    const answered = formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: ['diagnosis'] });
+    expect(answered).toContain('⏰ 기한 우선 확인 — 고객 답변 기준');
+    expect(answered).not.toContain('직접 선택');
+    for (const reason of ['visaIntake', 'visaDiagnosis']) {
+      expect(formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: [reason] }))
+        .toContain('고객 답변 기준');
+    }
+    const self = formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: ['selfReported'] });
+    expect(self).toContain("⏰ 기한 우선 확인 — 고객이 '급함·모름'을 직접 선택");
+    expect(self).not.toContain('고객 답변 기준');
+    const both = formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: ['diagnosis', 'visaIntake', 'selfReported'] });
+    expect(both.match(/⏰/g)).toHaveLength(2);
     const normal = formatTelegramMessage(sample, { inquiryId: 'JM-1' });
-    expect(normal).not.toContain('긴급 확인 항목');
+    expect(normal).not.toContain('⏰');
+  });
+
+  it.each(TOPICS)('평상시 긴급 알림에도 분야(%s)가 드러나지 않는다', (topic) => {
+    const text = formatTelegramMessage({ ...sample, topic }, {
+      inquiryId: 'JM-1',
+      urgentReasons: ['diagnosis', 'visaIntake', 'visaDiagnosis', 'selfReported'],
+    });
+    expect(text).not.toContain(topic);
+    for (const hint of ['비자', '진단', '음주', '영업', '보훈', '인허가', '토지']) expect(text).not.toContain(hint);
+  });
+
+  it('저장 실패 폴백에도 긴급 줄을 접수번호 바로 아래에 넣는다', () => {
+    const text = formatTelegramMessage(sample, {
+      inquiryId: 'JM-20260718-AB12',
+      storeError: true,
+      urgentReasons: ['selfReported'],
+    });
+    const lines = text.split('\n');
+    const idLine = lines.indexOf('접수번호: JM-20260718-AB12');
+    expect(lines[idLine + 1]).toBe("⏰ 기한 우선 확인 — 고객이 '급함·모름'을 직접 선택");
+    expect(formatTelegramMessage(sample, { storeError: true })).not.toContain('⏰');
   });
 
   it('저장 실패 시에는 유실 방지를 위해 경고와 전체 내용을 담는다', () => {

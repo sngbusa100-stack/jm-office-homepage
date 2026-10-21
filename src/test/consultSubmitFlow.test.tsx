@@ -156,6 +156,70 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(sessionStorage.getItem('consult:submission')).toBeNull();
     expect(sessionStorage.getItem('consult:attribution')).toBeNull();
     expect(screen.getByRole('button', { name: /상담 신청하기/ })).toBeDisabled();
+    expect(body).not.toHaveProperty('deadlineReport');
+  });
+
+  it('비자가 아닌 분야를 고르면 기한 질문(선택)을 보여 주고, 비자 분야와 분야 미선택이면 숨긴다', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    expect(screen.queryByRole('group', { name: /처분서·통지서에 적힌 기한/ })).toBeNull();
+    await user.selectOptions(screen.getByLabelText('분야'), '인허가');
+    const group = screen.getByRole('group', { name: /처분서·통지서에 적힌 기한/ });
+    expect(group).toHaveTextContent('(선택)');
+    for (const label of ['2주 안이거나 이미 지났습니다', '있지만 2주 넘게 남았습니다', '기한이 있는지, 언제인지 모릅니다', '받은 통지서가 없습니다']) {
+      const radio = screen.getByLabelText(label) as HTMLInputElement;
+      expect(radio.checked).toBe(false);
+      expect(radio).not.toBeRequired();
+    }
+    await user.selectOptions(screen.getByLabelText('분야'), '출입국 · 비자');
+    expect(screen.queryByRole('group', { name: /처분서·통지서에 적힌 기한/ })).toBeNull();
+  });
+
+  it('기한 답을 고르면 함께 보내고, 동의 문구에 기한 질문의 답을 수집 항목으로 적는다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage();
+    await user.selectOptions(screen.getByLabelText('분야'), '영업정지 · 행정심판');
+    await user.click(screen.getByLabelText('기한이 있는지, 언제인지 모릅니다'));
+    await fillContact(user);
+    expect(screen.getByLabelText(/개인정보 수집·이용에 동의/).closest('label')).toHaveTextContent('기한 질문의 답(답한 경우)');
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/접수되었습니다/);
+    expect(consultBody(fetchMock).deadlineReport).toBe('unknown');
+  });
+
+  it('기한 답을 고른 뒤 분야를 비자로 바꾸면 기한 답을 보내지 않는다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage();
+    await user.selectOptions(screen.getByLabelText('분야'), '인허가');
+    await user.click(screen.getByLabelText('2주 안이거나 이미 지났습니다'));
+    await user.selectOptions(screen.getByLabelText('분야'), '출입국 · 비자');
+    await answerVisaIntake(user);
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/접수되었습니다/);
+    expect(consultBody(fetchMock)).not.toHaveProperty('deadlineReport');
+  });
+
+  it('업무 페이지의 기한 우선 진입(priority=urgent)은 답을 미리 고르지 않고, 긴급 안내 카드를 폼 위로 올린다', () => {
+    renderPage('/consult?topic=dui&priority=urgent');
+    expect((screen.getByLabelText('분야') as HTMLSelectElement).value).toBe('음주운전 면허 구제');
+    expect(screen.getByRole('group', { name: /처분서·통지서에 적힌 기한/ })).toBeInTheDocument();
+    for (const radio of screen.getAllByRole('radio')) expect((radio as HTMLInputElement).checked).toBe(false);
+    const card = screen.getByRole('heading', { name: '기한이 임박했다면 기다리지 마세요' });
+    const form = screen.getByRole('button', { name: /상담 신청하기/ }).closest('form')!;
+    expect(card.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getAllByRole('heading', { name: '기한이 임박했다면 기다리지 마세요' })).toHaveLength(1);
+  });
+
+  it('일반 진입에서는 긴급 안내 카드가 폼 아래에 있다', () => {
+    renderPage('/consult?topic=dui');
+    const card = screen.getByRole('heading', { name: '기한이 임박했다면 기다리지 마세요' });
+    const form = screen.getByRole('button', { name: /상담 신청하기/ }).closest('form')!;
+    expect(card.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
   it('서버가 접수번호를 주면 성공 안내에 함께 보여준다', async () => {

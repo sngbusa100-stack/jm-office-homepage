@@ -2,6 +2,7 @@
 import CHECK_LEVELS from './_check-levels.mjs';
 import { sanitizeVisaHandoff } from './_visa-handoff.mjs';
 import { sanitizeVisaIntake } from './_visa-intake.mjs';
+import { DEADLINE_REPORTS } from './_urgency.mjs';
 
 export const TOPICS = [
   '음주운전 면허 구제',
@@ -99,6 +100,10 @@ export function validateConsultPayload(body) {
     if (intake.ok) visaIntake = intake.value;
     else errors.push('visaIntake');
   }
+  // 처분서·통지서 기한 자가 응답(선택). 비자는 접수 질문이 따로 있어 받지 않는다. 틀린 값은 버린다.
+  const deadlineReport = topic !== '출입국 · 비자' && DEADLINE_REPORTS.includes(data.deadlineReport)
+    ? data.deadlineReport
+    : '';
   if (message.length > 2000) errors.push('message');
   if (!consent) errors.push('consent');
 
@@ -117,6 +122,7 @@ export function validateConsultPayload(body) {
       ...(attribution ? { attribution } : {}),
       ...(visaDiagnosis ? { visaDiagnosis } : {}),
       ...(visaIntake ? { visaIntake } : {}),
+      ...(deadlineReport ? { deadlineReport } : {}),
       ...(submissionId ? { submissionId } : {}),
     },
   };
@@ -126,13 +132,17 @@ export function validateConsultPayload(body) {
  * 텔레그램(국외 사업자) 알림에는 개인정보(이름·연락처·분야·상담 내용)를 싣지 않는다.
  * 상세는 접근이 제한된 /admin 관리자 화면에서만 열람한다.
  * 예외: 저장 실패 시에는 이 알림이 유일한 기록이므로 유실 방지를 위해 전체 내용을 포함한다.
+ * 긴급 근거(meta.urgentReasons, _urgency.mjs)는 분야가 드러나지 않게 '고객 답변 기준'과
+ * '고객 직접 선택' 두 가지로만 표시한다.
  */
 export function formatTelegramMessage(value, meta = {}) {
+  const urgentLines = urgentNoticeLines(meta.urgentReasons);
   if (meta.storeError) {
     const lines = [
       '📥 새 상담 신청 (홈페이지)',
       '⚠ 접수 저장 실패 — 이 알림이 유일한 기록입니다.',
       ...(meta.inquiryId ? [`접수번호: ${meta.inquiryId}`] : []),
+      ...urgentLines,
       `이름: ${value.name}`,
       `연락처: ${value.phone}`,
       ...(value.email ? [`이메일: ${value.email}`] : []),
@@ -149,8 +159,16 @@ export function formatTelegramMessage(value, meta = {}) {
 
   const lines = ['📥 새 상담 접수'];
   if (meta.inquiryId) lines.push(`접수번호: ${meta.inquiryId}`);
-  if (meta.urgent) lines.push('⏰ 기한 관련 긴급 확인 항목 포함');
+  lines.push(...urgentLines);
   if (meta.indexWarning) lines.push('⚠ 접수 목록 인덱스 확인 필요');
   lines.push('상세는 관리자 화면(/admin)에서 확인하세요.');
   return lines.join('\n');
+}
+
+function urgentNoticeLines(reasons = []) {
+  const list = Array.isArray(reasons) ? reasons : [];
+  const lines = [];
+  if (list.some((reason) => reason !== 'selfReported')) lines.push('⏰ 기한 우선 확인 — 고객 답변 기준');
+  if (list.includes('selfReported')) lines.push("⏰ 기한 우선 확인 — 고객이 '급함·모름'을 직접 선택");
+  return lines;
 }

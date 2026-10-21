@@ -50,7 +50,7 @@ function ServiceActions({
       {location === 'bottom' && (
         <Link
           className="button button--ghost"
-          to={`/consult?topic=${service.consultTopic}&priority=urgent`}
+          to={`/consult?topic=${service.consultTopic}${service.deadlines ? '&priority=urgent' : ''}`}
           onClick={track}
         >
           {service.deadlines ? '기한이 급하면 상담부터' : '내 상황을 상담으로 정리하기'}

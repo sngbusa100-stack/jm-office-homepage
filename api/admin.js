@@ -14,6 +14,7 @@ import {
   redisConfig,
 } from './_store.mjs';
 import { createFunnelStore, emptyFunnelSummary } from './_funnel.mjs';
+import { urgentReasons } from './_urgency.mjs';
 
 /** Bearer 토큰을 상수 시간 비교로 검증한다 (길이 차이 노출 방지 위해 해시 후 비교). */
 export function isAuthorized(authHeader, adminToken) {
@@ -23,6 +24,11 @@ export function isAuthorized(authHeader, adminToken) {
   const given = createHash('sha256').update(match[1]).digest();
   const expected = createHash('sha256').update(adminToken).digest();
   return timingSafeEqual(given, expected);
+}
+
+/** 응답에만 긴급 근거를 붙인다(저장하지 않음 — 화면에서 판정식을 다시 만들지 않게). */
+function withUrgency(item) {
+  return { ...item, urgentReasons: urgentReasons(item) };
 }
 
 export default async function handler(req, res) {
@@ -83,7 +89,8 @@ export default async function handler(req, res) {
       } catch {
         // 전환 통계 장애가 개인정보 접수 목록 조회를 막지 않는다.
       }
-      res.status(200).json({ ok: true, items: swept, funnel });
+      const listed = swept.map(withUrgency);
+      res.status(200).json({ ok: true, items: listed, funnel });
       return;
     }
 
@@ -115,13 +122,13 @@ export default async function handler(req, res) {
           return;
         }
         await store.save(result.value);
-        res.status(200).json({ ok: true, item: result.value });
+        res.status(200).json({ ok: true, item: withUrgency(result.value) });
         return;
       }
 
       const purged = purgeInquiryRecord(record);
       await store.save(purged);
-      res.status(200).json({ ok: true, item: purged });
+      res.status(200).json({ ok: true, item: withUrgency(purged) });
       return;
     }
 

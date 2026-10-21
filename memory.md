@@ -476,3 +476,14 @@ Phase 1(구조)에 이은 두 번째 단계. 분야 상세 페이지를 "읽을 
   - 개업하면 방침 첫 문단이 바뀌므로 방침 변경이 된다. 그래서 시행일·CONSENT_VERSION·PRIVACY_HISTORY를 개업일로 함께 갱신한다. 점검 스크립트가 이를 확인한다.
   - Vercel Production에는 CONSULT_OPEN 변수가 없다(없으면 닫힘). 개업 커밋을 푸시하기 직전에 true로 추가하면 배포 한 번으로 열린다.
   - 주인님 결정: 카카오 채널은 개업 전에 만들어 필수로 유지한다. 비자 사이트의 개업 후 문구(5개 언어)는 별도 과제다.
+
+- 2026-10-21 기한·긴급 신호 잇기 계획(`docs/2026-10-21-deadline-signal-plan.md`, 승인 대기). 긴급 판정 `diagnosis.counts.urgent ∥ visaIntake.deadlineFirst`가 consult.js·_daily-summary.mjs·_reply-draft.mjs·로컬 store.py `_is_urgent` 네 곳에 복제되어 있다. 판정을 바꿀 때는 넷을 함께 봐야 한다(계획은 `api/_urgency.mjs` 하나로 모으고 로컬에는 connector GET의 urgentReasons로 전달). `?priority=urgent`(ServicePage:53)는 계획 당시 아무도 읽지 않았다(같은 날 구현으로 해소 — 아래 줄). 새 고객 답 필드를 추가하면 계약 `localMustKeep`에도 넣어야 로컬이 버리지 않는다(10-19 ① 재발 방지). 홈페이지 배포 전에 계약을 로컬로 sync하면 로컬 계약 테스트가 깨진다.
+
+- 2026-10-21 기한·긴급 신호 1~5단계 구현(미커밋). 긴급 판정은 이제 `api/_urgency.mjs` 하나다. 근거는 diagnosis·visaIntake·visaDiagnosis(urgent 등급)·selfReported(deadlineReport가 soon·unknown) 네 가지이고, 파기 건은 항상 빈 목록이다. 판정 결과는 저장하지 않는다. connector GET과 /api/admin GET·PATCH·DELETE 응답에서만 `urgentReasons`로 붙인다. 화면에서 판정식을 다시 만들지 말 것. 로컬 store.py `_is_urgent`만 아직 예전 식이다(6단계).
+  - SCHEMA_VERSION은 7이다. 새 고객 답 필드를 넣을 때는 `src/lib/inquiryContract.ts`의 LOCAL_MUST_KEEP와 샘플 레코드에도 넣고 `npm run contract:inquiry`를 돌린다.
+  - 교훈(리뷰 지적): 로컬은 정해진 열만 INSERT OR IGNORE로 받고, 한 번 가져간 건은 다시 내려오지 않는다. 그래서 새 고객 필드는 **로컬 열을 먼저** 만들어야 데이터가 비지 않는다. "예전 연동기는 모르는 필드를 무시한다"는 말은 안 깨진다는 뜻일 뿐, 데이터가 남는다는 뜻이 아니다.
+  - 교훈(리뷰 지적): 방침 수집 항목은 `src/pages/PrivacyPage.tsx`의 '처리하는 개인정보 항목'(47행 근처)과 '파기 방법'에 항목별로 적혀 있다. `privacyPolicy.ts`의 OVERSEAS_TRANSFERS '전체'는 국외 이전 표일 뿐이라 근거가 안 된다. 상담 화면 동의 문구(ConsultPage)도 항목을 나열하므로 새 수집 항목은 세 곳(동의 문구·방침 수집 항목·파기 방법)을 함께 본다.
+  - 테스트에서 상담 폼의 기한 질문은 `getByRole('group', { name: /처분서·통지서에 적힌 기한/ })`, 답은 라벨 문구로 찾는다. /admin 테스트 픽스처는 서버가 붙이는 `urgentReasons`를 직접 넣는다.
+  - `node -e "…"` 안에 백틱을 쓰면 bash가 명령으로 실행한다. 문서 내용은 Write로 파일에 쓴 뒤 붙인다.
+
+- 2026-10-21 리뷰 반영: 방침 수집 항목·파기 방법에 기한 질문의 답을 넣었고, 시행일·CONSENT_VERSION은 2026-10-21(임시, 배포일로 맞춤)이다. 로컬 6단계는 worktree `D:\행정사\wt-deadline-signal`(브랜치 feat/deadline-signal)에 있고 미병합이다. 배포 순서는 로컬 병합(운영 즉시) → 홈페이지 배포다. 로컬 예약 작업 JM_Homepage_Pull은 `D:\행정사\1-행정심판\run_homepage_pull.bat`을 실행한다. 그래서 메인 폴더 작업 트리를 고치면 바로 운영에 반영된다. 로컬 작업은 worktree에서 하고, 테스트는 메인 폴더 venv 파이썬으로 돌린다.

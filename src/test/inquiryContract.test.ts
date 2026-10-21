@@ -7,6 +7,8 @@ import { CONNECTOR_STATUS_RULES } from '../../api/_store.mjs';
 import { VISA_INTAKE_VALUES } from '../../api/_visa-intake.mjs';
 // @ts-expect-error — 서버 모듈(.mjs)
 import { TOPICS } from '../../api/_validate.mjs';
+// @ts-expect-error — 서버 모듈(.mjs)
+import { DEADLINE_REPORTS, URGENT_REASONS } from '../../api/_urgency.mjs';
 
 const CONTRACT_PATH = join(__dirname, '../../api/_inquiry-contract.json');
 
@@ -49,9 +51,18 @@ describe('접수 연동 계약 (api/_inquiry-contract.json)', () => {
     expect(Object.values(contract.topics).filter((r) => (r as { route: string }).route === 'case')).toHaveLength(2);
   });
 
-  it('연동기 GET은 저장하지 않는 회신 초안을 함께 돌려준다', () => {
-    expect(contract.connectorGetExtras).toEqual(['replyDraft']);
+  it('연동기 GET은 저장하지 않는 회신 초안과 긴급 근거를 함께 돌려준다', () => {
+    expect(contract.connectorGetExtras).toEqual(['replyDraft', 'urgentReasons']);
     expect(contract.recordFields).not.toContain('replyDraft');
+    expect(contract.recordFields).not.toContain('urgentReasons');
+  });
+
+  it('기한 자가 응답은 로컬이 반드시 보관하고, 모든 서버 허용값·긴급 근거에 한국어 라벨이 있다', () => {
+    expect(contract.recordFields).toContain('deadlineReport');
+    expect(contract.localMustKeep).toContain('deadlineReport');
+    expect(Object.keys(contract.deadlineReportLabels.options)).toEqual(DEADLINE_REPORTS);
+    expect(contract.deadlineReportLabels.question).toBeTruthy();
+    expect(Object.keys(contract.urgentReasonLabels)).toEqual(URGENT_REASONS);
   });
 
   it('미처리 기준은 주인님이 승인한 값이다(2026-10-19: 72시간 지연, 긴급 24시간, 30일 경고, 90일 자동 종결)', () => {

@@ -1,3 +1,5 @@
+import type { DeadlineReport } from '../data/deadlineReport';
+
 /** 진단 결과에서 상담으로 이동할 때 함께 전달되는 셀프 진단 상세. */
 export interface ConsultDiagnosis {
   domain: string;
@@ -30,6 +32,8 @@ export interface ConsultPayload {
   company: string;
   diagnosis?: ConsultDiagnosis;
   visaDiagnosis?: VisaConsultDiagnosis;
+  /** 처분서·통지서 기한 자가 응답(출입국·비자 외 분야, 답한 경우만). */
+  deadlineReport?: DeadlineReport;
   sourcePath?: string;
   utmSource?: string;
   attribution?: {
