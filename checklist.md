@@ -695,3 +695,14 @@
 - [x] 검사: 타입 검사, 51파일 558테스트(.claude 제외), 빌드·verify-dist 통과, 사전 렌더링 /privacy에 새 문구·시행일
 - [ ] 배포 당일: 배포일이 2026-10-21이 아니면 `PRIVACY_EFFECTIVE_DATE`·`CONSENT_VERSION`을 배포일로
 - [ ] 승인 대기: ① 로컬 병합·커밋(운영 즉시) → 다음 30분 실행 확인 ② 홈페이지 커밋·푸시(운영 배포). 미푸시 문서 커밋 528e03a도 함께 나감
+
+### 2026-10-21 기한·긴급 신호 배포 (주인님: "로컬 병합·커밋하고 다음 30분 실행 확인 뒤, 홈페이지를 커밋·푸시해 배포해. 시행일·CONSENT_VERSION은 배포일에 맞추고, 배포 뒤 확인까지")
+
+- [x] 로컬 먼저: feat/deadline-signal 커밋 12b76dd → master fast-forward(d396020..12b76dd, 19:09). 메인 폴더 전체 테스트 487 통과·2 실패(기존 날짜 의존 test_business_subsidy_packages), 시험 전후 data/backup 목록 같음
+- [x] 로컬 19:15:43 실행 `fetched=0 … errors=0`, 경고 없음. 운영 DB에 deadline_report·urgent_reasons_json 열 생김(읽기 전용 확인). worktree·브랜치 삭제. 로컬은 푸시하지 않음
+- [x] 홈페이지: 배포일 2026-10-21 = 시행일·CONSENT_VERSION 값 그대로. 커밋 4e71390, 푸시 6ee0034..4e71390(미푸시였던 528e03a 포함) → 약 40초 뒤 운영 반영
+- [x] 운영 확인(19:17): /privacy "2026년 10월 21일부터 시행"·수집 항목 새 문구, /services/dui 하단만 priority=urgent·/services/license 없음, /consult?topic=dui&priority=urgent에서 110 카드가 폼 위·기한 질문 표시(선택된 답 0)·동의 문구에 기한 질문의 답, /api/consult 빈 요청 503(닫힘), /api/connector·/api/admin 토큰 없이 401
+- [x] `npm run go-live:check`(10:17 UTC): 통과 8 · 실패 1(개업 전에 채울 값) · 사람 확인 7 · 건너뜀 0, 방침 2026-10-21 일치
+- [x] 배포 뒤 첫 로컬 실행 19:45:43 `fetched=0 … errors=0`, 경고 없음
+- [ ] 아직 못 본 것: 실제 접수 건의 urgentReasons 왕복(운영 접수가 닫혀 있어 새 건이 없음 — 개업 순서표의 시험 접수 1건 왕복 때 확인)
+- [ ] 리뷰 사소한 지적 미반영(계획서 7절)

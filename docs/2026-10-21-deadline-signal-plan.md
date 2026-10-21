@@ -225,3 +225,10 @@
 1. 로컬 feat/deadline-signal을 master에 병합·커밋(즉시 운영). 다음 30분 실행이 오류 없이 끝나는지 확인
 2. 홈페이지 커밋·푸시(Vercel 운영 배포). 배포일이 10-21이 아니면 먼저 시행일·CONSENT_VERSION을 바꾼다
 3. 배포 뒤 확인: `/privacy` 시행일, 상담 화면 기한 질문(개업 전이라 비활성), connector GET이 urgentReasons를 붙이는지(다음 연동 실행 로그)
+
+## 9. 배포 (2026-10-21)
+
+- 로컬 먼저: 12b76dd master 병합(19:09) → 19:15 실행 errors=0, 운영 DB 새 열 확인
+- 홈페이지: 4e71390 푸시(19:16), 약 40초 뒤 운영 반영. 시행일·CONSENT_VERSION = 배포일 2026-10-21
+- 운영 확인: /privacy 시행일·새 문구, dui만 priority=urgent, 상담 화면 110 카드 위·기한 질문, 접수 API 503, 보호 API 401, go-live:check 통과 8·실패 1(개업 전 값)·사람 확인 7, 배포 뒤 로컬 19:45 실행 errors=0
+- 남은 확인: 실제 접수 건의 urgentReasons 왕복(개업 시험 접수 때)
