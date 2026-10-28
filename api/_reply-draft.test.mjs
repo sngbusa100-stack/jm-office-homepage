@@ -82,8 +82,8 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
       },
     }));
     expect(text).toContain('접수 때 알려 주신 내용(서류로 확인하기 전입니다)');
-    expect(text).toContain('- 혈중알코올농도 구간: 0.08% 이상 ~ 0.1% 미만');
-    expect(text).toContain('- 최근 5년 음주운전 이력: 없음 (이번이 처음)');
+    expect(text).toContain('- 혈중알코올농도 구간: 0.08% 이상 ~ 0.1% 이하');
+    expect(text).toContain('- 최근 5년 음주운전 이력: 최근 5년 안에는 없음 (그 전 전력은 있을 수 있음)');
     const qs = questions(text);
     expect(qs.some((q) => q.includes('혈중알코올농도'))).toBe(false);
     expect(qs.some((q) => q.includes('음주운전 이력'))).toBe(false);
@@ -124,6 +124,27 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
     expect(questions(text).some((q) => q.includes('혈중알코올농도'))).toBe(true);
     const visa = buildReplyDraft(record('출입국 · 비자', { visaIntake: { ...FULL_VISA, goal: 'retired-goal' } })).text;
     expect(questions(visa).some((q) => q.includes('원하시는 일'))).toBe(true);
+  });
+
+  it('옛 혈중알코올농도 답 high(0.1% 이상)는 새 구간(0.1% 초과)으로 읽지 않고 수치를 다시 묻는다', () => {
+    const { text } = buildReplyDraft(record('음주운전 면허 구제', {
+      diagnosis: { domain: 'dui', answers: { 'dui-bac': 'high' }, counts: {} },
+    }));
+    expect(text).not.toContain('0.1% 초과');
+    expect(questions(text).some((q) => q.includes('혈중알코올농도'))).toBe(true);
+  });
+
+  it('이의신청 결과를 받은 고객에게는 결과 통보일과 결과 전 행정심판 청구 여부를 묻고, 아니면 묻지 않는다', () => {
+    const ask = '이의신청 결과를 통보받으신 정확한 날짜';
+    const result = buildReplyDraft(record('음주운전 면허 구제', {
+      diagnosis: { domain: 'dui', answers: { 'dui-procedure': 'objection-result' }, counts: {} },
+    })).text;
+    expect(questions(result).some((q) => q.includes(ask) && q.includes('행정심판을 이미 청구하셨는지'))).toBe(true);
+    expect(result).toContain('- 이의신청·행정심판 진행 여부: 이의신청 결과를 통보받음');
+    const pending = buildReplyDraft(record('음주운전 면허 구제', {
+      diagnosis: { domain: 'dui', answers: { 'dui-procedure': 'objection' }, counts: {} },
+    })).text;
+    expect(questions(pending).some((q) => q.includes(ask))).toBe(false);
   });
 
   it('"모름"으로 답한 문항은 다시 묻는다', () => {

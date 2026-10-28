@@ -30,13 +30,16 @@ export function classifyAnswers(definition: CheckDefinition, answers: Answers): 
     if (!optionId) continue;
     const option = question.options.find((o) => o.id === optionId);
     if (!option) continue;
+    const override = definition.overrides?.find(
+      (o) => o.questionId === question.id && Object.entries(o.when).every(([id, optionIds]) => optionIds.includes(answers[id])),
+    );
     items.push({
       questionId: question.id,
       questionText: question.text,
       answerLabel: option.label,
       level: option.level,
-      note: option.note,
-      lawRef: option.lawRef,
+      note: override ? override.note : option.note,
+      lawRef: override ? override.lawRef : option.lawRef,
     });
   }
   items.sort((a, b) => LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level));

@@ -21,8 +21,9 @@ export const dui: CheckDefinition = {
       help: '도로교통법 제44조 및 시행규칙 별표28 기준: 0.03% 이상 정지, 0.08% 이상 취소 대상.',
       options: [
         { id: 'low', label: '0.03% 이상 ~ 0.08% 미만', level: 'ready', note: '정지 구간입니다. 생계형 등 감경 사유가 있으면 다툴 여지를 검토할 수 있습니다.' },
-        { id: 'mid', label: '0.08% 이상 ~ 0.1% 미만', level: 'official', note: '취소 구간 경계입니다. 처분 내용과 감경 요건을 함께 확인해야 합니다.' },
-        { id: 'high', label: '0.1% 이상', level: 'official', note: '취소 구간입니다. 감경 배제 사유 해당 여부 확인이 중요합니다.' },
+        { id: 'mid', label: '0.08% 이상 ~ 0.1% 이하', level: 'official', note: '취소 기준 구간입니다. 이의신청 감경은 생계 등 감경 사유가 있고, 감경 제외 사유(최근 5년 안 음주운전 전력, 인적 피해 사고, 측정 불응 등)가 없을 때 검토됩니다.', lawRef: '도로교통법 시행규칙 별표 28' },
+        // 옛 'high'(0.1% 이상)는 정확히 0.1%를 포함해 뜻이 달라 새 id를 쓴다. 옛 답은 회신 초안에서 다시 묻는다.
+        { id: 'over01', label: '0.1% 초과', level: 'official', note: '혈중알코올농도 0.1% 초과는 이의신청 감경 제외 사유입니다. 행정심판은 위원회가 처분이 지나치게 무거운지 따로 판단하지만, 같은 결과를 약속할 수는 없습니다.', lawRef: '도로교통법 시행규칙 별표 28' },
         { id: 'unknown', label: '모름', level: 'documents', note: '적발 당시 수치는 처분 통지서·수사 기록으로 확인할 수 있습니다.' },
       ],
     },
@@ -44,7 +45,8 @@ export const dui: CheckDefinition = {
       text: '이의신청 또는 행정심판을 이미 진행 중인가요?',
       options: [
         { id: 'no', label: '아니오', level: 'ready', note: '아직 절차를 시작하지 않았습니다. 기한 안에 어떤 절차를 선택할지 정해야 합니다.' },
-        { id: 'objection', label: '이의신청 진행 중', level: 'official', note: '이의신청 결과 통지 후에도 행정심판 기한이 별도로 진행됩니다. 일정 관리가 필요합니다.' },
+        { id: 'objection', label: '이의신청을 하고 결과를 기다리는 중', level: 'official', note: '이의신청 결과를 통보받으면 그 날부터 90일 안에 행정심판을 청구할 수 있습니다. 결과 통지서를 받은 날을 꼭 기록하세요. 결과를 기다리지 않고 행정심판을 먼저 청구할 수도 있는데, 그러면 이 90일 특례는 적용되지 않습니다.', lawRef: '도로교통법 제94조' },
+        { id: 'objection-result', label: '이의신청 결과를 통보받음', level: 'official', note: '이의신청 결과를 통보받은 날부터 90일 안에 행정심판을 청구할 수 있습니다. 처분 통지일이 아니라 결과 통보일부터 셉니다. 다만 결과를 받기 전에 이미 행정심판을 청구했다면 이 특례가 아니고, 이미 낸 사건에서 보충서면으로 다툽니다.', lawRef: '도로교통법 제94조' },
         { id: 'appeal', label: '행정심판 진행 중', level: 'official', note: '보충 서면·증거 제출 기한을 관리해야 하는 단계입니다.' },
       ],
     },
@@ -63,9 +65,9 @@ export const dui: CheckDefinition = {
       id: 'dui-history',
       text: '최근 5년 내 음주운전 이력이 있나요?',
       options: [
-        { id: 'none', label: '없음 (이번이 처음)', level: 'ready', note: '초범은 감경 판단에서 유리한 요소입니다.' },
-        { id: 'once', label: '1회 있음', level: 'official', note: '재범은 감경이 제한될 수 있습니다. 이력 내용을 정확히 확인하세요.' },
-        { id: 'multi', label: '2회 이상', level: 'official', note: '감경 배제 사유에 해당할 가능성이 높습니다. 다른 구제 수단을 검토해야 합니다.' },
+        { id: 'none', label: '최근 5년 안에는 없음 (그 전 전력은 있을 수 있음)', level: 'ready', note: '최근 5년 안 음주운전 전력은 이의신청 감경 제외 사유인데, 여기에는 해당하지 않습니다. 다만 5년보다 전의 음주운전 전력도 처분 단계에서 면허 취소 사유로 쓰일 수 있으니 전체 이력을 확인하세요.', lawRef: '도로교통법 제93조' },
+        { id: 'once', label: '1회 있음', level: 'official', note: '최근 5년 안 음주운전 전력은 이의신청 감경 제외 사유입니다. 행정심판은 위원회가 따로 판단하지만, 같은 결과를 약속할 수는 없습니다.', lawRef: '도로교통법 시행규칙 별표 28' },
+        { id: 'multi', label: '2회 이상', level: 'official', note: '최근 5년 안 음주운전 전력은 이의신청 감경 제외 사유입니다. 행정심판은 위원회가 따로 판단하지만, 같은 결과를 약속할 수는 없습니다.', lawRef: '도로교통법 시행규칙 별표 28' },
       ],
     },
     {
@@ -74,7 +76,7 @@ export const dui: CheckDefinition = {
       options: [
         { id: 'none', label: '사고 없음', level: 'ready', note: '단순 적발은 사고 동반 사안보다 감경 검토 폭이 넓습니다.' },
         { id: 'property', label: '물적 피해 사고', level: 'official', note: '피해 회복(합의·변제) 여부가 중요합니다. 관련 서류를 정리하세요.' },
-        { id: 'injury', label: '인적 피해 사고', level: 'official', note: '인적 피해 사고는 감경 배제 사유가 될 수 있습니다. 사안 검토가 꼭 필요합니다.' },
+        { id: 'injury', label: '인적 피해 사고', level: 'official', note: '음주운전 중 인적 피해 교통사고는 이의신청 감경 제외 사유입니다. 행정심판은 위원회가 따로 판단하지만, 같은 결과를 약속할 수는 없습니다.', lawRef: '도로교통법 시행규칙 별표 28' },
       ],
     },
     {
@@ -82,7 +84,7 @@ export const dui: CheckDefinition = {
       text: '음주 측정을 거부했나요?',
       options: [
         { id: 'no', label: '아니오', level: 'ready', note: '측정에 응한 경우 수치 기준으로 처분이 정해집니다.' },
-        { id: 'yes', label: '예', level: 'official', note: '측정 거부는 별도의 취소 사유입니다(도로교통법 제93조). 처분 근거를 정확히 확인하세요.' },
+        { id: 'yes', label: '예', level: 'official', note: '측정 거부는 별도의 취소 사유이고(도로교통법 제93조), 이의신청 감경 제외 사유이기도 합니다(시행규칙 별표 28). 처분 근거를 정확히 확인하세요.' },
       ],
     },
     {
@@ -105,6 +107,34 @@ export const dui: CheckDefinition = {
         { id: 'trial', label: '약식명령 · 재판 중', level: 'official', note: '형사 절차 서류는 행정 절차에서도 중요합니다. 사본을 보관하세요.' },
         { id: 'done', label: '종결(벌금 납부 등)', level: 'ready', note: '형사 결과 서류는 행정심판에서 참고 자료가 됩니다.' },
       ],
+    },
+  ],
+  // 이의신청을 했거나 행정심판을 이미 냈으면 처분 통지일 기준 기한 안내가 달라진다(도로교통법 제94조 제3항).
+  // 결과 통보 전에 행정심판을 먼저 청구한 사람은 결과 통보일부터 90일 특례 대상이 아니다.
+  overrides: [
+    {
+      questionId: 'dui-elapsed',
+      when: { 'dui-elapsed': ['d30to60', 'd60to90', 'over90'], 'dui-procedure': ['objection'] },
+      note: '이의신청을 이미 하셨다면, 결과를 통보받은 날부터 90일 안에 행정심판을 청구할 수 있습니다. 처분 통지일 기준 기한이 지나도 이 기한은 따로 남습니다(결과 전에 행정심판을 먼저 청구하면 이 특례는 적용되지 않습니다). 결과 통지서를 받은 날을 꼭 기록하세요.',
+      lawRef: '도로교통법 제94조',
+    },
+    {
+      questionId: 'dui-elapsed',
+      when: { 'dui-elapsed': ['none'], 'dui-procedure': ['objection-result'] },
+      note: '처분 통지서는 받지 않았는데 이의신청 결과는 받으셨다면, 받은 문서가 처분 통지서인지 결과 통지서인지 먼저 확인하세요. 행정심판 기한은 이의신청 결과를 통보받은 날부터 90일입니다(결과 전에 이미 행정심판을 청구한 경우는 제외).',
+      lawRef: '도로교통법 제94조',
+    },
+    {
+      questionId: 'dui-elapsed',
+      when: { 'dui-elapsed': ['within30', 'd30to60', 'd60to90', 'over90', 'unknown'], 'dui-procedure': ['objection-result'] },
+      note: '이의신청 결과를 통보받으셨다면, 행정심판 기한은 처분 통지일이 아니라 결과를 통보받은 날부터 90일입니다(결과 전에 이미 행정심판을 청구한 경우는 제외). 결과 통지서를 받은 날부터 며칠이 지났는지 먼저 확인하세요.',
+      lawRef: '도로교통법 제94조',
+    },
+    {
+      questionId: 'dui-elapsed',
+      when: { 'dui-elapsed': ['d30to60', 'd60to90', 'over90'], 'dui-procedure': ['appeal'] },
+      note: '이미 행정심판을 청구하셨다면, 기한 안에 냈는지는 청구한 날을 기준으로 봅니다. 지금은 위원회가 정하는 보정·보충 서면 기한을 확인하세요.',
+      lawRef: '행정심판법 제27조',
     },
   ],
 };

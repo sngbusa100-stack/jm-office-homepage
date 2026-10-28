@@ -50,6 +50,12 @@ export const REPLY_TEMPLATES = [
         deadline: true,
         recapOnly: [['dui-elapsed', '통지서를 받은 지']],
       },
+      {
+        // 결과 통보일부터 90일 특례 — 결과 전에 행정심판을 먼저 청구했으면 대상이 아니다(도로교통법 제94조 제3항).
+        ask: '이의신청 결과를 통보받으신 정확한 날짜와, 결과를 받기 전에 행정심판을 이미 청구하셨는지',
+        deadline: true,
+        when: (a) => a['dui-procedure'] === 'objection-result',
+      },
       { ask: '받으신 처분이 면허 정지인지 취소인지', from: [['dui-disposition', '처분 종류']] },
       { ask: '단속 일시와 장소' },
       { ask: '측정된 혈중알코올농도 수치(채혈 측정 여부 포함)', from: [['dui-bac', '혈중알코올농도 구간']] },

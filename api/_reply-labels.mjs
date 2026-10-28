@@ -21,8 +21,8 @@ export default {
         "text": "적발 당시 혈중알코올농도 구간은 어디였나요?",
         "options": {
           "low": "0.03% 이상 ~ 0.08% 미만",
-          "mid": "0.08% 이상 ~ 0.1% 미만",
-          "high": "0.1% 이상",
+          "mid": "0.08% 이상 ~ 0.1% 이하",
+          "over01": "0.1% 초과",
           "unknown": "모름"
         }
       },
@@ -41,7 +41,8 @@ export default {
         "text": "이의신청 또는 행정심판을 이미 진행 중인가요?",
         "options": {
           "no": "아니오",
-          "objection": "이의신청 진행 중",
+          "objection": "이의신청을 하고 결과를 기다리는 중",
+          "objection-result": "이의신청 결과를 통보받음",
           "appeal": "행정심판 진행 중"
         }
       },
@@ -57,7 +58,7 @@ export default {
       "dui-history": {
         "text": "최근 5년 내 음주운전 이력이 있나요?",
         "options": {
-          "none": "없음 (이번이 처음)",
+          "none": "최근 5년 안에는 없음 (그 전 전력은 있을 수 있음)",
           "once": "1회 있음",
           "multi": "2회 이상"
         }

@@ -10,7 +10,7 @@ export default {
     "dui-bac": {
       "low": "ready",
       "mid": "official",
-      "high": "official",
+      "over01": "official",
       "unknown": "documents"
     },
     "dui-elapsed": {
@@ -24,6 +24,7 @@ export default {
     "dui-procedure": {
       "no": "ready",
       "objection": "official",
+      "objection-result": "official",
       "appeal": "official"
     },
     "dui-livelihood": {
