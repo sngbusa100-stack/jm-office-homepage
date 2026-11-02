@@ -30,6 +30,12 @@ export function Footer() {
             {office.email && <>{(office.phone || office.fax) && ' | '}이메일 <a href={`mailto:${office.email}`}>{office.email}</a></>}
           </p>
         )}
+        {(office.consultHours || office.parking) && (
+          <p>
+            {office.consultHours && <>상담 시간 {office.consultHours}</>}
+            {office.parking && <>{office.consultHours && ' | '}주차 {office.parking}</>}
+          </p>
+        )}
         {office.blogUrl && (
           <p><a href={office.blogUrl} target="_blank" rel="noopener noreferrer">네이버 블로그</a></p>
         )}

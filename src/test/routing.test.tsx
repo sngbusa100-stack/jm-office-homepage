@@ -13,9 +13,9 @@ function renderAt(path: string) {
 describe('라우팅', () => {
   it('홈에서 업무 분야가 셀프 진단보다 먼저 나온다', () => {
     const { container } = renderAt('/');
-    const headings = Array.from(container.querySelectorAll('h2')).map((h) => h.textContent ?? '');
-    const services = headings.findIndex((t) => t.includes('업무 분야'));
-    const check = headings.findIndex((t) => t.includes('셀프 진단'));
+    const headings = Array.from(container.querySelectorAll('h2')).map((h) => h.id);
+    const services = headings.indexOf('services-heading');
+    const check = headings.indexOf('check-heading');
     expect(services).toBeGreaterThanOrEqual(0);
     expect(check).toBeGreaterThanOrEqual(0);
     expect(services).toBeLessThan(check);

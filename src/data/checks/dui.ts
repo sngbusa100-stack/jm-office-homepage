@@ -4,6 +4,7 @@ export const dui: CheckDefinition = {
   domain: 'dui',
   title: '음주운전 면허 구제 사전 점검',
   intro: '행정심판·이의신청으로 다툴 수 있는 상황인지, 무엇을 준비해야 하는지 정리합니다. 결과는 일반 정보이며 구제 여부에 대한 판단이 아닙니다.',
+  summary: '이의신청·행정심판으로 다툴 수 있는 상황인지, 무엇을 준비할지 정리합니다.',
   questions: [
     {
       id: 'dui-disposition',

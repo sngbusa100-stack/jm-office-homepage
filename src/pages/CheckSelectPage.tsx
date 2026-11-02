@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { checks } from '../data/checks';
+import { VisaCheckCard } from '../components/VisaCheckCard';
 
 export function CheckSelectPage() {
   return (
@@ -27,11 +28,12 @@ export function CheckSelectPage() {
         {Object.values(checks).map((def) => (
           <article className="card" key={def.domain}>
             <h2>{def.title}</h2>
-            <p>{def.intro}</p>
+            <p>{def.summary}</p>
             <p className="note">{def.questions.length}개 문항 · 약 3분</p>
             <Link className="button button--primary" to={`/check/${def.domain}`}>{def.title} 시작 →</Link>
           </article>
         ))}
+        <VisaCheckCard headingLevel="h2" />
       </div>
     </div>
   );

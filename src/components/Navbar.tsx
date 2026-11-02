@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
+// 2026-11-02 주인님 확정 순서. 상담 문의는 아래 버튼으로 따로 둔다.
 const menu = [
-  { to: '/why', label: '행정사가 필요한 이유' },
+  { to: '/about', label: '사무소 소개' },
   { to: '/services', label: '업무분야' },
+  { to: '/check', label: '셀프 진단' },
+  { to: '/why', label: '행정사가 필요한 이유' },
   { to: '/location', label: '오시는 길' },
 ];
 

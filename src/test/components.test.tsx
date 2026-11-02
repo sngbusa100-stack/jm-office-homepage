@@ -25,11 +25,20 @@ describe('공통 레이아웃', () => {
     expect(screen.getByRole('link', { name: '행정사가 필요한 이유' })).toHaveAttribute('href', '/why');
   });
 
-  it('상단 메뉴에서 셀프 진단을 분리하고 상담 버튼을 상시 노출한다', () => {
+  it('상단 메뉴는 주인님이 정한 순서이고 상담 버튼은 메뉴 밖에 상시 노출한다', () => {
     renderLayout();
     const nav = screen.getByRole('navigation', { name: '주요 메뉴' });
-    expect(nav.querySelector('a[href="/check"]')).toBeNull();
-    expect(screen.getByRole('link', { name: '상담 문의' })).toHaveAttribute('href', '/consult');
+    const links = Array.from(nav.querySelectorAll('a')).map((a) => [a.textContent, a.getAttribute('href')]);
+    expect(links).toEqual([
+      ['사무소 소개', '/about'],
+      ['업무분야', '/services'],
+      ['셀프 진단', '/check'],
+      ['행정사가 필요한 이유', '/why'],
+      ['오시는 길', '/location'],
+    ]);
+    const consult = screen.getByRole('link', { name: '상담 문의' });
+    expect(consult).toHaveAttribute('href', '/consult');
+    expect(nav.contains(consult)).toBe(false);
   });
 
   it('푸터에 가짜 연락처가 없고 면책 링크가 있다', () => {

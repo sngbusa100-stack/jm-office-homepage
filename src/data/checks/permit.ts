@@ -4,6 +4,7 @@ export const permit: CheckDefinition = {
   domain: 'permit',
   title: '인허가 신청 사전 점검',
   intro: '어떤 인허가가 필요한지, 장소와 시설은 요건에 맞는지, 보완·반려에 대응할 준비가 되었는지 순서대로 정리합니다. 답변한 내용은 상담 때 그대로 확인 항목이 됩니다. 결과는 일반 정보이며 허가 여부에 대한 판단이 아닙니다.',
+  summary: '어떤 인허가가 필요한지, 장소와 시설이 요건에 맞는지 정리합니다.',
   questions: [
     {
       id: 'permit-type',

@@ -13,6 +13,8 @@
   "streetAddress": "새빛공원로 67 광명역자이타워 B1305호",
   "addressNote": "광명KTX역 5번출구 앞",
   "mapQuery": "경기도 광명시 새빛공원로 67",
+  "consultHours": "10:00~17:00",
+  "parking": "1시간 30분 무료",
   "registrationNumber": null,
   "businessNumber": null,
   "formEndpoint": "https://jungmyungoffice.com/api/consult"

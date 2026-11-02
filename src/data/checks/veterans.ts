@@ -4,6 +4,7 @@ export const veterans: CheckDefinition = {
   domain: 'veterans',
   title: '국가유공자 등록 사전 점검',
   intro: '신청 유형과 필요한 기록, 절차 단계를 정리합니다. 결과는 일반 정보이며 등록 결과에 대한 판단이 아닙니다.',
+  summary: '신청 유형과 필요한 기록, 절차 단계를 정리합니다.',
   questions: [
     {
       id: 'vet-applicant',

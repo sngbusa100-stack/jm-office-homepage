@@ -11,13 +11,20 @@ export interface PageMeta {
   robots: 'index, follow' | 'noindex, nofollow';
 }
 
-const DEFAULT_DESCRIPTION = '정명 행정사사무소의 음주운전 면허 구제, 영업정지 행정심판, 인허가, 국가보훈 업무 안내와 셀프 진단.';
-const HOME_DESCRIPTION = '광명KTX역 앞 정명 행정사사무소(대표 행정사 정재훈). 인허가, 출입국·비자, 영업정지 행정심판, 음주운전 면허 구제, 국가보훈 업무 안내와 셀프 진단.';
+// 업무분야는 명함 5개(src/data/serviceAreas.ts). 셸 index.html의 description·og·JSON-LD도 DEFAULT_DESCRIPTION과 같아야 한다(seo.test).
+export const DEFAULT_DESCRIPTION = '광명KTX역 5번출구 앞 정명 행정사사무소. 인허가·등록·변경, 출입국·비자, 토지개발·보상, 행정심판·권리구제, 공공조달·기업인증 업무 안내와 셀프 진단.';
+const HOME_DESCRIPTION = '광명KTX역 5번출구 앞 정명 행정사사무소(대표 행정사 정재훈). 인허가·등록·변경, 출입국·비자, 토지개발·보상, 행정심판·권리구제, 공공조달·기업인증 업무 안내와 셀프 진단.';
+// 홈 제목에 지역명을 넣는다 — 네이버 '정명' 검색에 다른 지역 정명 행정사가 함께 나와 구분이 필요하다(2026-11-02 조회).
+export const HOME_TITLE = `정명 행정사사무소 | 광명KTX역 앞 행정사 — ${SLOGAN}`;
 
 const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
   '/': {
-    title: `정명 행정사사무소 | ${SLOGAN}`,
+    title: HOME_TITLE,
     description: HOME_DESCRIPTION,
+  },
+  '/about': {
+    title: '사무소 소개 | 정명 행정사사무소',
+    description: '광명KTX역 5번출구 앞 정명 행정사사무소 대표 행정사 정재훈의 인사말과 약속. 변호사 사무실과 같은 공간에서 행정 절차를 맡습니다.',
   },
   '/why': {
     title: '행정사가 필요한 이유 | 정명 행정사사무소',
@@ -25,11 +32,11 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
   },
   '/services': {
     title: '업무 분야 | 정명 행정사사무소',
-    description: '음주운전 면허 구제, 영업정지 행정심판, 인허가, 출입국·비자, 국가보훈, 토지보상 관련 업무를 확인하세요.',
+    description: '인허가·등록·변경, 출입국·비자, 토지개발·보상, 행정심판·권리구제, 공공조달·기업인증 — 정명 행정사사무소의 다섯 가지 업무 분야를 확인하세요.',
   },
   '/check': {
     title: '3분 셀프 진단 | 정명 행정사사무소',
-    description: '음주운전 면허, 영업정지 처분, 국가유공자 등록에 관해 지금 확인할 사항과 준비 서류를 정리합니다.',
+    description: '인허가 신청, 영업정지 처분, 음주운전 면허, 국가유공자 등록에 관해 지금 확인할 사항과 준비 서류를 정리합니다. 외국인 비자는 5개 언어 비자 진단으로 안내합니다.',
   },
   '/consult': {
     title: '상담 안내 | 정명 행정사사무소',
@@ -45,7 +52,7 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
   },
   '/location': {
     title: '오시는 길 | 정명 행정사사무소',
-    description: '광명KTX역 5번출구 앞 광명역자이타워에 있는 정명 행정사사무소의 주소, 지도, 연락처를 안내합니다.',
+    description: '광명KTX역 5번출구 앞 광명역자이타워에 있는 정명 행정사사무소의 주소, 지도, 상담 시간, 주차, 연락처를 안내합니다.',
   },
 };
 

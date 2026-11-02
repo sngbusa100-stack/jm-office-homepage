@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { HomePage } from '../pages/HomePage';
+import { AboutPage } from '../pages/AboutPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { WhyPage } from '../pages/WhyPage';
 import { ServicePage } from '../pages/ServicePage';
@@ -19,6 +20,7 @@ export function AppRouter() {
     <Layout>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/why" element={<WhyPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:slug" element={<ServicePage />} />

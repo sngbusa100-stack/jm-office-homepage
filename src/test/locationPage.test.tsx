@@ -40,6 +40,13 @@ describe('오시는 길', () => {
     expect(main.getByRole('link', { name: 'sngbusa10@naver.com' })).toHaveAttribute('href', 'mailto:sngbusa10@naver.com');
   });
 
+  it('상담 시간과 주차 안내를 보여준다(2026-11-02 주인님 지정 값)', () => {
+    renderAt('/location');
+    const section = within(screen.getByRole('region', { name: '상담 시간·주차' }));
+    expect(section.getByText('10:00~17:00')).toBeInTheDocument();
+    expect(section.getByText('1시간 30분 무료')).toBeInTheDocument();
+  });
+
   it('검색 노출용 고유 제목과 설명을 갖는다', () => {
     const meta = getPageMeta('/location');
     expect(meta.title).toBe('오시는 길 | 정명 행정사사무소');

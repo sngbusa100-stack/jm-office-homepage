@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildSitemapXml, getIndexablePaths, getPageMeta } from '../lib/pageMeta';
+import { buildSitemapXml, DEFAULT_DESCRIPTION, getIndexablePaths, getPageMeta } from '../lib/pageMeta';
 
 describe('검색 노출 기반', () => {
   it('업무 상세 경로에 고유 제목·설명·canonical을 제공한다', () => {
@@ -19,10 +19,10 @@ describe('검색 노출 기반', () => {
   it('색인 경로 목록이 정적 페이지·업무분야·진단을 모두 포함한다', () => {
     const paths = getIndexablePaths();
     expect(paths).toEqual([
-      '/', '/why', '/services', '/check', '/consult', '/privacy', '/disclaimer', '/location',
-      '/services/dui', '/services/suspension', '/services/license',
-      '/services/immigration', '/services/veterans', '/services/documents',
-      '/check/dui', '/check/suspension', '/check/veterans', '/check/permit',
+      '/', '/about', '/why', '/services', '/check', '/consult', '/privacy', '/disclaimer', '/location',
+      '/services/license', '/services/immigration', '/services/documents',
+      '/services/suspension', '/services/dui', '/services/veterans',
+      '/check/permit', '/check/suspension', '/check/dui', '/check/veterans',
     ]);
     for (const path of paths) expect(getPageMeta(path).robots).toBe('index, follow');
     expect(new Set(paths.map((path) => getPageMeta(path).canonical)).size).toBe(paths.length);
@@ -38,7 +38,22 @@ describe('검색 노출 기반', () => {
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services/immigration</loc>');
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/check/permit</loc>');
     expect(sitemap).not.toContain('/result</loc>');
-    expect(sitemap.match(/<loc>/g)).toHaveLength(18);
+    expect(sitemap.match(/<loc>/g)).toHaveLength(19);
+  });
+
+  it('셸 index.html의 설명·공유 설명·JSON-LD 설명이 현재 업무 5개 문구와 같다', () => {
+    const html = readFileSync(join(__dirname, '../../index.html'), 'utf8');
+    expect(html).toContain(`<meta name="description" content="${DEFAULT_DESCRIPTION}" />`);
+    expect(html).toContain(`<meta property="og:description" content="${DEFAULT_DESCRIPTION}" />`);
+    expect(html).toContain(`"description": "${DEFAULT_DESCRIPTION}"`);
+    for (const area of ['인허가·등록·변경', '출입국·비자', '토지개발·보상', '행정심판·권리구제', '공공조달·기업인증']) {
+      expect(DEFAULT_DESCRIPTION).toContain(area);
+    }
+  });
+
+  it('/check 설명에 진단 4종이 모두 들어 있다', () => {
+    const description = getPageMeta('/check').description;
+    for (const word of ['인허가', '영업정지', '음주운전', '국가유공자']) expect(description).toContain(word);
   });
 
   it('알 수 없는 진단 도메인은 색인하지 않고 안전한 설명을 반환한다', () => {

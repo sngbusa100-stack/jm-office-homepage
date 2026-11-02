@@ -4,6 +4,7 @@ export const suspension: CheckDefinition = {
   domain: 'suspension',
   title: '영업정지 처분 대응 사전 점검',
   intro: '처분이 어느 단계에 있는지, 남은 기한과 소명 준비는 무엇인지 정리합니다. 결과는 일반 정보이며 처분 결과에 대한 판단이 아닙니다.',
+  summary: '처분이 어느 단계인지, 남은 기한과 소명 준비를 정리합니다.',
   questions: [
     {
       id: 'susp-business',

@@ -13,6 +13,16 @@ export function LocationPage() {
         <OfficeLocation />
       </section>
 
+      {(office.consultHours || office.parking) && (
+        <section className="card" aria-labelledby="location-visit">
+          <h2 id="location-visit">상담 시간·주차</h2>
+          <dl className="visit-facts">
+            {office.consultHours && <div><dt>상담 시간</dt><dd>{office.consultHours}</dd></div>}
+            {office.parking && <div><dt>주차</dt><dd>{office.parking}</dd></div>}
+          </dl>
+        </section>
+      )}
+
       {(office.phone || office.fax || office.email) && (
         <section className="card" aria-labelledby="location-contact">
           <h2 id="location-contact">연락처</h2>

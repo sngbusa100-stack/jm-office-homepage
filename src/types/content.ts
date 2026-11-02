@@ -32,6 +32,8 @@ export interface CheckDefinition {
   domain: CheckDomain;
   title: string;
   intro: string;
+  /** 홈·진단 선택 카드용 한 줄. 일반 정보 고지는 구역 안내에 한 번만 두므로 여기에 넣지 않는다 */
+  summary: string;
   questions: Question[];
   overrides?: AnswerOverride[]; // 앞에 있는 것이 먼저 적용된다
 }
