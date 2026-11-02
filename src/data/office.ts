@@ -16,7 +16,7 @@ export interface Office {
   streetAddress?: string | null;
   addressNote?: string | null;
   mapQuery?: string | null;
-  /** 상담 시간(2026-11-02 주인님 지정). 요일은 아직 정하지 않아 시간만 적는다. */
+  /** 상담 시간(2026-11-02 주인님 지정: 월~금 10:00~17:00). 공휴일은 아직 정하지 않았다. */
   consultHours?: string | null;
   /** 방문 주차 안내(2026-11-02 주인님 확인) */
   parking?: string | null;

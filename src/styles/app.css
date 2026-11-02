@@ -212,7 +212,7 @@ nav#global-nav a.active {
 .hero__content { min-width: 0; }
 .hero h1 { max-width: 760px; font-size: clamp(2.25rem, 4.4vw, 3.65rem); line-height: 1.18; margin-bottom: 20px; color: var(--text); }
 .hero__intro { max-width: 720px; color: var(--text); font-size: var(--fs-lg); font-weight: 500; margin-bottom: 22px; }
-/* 첫 화면 차별점 세 줄(변호사와 같은 공간·KTX역 앞·진단 도구) */
+/* 첫 화면 차별점 네 줄(대표 직접·변호사와 같은 공간·KTX역 앞·진단 도구) */
 .hero__strengths { display: grid; gap: 8px; max-width: 660px; margin-bottom: 28px; }
 .hero__strengths li { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; padding-left: 26px; }
 .hero__strengths li::before { content: '✓'; position: absolute; left: 0; top: 0; color: var(--accent); font-weight: 800; }

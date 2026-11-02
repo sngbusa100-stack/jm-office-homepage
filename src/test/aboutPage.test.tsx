@@ -42,8 +42,8 @@ describe('사무소 소개(/about)', () => {
     expect(promises.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['정확하게', '명쾌하게', '변호사와 한 공간에서']);
 
     const visit = within(screen.getByRole('region', { name: '찾아오시는 길' }));
-    expect(visit.getByText('경기도 광명시 새빛공원로 67 광명역자이타워 B1305호')).toBeInTheDocument();
-    expect(visit.getByText('10:00~17:00')).toBeInTheDocument();
+    expect(visit.getByText('경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호')).toBeInTheDocument();
+    expect(visit.getByText('월~금 10:00~17:00')).toBeInTheDocument();
     expect(visit.getByText('1시간 30분 무료')).toBeInTheDocument();
     expect(visit.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
     expect(visit.getByRole('link', { name: /오시는 길 자세히 보기/ })).toHaveAttribute('href', '/location');

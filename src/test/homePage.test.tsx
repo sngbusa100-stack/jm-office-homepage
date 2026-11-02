@@ -36,11 +36,11 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(intro?.textContent).toBe('서류 한 장에도 의뢰인의 생업과 생활이 걸려 있다는 것을 명심하고, 맡겨 주신 일에 끝까지 최선을 다하겠습니다.');
   });
 
-  it('첫 화면에 차별점 세 줄(변호사와 같은 공간·KTX역 앞·진단 도구)이 있다', () => {
+  it('첫 화면에 차별점 네 줄(대표 직접·변호사와 같은 공간·KTX역 앞·진단 도구)이 있다', () => {
     renderAt('/');
     const list = screen.getByRole('list', { name: '정명 행정사사무소의 특징' });
     const items = within(list).getAllByRole('listitem').map((li) => li.querySelector('strong')?.textContent);
-    expect(items).toEqual(['변호사 사무실과 같은 공간', '광명KTX역 5번출구 앞', '셀프 진단 4종 · 비자 진단 5개 언어']);
+    expect(items).toEqual(['대표 행정사가 직접', '변호사 사무실과 같은 공간', '광명KTX역 5번출구 앞', '셀프 진단 4종 · 비자 진단 5개 언어']);
   });
 
   it('대표 카드는 사진과 직함·이름 한 줄만 둔다', () => {
@@ -94,6 +94,9 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     }
     // 상담하는 사람이 변호사라는 것이 문장에 드러나야 한다
     expect(texts).toContain('변호사에게 바로 상담받으실 수 있');
+    // 소개 대가가 없다는 사실(2026-11-02 주인님 확인)을 약속 카드와 인사말 전문에 밝힌다
+    expect(profile.promises[2].detail).toContain('소개 대가는 받지 않습니다');
+    expect(profile.greeting.join('\n')).toContain('저희 사무소는 소개 대가를 받지 않습니다');
   });
 
   it('업무 분야는 명함 5개 순서이고, 예전 처분·통지 띠는 머리말 한 줄로 흡수했다', () => {

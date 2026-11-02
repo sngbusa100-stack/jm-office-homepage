@@ -20,7 +20,7 @@ describe('사무소 연락처 데이터', () => {
     expect(office.email).toBe('sngbusa10@naver.com');
     expect(office.representative).toBe('정재훈');
     expect(office.address).toBe(`${office.addressRegion} ${office.addressLocality} ${office.streetAddress}`);
-    expect(office.address).toBe('경기도 광명시 새빛공원로 67 광명역자이타워 B1305호');
+    expect(office.address).toBe('경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호');
   });
 
   it('국내 번호를 국제 표기로 바꾼다', () => {
@@ -49,7 +49,7 @@ describe('사무소 연락처 데이터', () => {
         addressCountry: 'KR',
         addressRegion: '경기도',
         addressLocality: '광명시',
-        streetAddress: '새빛공원로 67 광명역자이타워 B1305호',
+        streetAddress: '새빛공원로 67 광명역자이타워 B동 13층 1305호',
       },
     });
   });
@@ -66,7 +66,7 @@ describe('개업 전 연락처 공개', () => {
     renderAt('/');
     const footer = within(screen.getByRole('contentinfo'));
     expect(footer.getByText(/대표 행정사 정재훈/)).toBeInTheDocument();
-    expect(footer.getByText(/경기도 광명시 새빛공원로 67 광명역자이타워 B1305호/)).toBeInTheDocument();
+    expect(footer.getByText(/경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호/)).toBeInTheDocument();
     expect(footer.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
     expect(footer.getByText(/02-897-6254/)).toBeInTheDocument();
     expect(footer.getByRole('link', { name: 'sngbusa10@naver.com' })).toHaveAttribute('href', 'mailto:sngbusa10@naver.com');

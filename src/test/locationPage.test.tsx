@@ -26,7 +26,7 @@ describe('오시는 길', () => {
     renderAt('/location');
     const main = within(screen.getByRole('main'));
     expect(main.getByRole('heading', { level: 1, name: '오시는 길' })).toBeInTheDocument();
-    expect(main.getByText('경기도 광명시 새빛공원로 67 광명역자이타워 B1305호')).toBeInTheDocument();
+    expect(main.getByText('경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호')).toBeInTheDocument();
     expect(main.getByText('광명KTX역 5번출구 앞')).toBeInTheDocument();
     const maps = mapLinks(office.mapQuery!);
     for (const [name, href] of [['네이버 지도', maps.naver], ['카카오맵', maps.kakao]]) {
@@ -43,7 +43,7 @@ describe('오시는 길', () => {
   it('상담 시간과 주차 안내를 보여준다(2026-11-02 주인님 지정 값)', () => {
     renderAt('/location');
     const section = within(screen.getByRole('region', { name: '상담 시간·주차' }));
-    expect(section.getByText('10:00~17:00')).toBeInTheDocument();
+    expect(section.getByText('월~금 10:00~17:00')).toBeInTheDocument();
     expect(section.getByText('1시간 30분 무료')).toBeInTheDocument();
   });
 
