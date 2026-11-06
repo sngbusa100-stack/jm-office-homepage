@@ -731,4 +731,4 @@
 - [x] `src/test/homePage.test.tsx` 순서 검사를 인사말 → 업무 분야 → 셀프 진단으로 고침, 계획서 5-2에 변경 기록
 - [x] `npm run check`: 68파일 685테스트·빌드·사전 렌더링 19경로·verify-dist 통과
 - [x] 브라우저(로컬 빌드 :4180, ego-browser): PC·390px 모두 h2 순서 인사말 → 업무 분야 → 셀프 진단, 가로 넘침 없음. 업무 분야 시작 PC 805→1,464px, 휴대폰 1,387→2,653px
-- [ ] 커밋·푸시(운영 배포)는 주인님 승인 대기
+- [x] 운영 배포(주인님: "배포해"): `0e19486` 20:07:08 푸시 → 20:07:43 반영. 운영 확인: 홈·/about·/services·/check·/why·/consult·/location·/privacy·sitemap 200, /api/consult 503(닫힘), ego-browser 1280·390px h2 순서 인사말 → 업무 분야 → 셀프 진단, 가로 넘침 없음
