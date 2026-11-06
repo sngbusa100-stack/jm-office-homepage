@@ -62,15 +62,15 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(profile.career).toEqual(['DHL 법률사무소 고문']);
   });
 
-  it('홈 순서는 첫 화면 → 업무 분야 → 대표 인사말 → 셀프 진단이다', () => {
+  it('홈 순서는 첫 화면 → 대표 인사말 → 업무 분야 → 셀프 진단이다(2026-11-06 주인님 지시)', () => {
     const { container } = renderAt('/');
     const ids = h2Ids(container);
-    const services = ids.indexOf('services-heading');
     const greeting = ids.indexOf('greeting-heading');
+    const services = ids.indexOf('services-heading');
     const check = ids.indexOf('check-heading');
-    expect(services).toBeGreaterThanOrEqual(0);
-    expect(services).toBeLessThan(greeting);
-    expect(greeting).toBeLessThan(check);
+    expect(greeting).toBeGreaterThanOrEqual(0);
+    expect(greeting).toBeLessThan(services);
+    expect(services).toBeLessThan(check);
   });
 
   it('대표 인사말 요약에 변호사와 같은 공간을 쓰는 이유가 있고, 전문은 /about으로 간다', () => {

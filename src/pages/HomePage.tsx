@@ -19,8 +19,8 @@ const processSteps = [
 ];
 
 /**
- * 홈 순서(docs/2026-11-02-home-intro-copy-plan.md 5-2): 첫 화면(소개) → 업무 분야 → 대표 인사말 요약 →
- * 셀프 진단 → 행정사가 필요한 이유 → 진행 절차 → FAQ → 마지막 안내.
+ * 홈 순서: 첫 화면(소개) → 대표 인사말 요약 → 업무 분야 → 셀프 진단 → 행정사가 필요한 이유 → 진행 절차 → FAQ →
+ * 마지막 안내. 2026-11-06 주인님 지시로 인사말을 업무 분야 위로 올렸다(docs/2026-11-02-home-intro-copy-plan.md 5-2의 2·3번을 뒤집음).
  * 예전 '처분·통지를 받으셨다면' 띠는 업무 카드와 같은 곳으로 가서 업무 분야 머리말 한 줄로 흡수했다.
  */
 export function HomePage() {
@@ -53,20 +53,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="section page-shell" id="services" aria-labelledby="services-heading">
-        <div className="section-heading section-heading--row">
-          <div>
-            <p className="eyebrow">업무 분야</p>
-            <h2 id="services-heading">이런 일을 도와드립니다</h2>
-            <p className="services-deadline-note">
-              통지서를 받으셨다면 받은 날짜부터 확인하세요. 의견제출·이의신청·행정심판은 정해진 기간 안에 해야 합니다.
-            </p>
-          </div>
-          <Link className="text-link" to="/services">전체 업무 보기 →</Link>
-        </div>
-        <ServiceAreaGrid headingLevel="h3" />
-      </section>
-
       <section className="section section--tinted greeting" id="greeting" aria-labelledby="greeting-heading">
         <div className="page-shell greeting__grid">
           <div className="greeting__letter">
@@ -80,6 +66,20 @@ export function HomePage() {
           </div>
           <PromiseList promises={profile.promises} />
         </div>
+      </section>
+
+      <section className="section page-shell" id="services" aria-labelledby="services-heading">
+        <div className="section-heading section-heading--row">
+          <div>
+            <p className="eyebrow">업무 분야</p>
+            <h2 id="services-heading">이런 일을 도와드립니다</h2>
+            <p className="services-deadline-note">
+              통지서를 받으셨다면 받은 날짜부터 확인하세요. 의견제출·이의신청·행정심판은 정해진 기간 안에 해야 합니다.
+            </p>
+          </div>
+          <Link className="text-link" to="/services">전체 업무 보기 →</Link>
+        </div>
+        <ServiceAreaGrid headingLevel="h3" />
       </section>
 
       <section className="section page-shell" aria-labelledby="check-heading">
