@@ -1,12 +1,24 @@
 import { office } from '../data/office';
 import { SITE_URL } from '../lib/pageMeta';
-import { buildOfficeJsonLd } from '../lib/officeContact';
+import { buildOfficeJsonLd, buildSiteChannelJsonLd, serializeJsonLd } from '../lib/officeContact';
 
-/** 검색엔진용 사무소 정보(schema.org LegalService). 사전 렌더링 HTML에도 그대로 들어간다. */
+/**
+ * 검색엔진용 사무소 정보(schema.org LegalService)와 네이버 연관채널용 Organization(같은 @id).
+ * 홈(루트 페이지)에만 넣고, 사전 렌더링 HTML에도 그대로 들어간다.
+ */
 export function OfficeStructuredData() {
-  const data = buildOfficeJsonLd(office, SITE_URL);
-  if (!data) return null;
-  // JSON 안의 '<'를 이스케이프해 </script> 조기 종료를 막는다.
-  const json = JSON.stringify(data).replaceAll('<', '\u003c');
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
+  const blocks = [buildOfficeJsonLd(office, SITE_URL), buildSiteChannelJsonLd(office, SITE_URL)].filter(
+    (data): data is Record<string, unknown> => data !== null,
+  );
+  return (
+    <>
+      {blocks.map((data) => (
+        <script
+          key={String(data['@type'])}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
+        />
+      ))}
+    </>
+  );
 }

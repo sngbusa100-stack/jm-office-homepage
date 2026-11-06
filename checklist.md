@@ -732,3 +732,11 @@
 - [x] `npm run check`: 68파일 685테스트·빌드·사전 렌더링 19경로·verify-dist 통과
 - [x] 브라우저(로컬 빌드 :4180, ego-browser): PC·390px 모두 h2 순서 인사말 → 업무 분야 → 셀프 진단, 가로 넘침 없음. 업무 분야 시작 PC 805→1,464px, 휴대폰 1,387→2,653px
 - [x] 운영 배포(주인님: "배포해"): `0e19486` 20:07:08 푸시 → 20:07:43 반영. 운영 확인: 홈·/about·/services·/check·/why·/consult·/location·/privacy·sitemap 200, /api/consult 503(닫힘), ego-browser 1280·390px h2 순서 인사말 → 업무 분야 → 셀프 진단, 가로 넘침 없음
+
+### 2026-11-06 네이버 검색 결과 윗줄(사이트 브랜드)을 "정명 행정사사무소"로 (주인님: 네이버에서 jungmyungoffice.com으로만 보임)
+
+- [x] 네이버 공식 가이드 확인(ego-browser, searchadvisor.naver.com — 웹 가져오기 도구는 네이버 차단): `/guide/faq-branding` 브랜드 영역은 로봇이 자동 추출, 직접 지정 불가, 추출이 어려우면 URL 일부 노출, 잘못·미반영은 고객센터 문의 / `/guide/structured-data-channel` 루트 페이지 Person·Organization의 name(사이트 이름)·url·sameAs 필수 / `/guide/faq-serpedit` 제목·사이트 이름은 title과 제목 요소를 분석
+- [x] 이미 있던 신호 확인: title 맨 앞·og:site_name·WebSite JSON-LD·LegalService 모두 "정명 행정사사무소"
+- [x] 홈에 네이버 연관채널 Organization 추가(`buildSiteChannelJsonLd`: name·url·sameAs=네이버 블로그), LegalService와 같은 `@id`(`/#office`)로 묶음. `<` 이스케이프가 아무 일도 안 하던 것(소스의 `'\u003c'` 문자열이 곧 `<`였음) 고침(`serializeJsonLd`)
+- [x] 테스트 3개 추가, `npm run check` 68파일 688테스트·빌드·사전 렌더링 19경로·verify-dist 통과. dist/index.html: WebSite · LegalService(#office) · Organization(#office, sameAs 블로그)
+- [ ] 운영 배포 + 네이버 홈 수집 요청은 주인님 승인 대기. 반영 시점은 네이버가 밝히지 않음(자동 추출이라 보장 없음). 오래 안 바뀌면 주인님이 고객센터에 문의

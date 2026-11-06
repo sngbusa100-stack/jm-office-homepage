@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
 import { office } from '../data/office';
-import { buildOfficeJsonLd, mapLinks, toInternationalPhone } from '../lib/officeContact';
+import { buildOfficeJsonLd, buildSiteChannelJsonLd, mapLinks, serializeJsonLd, toInternationalPhone } from '../lib/officeContact';
 
 function renderAt(path: string) {
   return render(
@@ -56,6 +56,30 @@ describe('사무소 연락처 데이터', () => {
 
   it('주소와 전화가 모두 없으면 검색엔진용 정보를 만들지 않는다', () => {
     expect(buildOfficeJsonLd({ ...office, phone: null, address: null }, 'https://jungmyungoffice.com')).toBeNull();
+  });
+
+  // 네이버 서치어드바이저 '사이트 연관채널'(2026-11-06 확인): Person/Organization, name(사이트 이름)·url·sameAs 필수
+  it('네이버 연관채널용 Organization에 사이트 이름·주소·블로그를 넣고 사무소 정보와 같은 개체로 묶는다', () => {
+    const channel = buildSiteChannelJsonLd(office, 'https://jungmyungoffice.com');
+    expect(channel).toEqual({
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      '@id': 'https://jungmyungoffice.com/#office',
+      name: '정명 행정사사무소',
+      url: 'https://jungmyungoffice.com',
+      sameAs: ['https://blog.naver.com/jungmyung0909'],
+    });
+    expect(buildOfficeJsonLd(office, 'https://jungmyungoffice.com')?.['@id']).toBe(channel?.['@id']);
+  });
+
+  it('연관 채널이 없으면 연관채널용 정보를 만들지 않는다', () => {
+    expect(buildSiteChannelJsonLd({ ...office, blogUrl: null }, 'https://jungmyungoffice.com')).toBeNull();
+  });
+
+  it('구조화 데이터 글자 안의 <는 이스케이프해 script가 일찍 끝나지 않게 한다', () => {
+    const json = serializeJsonLd({ name: '</script><b>' });
+    expect(json).not.toContain('<');
+    expect(JSON.parse(json)).toEqual({ name: '</script><b>' });
   });
 });
 
@@ -111,8 +135,9 @@ describe('개업 전 연락처 공개', () => {
   it('홈에 검색엔진용 사무소 정보를 넣는다', () => {
     const { container } = renderAt('/');
     const scripts = [...container.querySelectorAll('script[type="application/ld+json"]')];
-    const legal = scripts.map((s) => JSON.parse(s.textContent ?? '{}')).find((d) => d['@type'] === 'LegalService');
-    expect(legal).toEqual(buildOfficeJsonLd(office, 'https://jungmyungoffice.com'));
+    const blocks = scripts.map((s) => JSON.parse(s.textContent ?? '{}'));
+    expect(blocks.find((d) => d['@type'] === 'LegalService')).toEqual(buildOfficeJsonLd(office, 'https://jungmyungoffice.com'));
+    expect(blocks.find((d) => d['@type'] === 'Organization')).toEqual(buildSiteChannelJsonLd(office, 'https://jungmyungoffice.com'));
   });
 
   it('개업 준비 중 안내 띠는 그대로 둔다', () => {
