@@ -739,4 +739,6 @@
 - [x] 이미 있던 신호 확인: title 맨 앞·og:site_name·WebSite JSON-LD·LegalService 모두 "정명 행정사사무소"
 - [x] 홈에 네이버 연관채널 Organization 추가(`buildSiteChannelJsonLd`: name·url·sameAs=네이버 블로그), LegalService와 같은 `@id`(`/#office`)로 묶음. `<` 이스케이프가 아무 일도 안 하던 것(소스의 `'\u003c'` 문자열이 곧 `<`였음) 고침(`serializeJsonLd`)
 - [x] 테스트 3개 추가, `npm run check` 68파일 688테스트·빌드·사전 렌더링 19경로·verify-dist 통과. dist/index.html: WebSite · LegalService(#office) · Organization(#office, sameAs 블로그)
-- [ ] 운영 배포 + 네이버 홈 수집 요청은 주인님 승인 대기. 반영 시점은 네이버가 밝히지 않음(자동 추출이라 보장 없음). 오래 안 바뀌면 주인님이 고객센터에 문의
+- [x] 운영 배포(주인님: "배포+수집 요청"): `ab99df4` 20:28:47 푸시 → 20:29:19 반영. 운영 홈에 Organization(#office, sameAs 블로그) 확인, 주요 경로 200, /api/consult 503
+- [x] 네이버 웹 페이지 수집 요청(ego-browser, 10-15 등록 계정): `https://jungmyungoffice.com/` → 내역 "/ 26.11.06 20:30:04"
+- [ ] 네이버 검색 결과 윗줄이 "정명 행정사사무소"로 바뀌는지 지켜보기. 반영 시점은 네이버가 밝히지 않음(자동 추출이라 보장 없음). 오래 안 바뀌면 주인님이 네이버 고객센터에 문의

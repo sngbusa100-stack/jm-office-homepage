@@ -532,4 +532,5 @@ Phase 1(구조)에 이은 두 번째 단계. 분야 상세 페이지를 "읽을 
 - 우리 쪽 신호는 이미 맞춰져 있었다(title 앞부분·og:site_name·WebSite·LegalService 모두 "정명 행정사사무소"). 새로 넣은 것은 네이버가 이름을 "사이트 이름"이라고 정의한 유일한 공식 마크업인 사이트 연관채널(Organization + name·url·sameAs 네이버 블로그 https://blog.naver.com/jungmyung0909)이다. 10-17 리뷰 결론대로 LegalService와 같은 @id로 묶었다. 이 마크업이 브랜드 이름을 바꿔 준다는 보장은 없다.
 - 이름이 같은 다른 사무소(인천 정명행정사 등)가 있어 네이버가 확신하지 못할 수 있다. 연관채널 가이드도 "중의성이 없이 고유한 이름의 사이트"를 표현 대상으로 든다.
 - 주의: WebFetch·web-fetch 에이전트는 searchadvisor.naver.com·blog.naver.com을 못 읽는다. 네이버 가이드는 ego-browser로 읽는다(메뉴는 expand_more를 눌러야 링크가 나온다).
-- 미커밋·미푸시.
+- 2026-11-06 운영 배포(주인님: "배포+수집 요청"): `ab99df4` 20:28:47 푸시 → 20:29:19 반영, 운영 홈 HTML에 Organization 블록 확인. 같은 날 네이버 웹 페이지 수집 요청 `https://jungmyungoffice.com/` 20:30:04 등록(내역 1번). 브랜드 이름이 바뀌었는지는 아직 모른다.
+- 주의: ego-browser `loc=role:textbox`처럼 이름 없는 role 로케이터는 오류가 난다. 스냅샷의 `textbox [ref=N]`을 쓴다.
