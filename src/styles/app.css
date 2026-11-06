@@ -237,8 +237,7 @@ nav#global-nav a.active {
 .greeting { scroll-margin-top: 80px; }
 .greeting__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 56px; align-items: start; }
 .greeting__letter h2 { margin-bottom: 18px; }
-.greeting__letter > p:not(.eyebrow):not(.greeting__sign):not(.greeting__hello) { color: var(--text-muted); max-width: 640px; }
-.greeting__hello { font-weight: 700; font-size: var(--fs-lg); }
+.greeting__letter > p:not(.eyebrow):not(.greeting__sign) { color: var(--text-muted); max-width: 640px; }
 .greeting__letter > p + p { margin-top: 12px; }
 .greeting__sign { margin-top: 24px !important; }
 .greeting__sign strong { font-size: var(--fs-lg); letter-spacing: 0.14em; margin-left: 6px; }
@@ -252,17 +251,16 @@ nav#global-nav a.active {
 .services-deadline-note { margin-top: 10px; color: var(--text-muted); max-width: 640px; }
 
 /* --- 상담 시간·주차·약력 같은 짧은 항목 목록 --- */
-.visit-facts, .about__bio { display: grid; gap: 6px; margin-top: 14px; }
-.visit-facts > div, .about__bio > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; }
-.visit-facts dt, .about__bio dt { color: var(--text-muted); font-size: var(--fs-sm); padding-top: 2px; }
-.visit-facts dd, .about__bio dd { margin: 0; font-weight: 600; }
+.visit-facts { display: grid; gap: 6px; margin-top: 14px; }
+.visit-facts > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; }
+.visit-facts dt { color: var(--text-muted); font-size: var(--fs-sm); padding-top: 2px; }
+.visit-facts dd { margin: 0; font-weight: 600; }
 
 /* --- 사무소 소개(/about) --- */
 .about__grid { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 48px; align-items: start; }
-.about__bio { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border); }
 .about__section { margin-top: 56px; }
 .about__section > h2 { margin-bottom: 18px; }
-.about-page .promise-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.about-page .promise-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .about-page .card .text-link { display: inline-block; margin-top: 16px; }
 @media (max-width: 1024px) {
   .about-page .promise-list { grid-template-columns: 1fr; }

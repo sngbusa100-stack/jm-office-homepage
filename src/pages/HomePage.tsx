@@ -30,7 +30,7 @@ export function HomePage() {
       <section className="hero">
         <div className="page-shell hero__grid">
           <div className="hero__content">
-            {office.addressNote && <p className="eyebrow">{office.addressNote} 행정사사무소</p>}
+            {/* 맨 위 '광명KTX역 5번출구 앞 행정사사무소' 글씨는 차별점 셋째 줄과 겹쳐 뺐다(2026-11-06 주인님 지시) */}
             <h1 className="hero__slogan">
               복잡한 행정절차를{' '}<br />
               <span className="slogan-mark">정</span>확하고 <span className="slogan-mark">명</span>쾌하게
@@ -58,9 +58,6 @@ export function HomePage() {
           <div className="greeting__letter">
             <p className="eyebrow">대표 인사말</p>
             <h2 id="greeting-heading">{profile.greetingTitle}</h2>
-            {profile.name && (
-              <p className="greeting__hello">안녕하세요, {profile.role} {profile.name}입니다.</p>
-            )}
             {profile.greetingSummary.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             <Link className="text-link greeting__more" to="/about">인사말 전문 보기 →</Link>
           </div>

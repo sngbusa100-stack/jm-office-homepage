@@ -36,11 +36,25 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(intro?.textContent).toBe('서류 한 장에도 의뢰인의 생업과 생활이 걸려 있다는 것을 명심하고, 맡겨 주신 일에 끝까지 최선을 다하겠습니다.');
   });
 
-  it('첫 화면에 차별점 네 줄(대표 직접·변호사와 같은 공간·KTX역 앞·진단 도구)이 있다', () => {
+  it('첫 화면에 차별점 네 줄(대표 직접·변호사와 같은 공간·진단 도구·KTX역 앞)이 있다(진단·KTX 순서는 2026-11-06 주인님 지시)', () => {
     renderAt('/');
     const list = screen.getByRole('list', { name: '정명 행정사사무소의 특징' });
     const items = within(list).getAllByRole('listitem').map((li) => li.querySelector('strong')?.textContent);
-    expect(items).toEqual(['대표 행정사가 직접', '변호사 사무실과 같은 공간', '광명KTX역 5번출구 앞', '셀프 진단 4종 · 비자 진단 5개 언어']);
+    expect(items).toEqual(['대표 행정사가 직접', '변호사 사무실과 같은 공간', '셀프 진단 4종 · 비자 진단 5개 언어', '광명KTX역 5번출구 앞']);
+  });
+
+  it('첫 화면에 같은 말을 두 번 쓰지 않는다 — 맨 위 위치 글씨를 빼고 KTX역 안내는 차별점 한 줄만(2026-11-06 주인님 지시)', () => {
+    const { container } = renderAt('/');
+    const hero = container.querySelector('.hero') as HTMLElement;
+    expect(hero.querySelector('.eyebrow')).toBeNull();
+    expect(hero.textContent?.match(/광명KTX역 5번출구 앞/g)).toHaveLength(1);
+    // '대표 행정사가 직접 — … 직접 맡습니다'처럼 한 줄에 같은 말을 두 번 쓰지 않는다
+    for (const s of profile.strengths) expect(s.detail, s.title).not.toMatch(new RegExp(s.title.split(' ').at(-1) ?? ''));
+    // 첫 화면 주인님 문장("서류 한 장에도…")과 같은 뜻의 인사말 제목("서류보다 사람을 먼저")을 바로 아래 두지 않는다
+    expect(container.textContent).not.toContain('서류보다 사람을 먼저');
+    // 버튼은 주인님 결정으로 남긴다(PC·휴대폰 같은 화면)
+    expect(within(hero).getByRole('link', { name: /업무 분야 살펴보기/ })).toHaveAttribute('href', '/services');
+    expect(within(hero).getByRole('link', { name: /바로 셀프 진단하기/ })).toHaveAttribute('href', '/check');
   });
 
   it('대표 카드는 사진과 직함·이름 한 줄만 둔다', () => {
@@ -57,9 +71,16 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(existsSync(join(__dirname, '../../public/images/profile-jung-jaehoon.jpg'))).toBe(true);
   });
 
-  it('학력·경력은 주인님이 확인한 항목만 싣는다', () => {
-    expect(profile.education).toEqual(['중앙대학교 행정대학원 석사과정']);
-    expect(profile.career).toEqual(['DHL 법률사무소 고문']);
+  it('학력·경력·업무제휴 약력은 싣지 않는다(2026-11-06 주인님: "별로 자랑할 게 못 돼... 그냥 빼")', () => {
+    expect(Object.keys(profile)).not.toEqual(expect.arrayContaining(['education']));
+    expect(Object.keys(profile)).not.toEqual(expect.arrayContaining(['career']));
+    for (const path of ['/', '/about']) {
+      const { container, unmount } = renderAt(path);
+      const main = container.querySelector('main') as HTMLElement;
+      for (const text of ['중앙대학교', '법률사무소 고문', '법률 업무제휴', '학력', '경력']) expect(main.textContent, `${path} ${text}`).not.toContain(text);
+      expect(main.querySelector('[aria-label="약력"]')).toBeNull();
+      unmount();
+    }
   });
 
   it('홈 순서는 첫 화면 → 대표 인사말 → 업무 분야 → 셀프 진단이다(2026-11-06 주인님 지시)', () => {
@@ -75,13 +96,29 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
 
   it('대표 인사말 요약에 변호사와 같은 공간을 쓰는 이유가 있고, 전문은 /about으로 간다', () => {
     renderAt('/');
+    // 인사말 제목은 인사 한 줄이다(따로 있던 인사 문단과 합침, 2026-11-06)
+    expect(profile.greetingTitle).toBe('안녕하세요, 대표 행정사 정재훈입니다.');
     const section = screen.getByRole('region', { name: profile.greetingTitle });
-    expect(within(section).getByText('안녕하세요, 대표 행정사 정재훈입니다.')).toBeInTheDocument();
+    expect(within(section).getAllByText('안녕하세요, 대표 행정사 정재훈입니다.')).toHaveLength(1);
     expect(section.textContent).toContain('변호사 사무실과 같은 공간에 행정사사무소를 열었습니다');
-    expect(section.textContent).toContain('결과를 장담할 수는 없습니다');
+    // 2026-11-06 주인님 문장: "처음부터 다시 설명하고 많이 비용을 부담하지 않도록"('많이 비용을'만 '많은 비용을'로)
+    expect(section.textContent).toContain('새로 변호사를 찾아 처음부터 다시 설명하고 많은 비용을 부담하지 않도록, 변호사 사무실과 같은 공간에');
+    expect(profile.greeting.join('\n')).toContain('시간도 비용도 마음도 두 번 듭니다');
+    // 예전 세 번째 카드에만 있던 변호사 이름은 인사말 문단으로 옮겼다(2026-11-06)
+    expect(section.textContent).toContain('같은 사무실의 이동호 변호사(DHL 법률사무소)에게 바로 상담받으실 수 있습니다');
+    // 마지막 다짐은 주인님 문장(2026-11-06): "~ 결과가 나오는 것을 목표로 최선을 다하겠습니다"
+    expect(profile.greetingSummary.at(-1)).toBe('의뢰인께 가장 좋은 결과가 나오는 것을 목표로 최선을 다하겠습니다.');
     expect(within(section).getByRole('link', { name: /인사말 전문 보기/ })).toHaveAttribute('href', '/about');
     const promises = within(section).getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(promises).toEqual(['정확하게', '명쾌하게', '변호사와 한 공간에서']);
+    expect(promises).toEqual(['정확하게', '명쾌하게']);
+  });
+
+  it('방어적인 부정형 문구를 쓰지 않는다(2026-11-06 주인님: "장담할 수는 없습니다·아는 척하지 않고·솔직히 말씀드리고" 싫다)', () => {
+    const texts = [
+      profile.intro, ...profile.greeting, ...profile.greetingSummary,
+      ...profile.promises.map((p) => p.detail), ...profile.strengths.map((s) => `${s.title} ${s.detail}`),
+    ].join('\n');
+    for (const phrase of ['장담', '아는 척', '솔직히']) expect(texts, phrase).not.toContain(phrase);
   });
 
   it('변호사 협업 문구는 변호사법 위험 표현을 쓰지 않는다(docs/2026-11-02-home-intro-copy-plan.md 4절)', () => {
@@ -94,9 +131,10 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     }
     // 상담하는 사람이 변호사라는 것이 문장에 드러나야 한다
     expect(texts).toContain('변호사에게 바로 상담받으실 수 있');
-    // 소개 대가가 없다는 사실(2026-11-02 주인님 확인)을 약속 카드와 인사말 전문에 밝힌다
-    expect(profile.promises[2].detail).toContain('소개 대가는 받지 않습니다');
-    expect(profile.greeting.join('\n')).toContain('저희 사무소는 소개 대가를 받지 않습니다');
+    // 소개 대가 문장은 싣지 않는다(2026-11-06 주인님: "이게 있어서 오히려 이상한 거 같다" — 법에 게시 의무는 없다).
+    // 상담·사건 의뢰는 변호사와 직접 한다는 설명은 /about 전문에 남긴다.
+    expect(texts).not.toContain('소개 대가');
+    expect(profile.greeting.join('\n')).toContain('변호사 상담과 사건 의뢰는 변호사와 직접 하십니다');
   });
 
   it('업무 분야는 명함 5개 순서이고, 예전 처분·통지 띠는 머리말 한 줄로 흡수했다', () => {

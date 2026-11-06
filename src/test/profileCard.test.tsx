@@ -24,7 +24,7 @@ describe('대표 행정사 카드 — 사진과 그 아래 한 줄만', () => {
     const line = card.querySelector('.profile-card__id') as HTMLElement;
     expect(line.tagName).toBe('P');
     expect(line).toHaveTextContent('대표 행정사정재훈JUNG JAE HOON');
-    // 학력·경력·제휴·링크는 카드에 싣지 않는다(2026-11-02 주인님 요청, /about 약력으로 이동)
+    // 학력·경력·제휴·링크는 카드에 싣지 않는다(2026-11-02 주인님 요청, 2026-11-06 /about 약력도 뺌)
     expect(within(card).queryByText('중앙대학교 행정대학원 석사과정')).toBeNull();
     expect(within(card).queryByText('DHL 법률사무소 고문')).toBeNull();
     expect(within(card).queryAllByRole('link')).toHaveLength(0);

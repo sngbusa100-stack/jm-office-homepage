@@ -2,7 +2,7 @@ import type { Profile } from '../data/profile';
 
 /**
  * 대표 행정사 카드. 사진과 그 아래 한 줄(직함·이름·영문)만 둔다(2026-11-02 주인님 요청).
- * 학력·경력은 /about 약력에 둔다. 사진이 없으면 같은 자리에 사무소 엠블럼을 둔다(profile.photo를 채우면 자동 교체).
+ * 학력·경력은 싣지 않는다(2026-11-06 /about 약력도 뺌). 사진이 없으면 같은 자리에 사무소 엠블럼을 둔다(profile.photo를 채우면 자동 교체).
  */
 export function ProfileCard({ profile }: { profile: Profile }) {
   const base = import.meta.env.BASE_URL;

@@ -20,26 +20,28 @@ describe('사무소 소개(/about)', () => {
     expect(nav.getByRole('link', { name: '사무소 소개' })).toHaveAttribute('href', '/about');
   });
 
-  it('대표 사진 카드, 인사말 전문, 서명, 약력을 보여준다', () => {
-    renderAt('/about');
+  it('대표 사진 카드, 인사말 전문, 서명을 보여주고 약력은 싣지 않는다', () => {
+    const { container } = renderAt('/about');
     const main = within(screen.getByRole('main'));
     expect(main.getByRole('heading', { level: 1, name: '사무소 소개' })).toBeInTheDocument();
     expect(main.getByRole('img', { name: '대표 행정사 정재훈' })).toBeInTheDocument();
+    // 머리말 한 줄(슬로건·KTX역·변호사와 같은 공간)은 아래 인사말·약속·찾아오시는 길과 겹쳐 뺐다(2026-11-06)
+    expect(container.querySelector('.about-page .page-lead')).toBeNull();
 
     const letter = within(screen.getByRole('region', { name: profile.greetingTitle }));
-    expect(letter.getByText('안녕하세요. 정명 행정사사무소 대표 행정사 정재훈입니다.')).toBeInTheDocument();
+    expect(letter.getByRole('heading', { level: 2 })).toHaveTextContent('안녕하세요, 대표 행정사 정재훈입니다.');
     for (const paragraph of profile.greeting) expect(letter.getByText(paragraph)).toBeInTheDocument();
+    expect(letter.getByText('정재훈', { selector: '.greeting__sign strong' })).toBeInTheDocument();
+    // 이어지는 두 문단을 모두 '그래서'로 시작하지 않는다
+    expect(profile.greeting.filter((p) => p.startsWith('그래서'))).toHaveLength(0);
 
-    const bio = within(letter.getByLabelText('약력'));
-    expect(bio.getByText('중앙대학교 행정대학원 석사과정')).toBeInTheDocument();
-    expect(bio.getByText('DHL 법률사무소 고문')).toBeInTheDocument();
-    expect(bio.getByText('DHL 법률사무소 (변호사 이동호)')).toBeInTheDocument();
+    expect(letter.queryByLabelText('약력')).toBeNull();
   });
 
-  it('약속 3가지와 찾아오시는 길(상담 시간·주차·전화)을 보여준다', () => {
+  it('약속 2가지와 찾아오시는 길(상담 시간·주차·전화)을 보여준다', () => {
     renderAt('/about');
-    const promises = within(screen.getByRole('region', { name: '세 가지 약속' }));
-    expect(promises.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['정확하게', '명쾌하게', '변호사와 한 공간에서']);
+    const promises = within(screen.getByRole('region', { name: '두 가지 약속' }));
+    expect(promises.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['정확하게', '명쾌하게']);
 
     const visit = within(screen.getByRole('region', { name: '찾아오시는 길' }));
     expect(visit.getByText('경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호')).toBeInTheDocument();
