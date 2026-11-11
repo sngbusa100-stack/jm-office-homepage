@@ -579,3 +579,5 @@ Phase 1(구조)에 이은 두 번째 단계. 분야 상세 페이지를 "읽을 
 - 묶음 1 `8889a16`, 문구 3차 `3601f8f`, 묶음 2 `e65cf7e` 운영 반영. 검수 방법: diff 읽기 → `npm run check` 재실행 → `npx --yes vercel deploy --yes` 미리보기 → ego-browser 실측 → 푸시 → 운영 curl.
 - 모바일 누르는 영역은 `padding` + 음수 `margin-block`으로 줄 높이를 유지하면서 키웠다. FAQ는 details의 padding을 summary와 p로 옮겼다(모바일만).
 - `/consult` 모바일 가로 넘침은 확장 프로그램 탓이 아니라 사이트 문제다(`#main` scrollWidth 427).
+- 2026-11-12 묶음 3(A4·A5) `6cace51` 운영 반영. sitemap lastmod는 `PAGE_UPDATED_AT` 표를 사람이 고치는 방식이라, 페이지 내용을 바꾸는 작업 지시에는 "해당 경로 날짜도 고칠 것"을 넣어야 한다.
+- 배포 반영 대기 중 curl을 짧은 간격으로 반복하면 Vercel 보안 확인(403)에 걸린다. 푸시 뒤에는 40~60초 기다렸다가 브라우저(ego-browser)로 한 번 확인한다.

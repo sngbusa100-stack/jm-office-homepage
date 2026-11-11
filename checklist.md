@@ -824,3 +824,15 @@
 - [ ] 보지 못한 것: 푸터·FAQ의 모바일 화면 캡처(숫자로만 확인), 실제 휴대폰 기기, 해시가 붙은 주소로의 이동(단위 테스트로만 확인)
 - [ ] **/consult 375px 가로 넘침은 사이트 문제로 확인**: `#main`의 scrollWidth 427px(화면 375px). 화면 밖으로 나간 요소는 좌표로는 잡히지 않음(숨김 입력 등 의심). 문서 A15에서 원인 찾아 수정
 - [ ] 남은 본문 속 링크 4개의 누르는 영역은 다음 CSS 작업 때 함께
+
+### 2026-11-12 묶음 3 구현·운영 배포 — 검색 노출 (문서 A4·A5, Sonnet 서브에이전트 구현 → Claude 검수). A3(검색용 제목)은 주인님 문구 확정 대기로 제외
+
+- [x] A4: `/location` 검색 제목 "오시는 길: 광명KTX역 5번출구 앞 광명역자이타워 | 정명 행정사사무소", 사무소 JSON-LD 출력. 화면의 h1 "오시는 길"과 본문은 그대로(문서 초안의 h1 변경은 하지 않음 — 화면 문구는 주인님 확인 뒤)
+- [x] A5: 업무 상세·진단 화면에 경로 표시(홈 › 상위 › 현재) + BreadcrumbList, 사무소 JSON-LD에 logo·image·slogan·founder, `og:image:alt`, sitemap `lastmod`(`src/lib/pageMeta.ts`의 `PAGE_UPDATED_AT` 표를 사람이 고침. 날짜가 빠지면 빌드 실패)
+- [x] `npm run check` 재실행: 69파일 708테스트, 가드 111테스트, 사전 렌더링 19경로, verify-dist 통과
+- [x] 미리보기 실측(ego-browser 375px): 경로 표시 링크 높이 46px, 가로 넘침 없음, 진단 결과 화면에는 경로 표시 없음, sitemap lastmod 19/19. 캡처로 모바일 업무 상세·PC 진단 화면 확인
+- [x] 커밋 `6cace51` 08:43:56 푸시. 운영 확인(ego-browser): /location 새 제목과 LegalService, /services/dui·/check/dui BreadcrumbList, 홈 founder·og:image:alt, sitemap lastmod 19개, /nofile.png 404
+- [ ] **주의**: 배포 반영을 기다리며 curl을 짧은 간격으로 80여 번 보냈더니 Vercel이 이 PC의 IP에 보안 확인 화면(403 "Vercel Security Checkpoint")을 띄웠다. 브라우저는 자동으로 통과한다. 앞으로 반영 대기는 curl 반복 대신 브라우저 한 번 확인으로 한다
+- [ ] 페이지 내용을 고칠 때마다 `PAGE_UPDATED_AT`의 해당 날짜를 함께 고쳐야 한다(공통 규칙에 추가할 것)
+- [ ] 진단 화면(PC)에서 제목·진행 막대·질문 상자가 붙어 보임(이번 변경 전부터). 다음 CSS 작업 때 함께
+- [ ] A3 검색용 제목: 주인님 문구 확정 대기
