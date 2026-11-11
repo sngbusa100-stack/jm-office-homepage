@@ -70,9 +70,6 @@ export function HomePage() {
           <div>
             <p className="eyebrow">업무 분야</p>
             <h2 id="services-heading">이런 일을 도와드립니다</h2>
-            <p className="services-deadline-note">
-              통지서를 받으셨다면 받은 날짜부터 확인하세요. 의견제출·이의신청·행정심판은 정해진 기간 안에 해야 합니다.
-            </p>
           </div>
           <Link className="text-link" to="/services">전체 업무 보기 →</Link>
         </div>

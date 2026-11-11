@@ -40,7 +40,7 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     renderAt('/');
     const list = screen.getByRole('list', { name: '정명 행정사사무소의 특징' });
     const items = within(list).getAllByRole('listitem').map((li) => li.querySelector('strong')?.textContent);
-    expect(items).toEqual(['대표 행정사가 직접', '변호사 사무실과 같은 공간', '셀프 진단 4종 · 비자 진단 5개 언어', '광명KTX역 5번출구 앞']);
+    expect(items).toEqual(['대표 행정사가 직접', '변호사 사무실과 같은 공간', '셀프 진단(4종) / 비자 진단(5개 언어)', '광명KTX역 5번출구 앞']);
   });
 
   it('첫 화면에 같은 말을 두 번 쓰지 않는다 — 맨 위 위치 글씨를 빼고 KTX역 안내는 차별점 한 줄만(2026-11-06 주인님 지시)', () => {
@@ -49,7 +49,11 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(hero.querySelector('.eyebrow')).toBeNull();
     expect(hero.textContent?.match(/광명KTX역 5번출구 앞/g)).toHaveLength(1);
     // '대표 행정사가 직접 — … 직접 맡습니다'처럼 한 줄에 같은 말을 두 번 쓰지 않는다
-    for (const s of profile.strengths) expect(s.detail, s.title).not.toMatch(new RegExp(s.title.split(' ').at(-1) ?? ''));
+    // 제목 끝말은 괄호를 떼고 비교한다('비자 진단(5개 언어)' → '언어')
+    for (const s of profile.strengths) {
+      const lastWord = (s.title.split(' ').at(-1) ?? '').replace(/[()]/g, '');
+      expect(s.detail.includes(lastWord), s.title).toBe(false);
+    }
     // 첫 화면 주인님 문장("서류 한 장에도…")과 같은 뜻의 인사말 제목("서류보다 사람을 먼저")을 바로 아래 두지 않는다
     expect(container.textContent).not.toContain('서류보다 사람을 먼저');
     // 버튼은 주인님 결정으로 남긴다(PC·휴대폰 같은 화면)
@@ -137,12 +141,13 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(profile.greeting.join('\n')).toContain('변호사 상담과 사건 의뢰는 변호사와 직접 하십니다');
   });
 
-  it('업무 분야는 명함 5개 순서이고, 예전 처분·통지 띠는 머리말 한 줄로 흡수했다', () => {
+  it('업무 분야는 명함 5개 순서이고, 머리말 아래에는 기한 안내 줄을 두지 않는다', () => {
     const { container } = renderAt('/');
     const section = screen.getByRole('region', { name: '이런 일을 도와드립니다' });
     const areas = within(section).getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
     expect(areas).toEqual(['인허가 · 등록 · 변경', '출입국 · 비자', '토지개발 · 보상', '행정심판 · 권리구제', '공공조달 · 기업인증']);
-    expect(section.textContent).toContain('통지서를 받으셨다면 받은 날짜부터 확인하세요');
+    // 2026-11-06 주인님: 다섯 분야 중 행정심판에만 해당하고, 기한은 '맡기기 전에'·셀프 진단·상세 페이지 '법정 기한'에서 안내한다.
+    expect(section.textContent).not.toContain('통지서를 받으셨다면');
     expect(container.textContent).not.toContain('초기 대응이 중요합니다');
 
     const remedy = within(section).getByRole('heading', { name: '행정심판 · 권리구제' }).closest('article') as HTMLElement;
