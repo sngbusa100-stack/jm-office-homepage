@@ -176,6 +176,29 @@ function buildPrefill(): string {
   }
 }
 
+/** 접수번호 복사 버튼. clipboard가 없거나 실패하면 아무 표시도 하지 않는다. */
+function CopyInquiryId({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  async function copy() {
+    try {
+      await navigator.clipboard?.writeText(id);
+    } catch {
+      return;
+    }
+    if (!navigator.clipboard) return;
+    setCopied(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <button className="button button--ghost" type="button" onClick={() => { void copy(); }} aria-live="polite">
+      {copied ? '복사했습니다' : '접수번호 복사'}
+    </button>
+  );
+}
+
 export function ConsultPage() {
   const accepting = isAcceptingRequests(office);
   // 사전 렌더링(Node)된 폼은 스크립트가 붙기 전까지 막아 둔다. 그대로 제출되면
@@ -484,11 +507,11 @@ export function ConsultPage() {
         )}
         <label className="agree">
           <input type="checkbox" name="consent" required disabled={!formEnabled} />
-          개인정보 수집·이용에 동의합니다 — 수집 항목: 이름·전화번호·이메일(선택)·분야·문의 글, 기한 질문의 답(답한 경우),
+          <span>개인정보 수집·이용에 동의합니다 — 수집 항목: 이름·전화번호·이메일(선택)·분야·문의 글, 기한 질문의 답(답한 경우),
           함께 보내기를 고른 경우 진단 답변, 출입국·비자 분야는 위 질문의 답(선택 항목은 답한 경우만). 목적: 상담 회신. 보관: 처리 완료 후 120일 뒤 파기.
           국외 이전: 접수 서버·저장소 Vercel·Upstash(미국), 접수 알림 Telegram에 처리를 맡깁니다.
           동의하지 않으실 수 있으나, 이 경우 온라인 신청은 접수되지 않습니다(전화 문의 가능). 선택 항목은 답하지
-          않아도 상담을 받으실 수 있습니다. 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 확인해 주세요.
+          않아도 상담을 받으실 수 있습니다. 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 확인해 주세요.</span>
         </label>
         <button
           className="button button--accent"
@@ -508,6 +531,7 @@ export function ConsultPage() {
             남겨주신 연락처로 연락드리겠습니다.
           </p>
         )}
+        {status === 'sent' && inquiryId && <CopyInquiryId id={inquiryId} />}
         {status === 'error' && (
           <p className="note" role="alert">전송에 실패했습니다. 잠시 후 다시 시도하시거나 전화·카카오톡으로 문의해 주세요.</p>
         )}

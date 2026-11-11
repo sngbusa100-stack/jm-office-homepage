@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { findForbidden, htmlToCheckedText } from './forbidden-phrases.mjs';
 
@@ -31,6 +32,15 @@ for (const marker of ['rel="canonical"', 'property="og:title"', 'application/ld+
 function fail(message) {
   console.error(`[verify-dist] ${message}`);
   process.exit(1);
+}
+
+// 진입 JS 크기 상한: 관리자 화면을 따로 뺀 뒤 2026-11-12 실측 gzip 120,936바이트(분리 전 132,012)의 약 110%를 KB로 올림.
+const ENTRY_JS_GZIP_LIMIT_KB = 130;
+const entryMatch = index.match(/<script[^>]*\ssrc="(\/assets\/index-[^"]+\.js)"/);
+if (!entryMatch) fail('index.html에서 진입 JS(/assets/index-*.js)를 찾지 못했습니다.');
+const entryGzip = gzipSync(readFileSync(resolve(dist, `.${entryMatch[1]}`))).length;
+if (entryGzip > ENTRY_JS_GZIP_LIMIT_KB * 1024) {
+  fail(`진입 JS gzip ${entryGzip}바이트가 상한 ${ENTRY_JS_GZIP_LIMIT_KB * 1024}바이트를 넘습니다.`);
 }
 
 const sitemap = readFileSync(resolve(dist, 'sitemap.xml'), 'utf8');

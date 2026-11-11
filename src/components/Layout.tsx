@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
+import { ErrorBoundary } from './ErrorBoundary';
 import { PreOpeningNotice } from './PreOpeningNotice';
 import { getPageMeta } from '../lib/pageMeta';
 import { captureAttribution } from '../lib/funnel';
@@ -67,7 +68,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <PreOpeningNotice />
       <Navbar />
       <main id="main" ref={mainRef} tabIndex={-1}>
-        {children}
+        <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>
       </main>
       <Footer />
     </>

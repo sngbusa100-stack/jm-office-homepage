@@ -239,6 +239,41 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('JM-20260717-AB12');
   });
 
+  it('접수번호가 있으면 복사 버튼이 번호를 클립보드에 쓰고, 번호가 없으면 버튼을 그리지 않는다', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, id: 'JM-20260717-AB12' }) }),
+    );
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    renderPage();
+
+    await user.type(screen.getByLabelText(/성함/), '홍길동');
+    await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
+    await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+
+    await user.click(await screen.findByRole('button', { name: '접수번호 복사' }));
+    expect(writeText).toHaveBeenCalledWith('JM-20260717-AB12');
+    expect(await screen.findByRole('button', { name: '복사했습니다' })).toBeInTheDocument();
+  });
+
+  it('접수번호 없이 완료되면 복사 버튼을 그리지 않는다', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) }));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText(/성함/), '홍길동');
+    await user.type(screen.getByLabelText(/연락처/), '01012345678');
+    await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
+    await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+
+    await screen.findByText(/접수되었습니다/);
+    expect(screen.queryByRole('button', { name: /접수번호 복사/ })).toBeNull();
+  });
+
   it('전송 실패 시 대체 채널 안내를 보여준다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
     const user = userEvent.setup();

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { HomePage } from '../pages/HomePage';
@@ -12,8 +13,10 @@ import { CheckResultPage } from '../pages/CheckResultPage';
 import { ConsultPage } from '../pages/ConsultPage';
 import { PrivacyPage } from '../pages/PrivacyPage';
 import { DisclaimerPage } from '../pages/DisclaimerPage';
-import { AdminPage } from '../pages/AdminPage';
 import { LocationPage } from '../pages/LocationPage';
+
+// 관리자 화면만 따로 내려받는다. 다른 페이지는 사전 렌더링 본문이 있어야 하므로 lazy로 바꾸지 않는다.
+const AdminPage = lazy(() => import('../pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 
 export function AppRouter() {
   return (
@@ -31,7 +34,11 @@ export function AppRouter() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/disclaimer" element={<DisclaimerPage />} />
         <Route path="/location" element={<LocationPage />} />
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={(
+          <Suspense fallback={<p className="page-shell section">불러오는 중…</p>}>
+            <AdminPage />
+          </Suspense>
+        )} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Layout>
