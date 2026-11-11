@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { Link, MemoryRouter } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 
 function renderLayout() {
@@ -45,5 +45,22 @@ describe('공통 레이아웃', () => {
     renderLayout();
     expect(screen.queryByText(/02-1234/)).toBeNull();
     expect(screen.getByRole('link', { name: '면책 고지' })).toBeInTheDocument();
+  });
+
+  it('첫 렌더에서는 맨 위로 스크롤하지 않고, 다른 경로로 이동하면 스크롤하고 main에 초점을 준다', () => {
+    const scrollTo = vi.mocked(window.scrollTo);
+    scrollTo.mockClear();
+    render(
+      <MemoryRouter>
+        <Layout>
+          <Link to="/other">이동</Link>
+        </Layout>
+      </MemoryRouter>,
+    );
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(document.activeElement).not.toBe(screen.getByRole('main'));
+    fireEvent.click(screen.getByRole('link', { name: '이동' }));
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' });
+    expect(screen.getByRole('main')).toHaveFocus();
   });
 });

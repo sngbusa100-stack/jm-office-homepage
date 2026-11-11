@@ -6,3 +6,7 @@ if (typeof window !== 'undefined') {
     writable: true,
   });
 }
+
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}
