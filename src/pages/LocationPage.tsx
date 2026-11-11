@@ -1,9 +1,11 @@
 import { office } from '../data/office';
 import { OfficeLocation } from '../components/OfficeLocation';
+import { OfficeStructuredData } from '../components/OfficeStructuredData';
 
 export function LocationPage() {
   return (
     <div className="page-shell section narrow-page">
+      <OfficeStructuredData />
       <header className="page-header">
         <h1>오시는 길</h1>
       </header>

@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
 import { office } from '../data/office';
+import { SLOGAN } from '../data/profile';
 import { buildOfficeJsonLd, buildSiteChannelJsonLd, mapLinks, serializeJsonLd, toInternationalPhone } from '../lib/officeContact';
 
 function renderAt(path: string) {
@@ -52,6 +53,19 @@ describe('사무소 연락처 데이터', () => {
         streetAddress: '새빛공원로 67 광명역자이타워 B동 13층 1305호',
       },
     });
+  });
+
+  it('사무소 정보에 로고·대표 이미지·슬로건·대표자를 넣고 금지 항목은 넣지 않는다', () => {
+    const data = buildOfficeJsonLd(office, 'https://jungmyungoffice.com')!;
+    expect(data.logo).toBe('https://jungmyungoffice.com/images/logo-mark-128.png');
+    expect(data.image).toBe('https://jungmyungoffice.com/images/og-image-v2.png');
+    expect(data.slogan).toBe(SLOGAN);
+    expect(data.founder).toEqual({ '@type': 'Person', name: '정재훈', alternateName: 'JUNG JAE HOON', jobTitle: '대표 행정사' });
+    expect(data['@id']).toBe('https://jungmyungoffice.com/#office');
+    expect(buildOfficeJsonLd({ ...office, representative: null }, 'https://jungmyungoffice.com')).not.toHaveProperty('founder');
+    for (const key of ['aggregateRating', 'openingHours', 'openingHoursSpecification', 'alumniOf', 'memberOf', 'worksFor']) {
+      expect(data).not.toHaveProperty(key);
+    }
   });
 
   it('주소와 전화가 모두 없으면 검색엔진용 정보를 만들지 않는다', () => {
@@ -138,6 +152,12 @@ describe('개업 전 연락처 공개', () => {
     const blocks = scripts.map((s) => JSON.parse(s.textContent ?? '{}'));
     expect(blocks.find((d) => d['@type'] === 'LegalService')).toEqual(buildOfficeJsonLd(office, 'https://jungmyungoffice.com'));
     expect(blocks.find((d) => d['@type'] === 'Organization')).toEqual(buildSiteChannelJsonLd(office, 'https://jungmyungoffice.com'));
+  });
+
+  it('오시는 길에도 검색엔진용 사무소 정보를 넣는다', () => {
+    const { container } = renderAt('/location');
+    const blocks = [...container.querySelectorAll('script[type="application/ld+json"]')].map((s) => JSON.parse(s.textContent ?? '{}'));
+    expect(blocks.find((d) => d['@type'] === 'LegalService')).toEqual(buildOfficeJsonLd(office, 'https://jungmyungoffice.com'));
   });
 
   it('개업 준비 중 안내 띠는 그대로 둔다', () => {

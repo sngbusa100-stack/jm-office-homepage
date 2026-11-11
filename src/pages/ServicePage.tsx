@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Breadcrumbs } from '../components/Breadcrumbs';
 import { ServiceFlowSteps } from '../components/ServiceFlowSteps';
 import { ServiceNextStepBar } from '../components/ServiceNextStepBar';
 import { findService, type Service } from '../data/services';
@@ -83,6 +84,7 @@ export function ServicePage() {
   return (
     <div className="page-shell section service-landing">
       <header className="page-header">
+        <Breadcrumbs parents={[{ name: '업무 분야', to: '/services' }]} current={service.name} />
         <p className="eyebrow">{service.name}</p>
         <h1>{service.headline}</h1>
         <p className="page-lead">{service.short}</p>

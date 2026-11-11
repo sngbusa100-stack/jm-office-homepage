@@ -36,6 +36,24 @@ describe('사전 렌더링', () => {
     }
   });
 
+  it('오시는 길 사전 렌더링 결과에 LegalService JSON-LD가 있다', () => {
+    const html = renderPage('/location');
+    expect(html).toContain('application/ld+json');
+    expect(html).toContain('"@type":"LegalService"');
+  });
+
+  it('업무 상세·진단 사전 렌더링 결과에 BreadcrumbList가 있고 진단 결과 화면에는 없다', () => {
+    const service = findService('dui')!;
+    const serviceHtml = renderPage('/services/dui');
+    expect(serviceHtml).toContain('"@type":"BreadcrumbList"');
+    expect(serviceHtml).toContain('aria-label="현재 위치"');
+    expect(serviceHtml).toContain(`"name":"${service.name}"`);
+    expect(serviceHtml).toContain('"item":"https://jungmyungoffice.com/services"');
+    const checkHtml = renderPage('/check/dui');
+    expect(checkHtml).toContain('"@type":"BreadcrumbList"');
+    expect(checkHtml).toContain('"item":"https://jungmyungoffice.com/check"');
+  });
+
   it('업무 상세 본문에 그 분야의 제목과 FAQ 질문이 들어간다', () => {
     const service = findService('dui')!;
     const html = renderPage('/services/dui');

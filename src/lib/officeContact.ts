@@ -1,4 +1,5 @@
 import type { Office } from '../data/office';
+import { SLOGAN } from '../data/profile';
 
 /** 국내 전화번호(02-897-6251)를 국제 표기(+82-2-897-6251)로 바꾼다. */
 export function toInternationalPhone(phone: string): string {
@@ -31,7 +32,18 @@ export function buildOfficeJsonLd(office: Office, siteUrl: string): Record<strin
     '@id': officeNodeId(siteUrl),
     name: OFFICE_SITE_NAME,
     url: siteUrl,
+    logo: `${siteUrl}/images/logo-mark-128.png`,
+    image: `${siteUrl}/images/og-image-v2.png`,
+    slogan: SLOGAN,
   };
+  if (office.representative) {
+    data.founder = {
+      '@type': 'Person',
+      name: office.representative,
+      alternateName: 'JUNG JAE HOON',
+      jobTitle: '대표 행정사',
+    };
+  }
   if (office.phone) data.telephone = toInternationalPhone(office.phone);
   if (office.fax) data.faxNumber = toInternationalPhone(office.fax);
   if (office.email) data.email = office.email;

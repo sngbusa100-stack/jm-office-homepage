@@ -51,9 +51,37 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
     description: '홈페이지 정보와 셀프 진단의 이용 범위, 법령 확인 및 긴급 사안에 관한 안내입니다.',
   },
   '/location': {
-    title: '오시는 길 | 정명 행정사사무소',
+    title: '오시는 길: 광명KTX역 5번출구 앞 광명역자이타워 | 정명 행정사사무소',
     description: '광명KTX역 5번출구 앞 광명역자이타워에 있는 정명 행정사사무소의 주소, 지도, 상담 시간, 주차, 연락처를 안내합니다.',
   },
+};
+
+/**
+ * sitemap lastmod에 쓰는 '내용을 마지막으로 고친 날'(YYYY-MM-DD). 사람이 직접 적는다 — 빌드 시각으로 채우지 않는다.
+ * 페이지 내용(본문·데이터 파일)을 고친 날 이 표의 해당 줄도 함께 고친다. 색인 경로가 늘면 여기에도 줄을 더해야 하며,
+ * 빠지면 buildSitemapXml이 실패한다(seo.test도 검사).
+ * 초기값: 해당 페이지와 그 내용을 담은 데이터 파일의 마지막 커밋 날짜 중 최근 것(2026-11-12).
+ */
+export const PAGE_UPDATED_AT: Record<string, string> = {
+  '/': '2026-11-12',
+  '/about': '2026-11-12',
+  '/why': '2026-10-19',
+  '/services': '2026-11-02',
+  '/check': '2026-11-02',
+  '/consult': '2026-10-21',
+  '/privacy': '2026-10-21',
+  '/disclaimer': '2026-10-19',
+  '/location': '2026-11-12',
+  '/services/license': '2026-11-02',
+  '/services/immigration': '2026-11-02',
+  '/services/documents': '2026-11-02',
+  '/services/suspension': '2026-11-02',
+  '/services/dui': '2026-11-02',
+  '/services/veterans': '2026-11-02',
+  '/check/permit': '2026-11-02',
+  '/check/suspension': '2026-11-02',
+  '/check/dui': '2026-11-02',
+  '/check/veterans': '2026-11-02',
 };
 
 function buildMeta(
@@ -126,7 +154,13 @@ export function getIndexablePaths(): string[] {
 
 export function buildSitemapXml(paths: string[] = getIndexablePaths()): string {
   const urls = paths
-    .map((path) => `  <url><loc>${getPageMeta(path).canonical}</loc></url>`)
+    .map((path) => {
+      const updatedAt = PAGE_UPDATED_AT[path];
+      if (!updatedAt || !/^\d{4}-\d{2}-\d{2}$/.test(updatedAt)) {
+        throw new Error(`sitemap lastmod가 없습니다: ${path} — src/lib/pageMeta.ts의 PAGE_UPDATED_AT에 날짜를 적으세요.`);
+      }
+      return `  <url><loc>${getPageMeta(path).canonical}</loc><lastmod>${updatedAt}</lastmod></url>`;
+    })
     .join('\n');
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',

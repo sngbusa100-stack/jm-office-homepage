@@ -849,3 +849,13 @@ th { background: var(--surface-muted); font-weight: 700; }
   .footer p a { display: inline-block; padding: 10px 0; margin-block: -10px; }
   .footer nav[aria-label='법적 고지'] a { padding: 10px 0; margin-block: -10px; }
 }
+
+/* --- 빵부스러기(현재 위치) --- */
+.breadcrumbs { margin-bottom: 12px; font-size: var(--fs-sm); color: var(--text-muted); }
+.breadcrumbs ol { list-style: none; display: flex; flex-wrap: wrap; align-items: center; margin: 0; padding: 0; }
+.breadcrumbs li + li::before { content: '›'; margin: 0 8px; }
+.breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+.breadcrumbs a:hover, .breadcrumbs a:focus-visible { text-decoration: underline; }
+@media (max-width: 768px) {
+  .breadcrumbs a { display: inline-block; padding: 10px 0; margin-block: -10px; }
+}

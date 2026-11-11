@@ -49,7 +49,7 @@ describe('오시는 길', () => {
 
   it('검색 노출용 고유 제목과 설명을 갖는다', () => {
     const meta = getPageMeta('/location');
-    expect(meta.title).toBe('오시는 길 | 정명 행정사사무소');
+    expect(meta.title).toBe('오시는 길: 광명KTX역 5번출구 앞 광명역자이타워 | 정명 행정사사무소');
     expect(meta.description).toContain('광명KTX역 5번출구 앞');
     expect(meta.canonical).toBe('https://jungmyungoffice.com/location');
     expect(meta.robots).toBe('index, follow');

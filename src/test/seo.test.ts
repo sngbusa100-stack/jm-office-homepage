@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildSitemapXml, DEFAULT_DESCRIPTION, getIndexablePaths, getPageMeta } from '../lib/pageMeta';
+import { PAGE_UPDATED_AT, buildSitemapXml, DEFAULT_DESCRIPTION, getIndexablePaths, getPageMeta } from '../lib/pageMeta';
 
 describe('검색 노출 기반', () => {
   it('업무 상세 경로에 고유 제목·설명·canonical을 제공한다', () => {
@@ -41,6 +41,21 @@ describe('검색 노출 기반', () => {
     expect(sitemap.match(/<loc>/g)).toHaveLength(19);
   });
 
+  it('sitemap 색인 경로 19개 모두에 사람이 적은 lastmod 날짜가 있다', () => {
+    const paths = getIndexablePaths();
+    expect(paths).toHaveLength(19);
+    for (const path of paths) {
+      expect(PAGE_UPDATED_AT[path], path).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+    const sitemap = buildSitemapXml();
+    expect(sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)).toHaveLength(19);
+    expect(sitemap).toContain('<url><loc>https://jungmyungoffice.com/about</loc><lastmod>2026-11-12</lastmod></url>');
+  });
+
+  it('날짜가 없는 경로가 있으면 sitemap 생성이 실패한다', () => {
+    expect(() => buildSitemapXml(['/services/dui', '/no-date-path'])).toThrow(/lastmod/);
+  });
+
   it('셸 index.html의 설명·공유 설명·JSON-LD 설명이 현재 업무 5개 문구와 같다', () => {
     const html = readFileSync(join(__dirname, '../../index.html'), 'utf8');
     expect(html).toContain(`<meta name="description" content="${DEFAULT_DESCRIPTION}" />`);
@@ -73,6 +88,7 @@ describe('검색 노출 기반', () => {
   it('공유 미리보기 이미지는 JUNGMYUNG 표기 새 파일(og-image-v2)을 가리킨다', () => {
     const html = readFileSync(join(__dirname, '../../index.html'), 'utf8');
     expect(html).toContain('<meta property="og:image" content="https://jungmyungoffice.com/images/og-image-v2.png" />');
+    expect(html).toContain('<meta property="og:image:alt" content="정명 행정사사무소" />');
     expect(existsSync(join(__dirname, '../../public/images/og-image-v2.png'))).toBe(true);
     expect(existsSync(join(__dirname, '../../public/images/og-image.png'))).toBe(false);
   });

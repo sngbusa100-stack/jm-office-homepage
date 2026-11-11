@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { findCheck } from '../data/checks';
 import { safeSessionSet } from '../lib/browserStorage';
+import { Breadcrumbs } from '../components/Breadcrumbs';
 import { NotFoundPage } from './NotFoundPage';
 import { trackFunnelEvent } from '../lib/funnel';
 
@@ -46,6 +47,7 @@ export function CheckPage() {
 
   return (
     <div className="page-shell section narrow-page">
+      <Breadcrumbs parents={[{ name: '셀프 진단', to: '/check' }]} current={definition.title} />
       <h1>{definition.title}</h1>
       <div
         role="progressbar"
