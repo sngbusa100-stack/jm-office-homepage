@@ -769,3 +769,58 @@
 - [x] 5차(주인님 문장): 홈 인사말 마지막 "의뢰인께 가장 좋은 결과가 나올 수 있는 길을 함께 찾겠습니다." → "의뢰인께 가장 좋은 결과가 나오는 것을 목표로 최선을 다하겠습니다." /about 전문 끝도 같은 뜻으로 "…목표로, 맡겨 주신 날부터 일이 끝나는 날까지 최선을 다하겠습니다."
 - [x] 5차: "저희 사무소는 소개 대가를 받지 않습니다" 홈·/about 모두 삭제(주인님: "이게 있어서 오히려 이상한 거 같다" — 변호사법에 게시 의무 없음, 실제로 대가를 받지 않는 것이 핵심). /about의 "변호사 상담과 사건 의뢰는 변호사와 직접 하십니다"(각자 사무소라는 설명)는 남김. `npm run check` 690테스트·빌드·verify-dist 통과, dist 홈·/about "소개 대가" 0건, ego-browser 390px 확인
 - [x] 운영 배포(주인님: "배포해"): 1~5차 정리 `7ef750c` 21:23:05 푸시 → 21:23:31 반영. 운영 홈·/about HTML: 새 마지막 다짐 있음, 소개 대가·장담·아는 척·솔직히·중앙대학교·법률사무소 고문·서류보다 사람을·맨 위 KTX 글씨 0건. 주요 경로 200, /api/consult 503. ego-browser 1280·390px: 맨 위 글씨 없음, 차별점 순서(직접·변호사·셀프 진단·KTX), 버튼 2개, 인사 제목, 약속 2개, /about 약력·머리말 없음·"두 가지 약속", 가로 넘침 없음
+
+### 2026-11-06 문구 3차 정리 (주인님: 업무 분야 머리글 아래 두 줄 캡처에 "필요없지 않아?" → "네, 지워줘" / "셀프 진단(4종) / 비자 진단(5개 언어)… 이렇게 바꾸는게 낫지 않을까?") — 미커밋·미배포
+
+- [x] 홈 업무 분야 머리글 아래 기한 한 줄("통지서를 받으셨다면 받은 날짜부터 확인하세요. 의견제출·이의신청·행정심판은 정해진 기간 안에 해야 합니다.") 삭제. 다섯 분야 중 행정심판·권리구제 하나에만 해당하고, 기한은 '맡기기 전에' 구역·셀프 진단·업무 상세 '법정 기한'에서 이미 안내함. 쓰지 않게 된 `.services-deadline-note` 스타일 삭제. 11-02 계획 5-4절의 '띠 → 한 줄 흡수'는 이것으로 대체
+- [x] 첫 화면 차별점 셋째 줄 "셀프 진단 4종 · 비자 진단 5개 언어" → "셀프 진단(4종) / 비자 진단(5개 언어)"(주인님 문안 그대로)
+- [x] 테스트: 업무 분야 구역에 기한 줄이 없는지 검사로 바꿈, 차별점 문구 갱신. 차별점 '한 줄 같은 말 반복' 검사가 제목 끝말을 정규식으로 만들다 "언어)"의 괄호에서 깨져서 괄호를 떼고 글자 그대로 비교하도록 고침. `npm run check` 68파일 690테스트·빌드·사전 렌더링 19경로·verify-dist 통과
+- [x] 브라우저(로컬 빌드 :4180, ego-browser): PC·390px 차별점 셋째 줄 한 줄로 표시·가로 넘침 없음, 업무 분야 머리글 바로 아래가 "전체 업무 보기 →"(기한 줄·스타일 없음). 개발 서버(:5173)는 기존 `/api` 프록시 문제로 화면이 비어 dist로 확인
+- 커밋·배포는 승인 대기
+
+### 2026-11-12 홈페이지 보완·발전 방안 문서 (주인님: "보완할점이나 발전시킬 방안을 찾아서 문서로 작성해줘. 실제 코딩은 비용이 싼 모델로 할거야")
+
+- [x] 코드·운영 응답·화면(ego-browser, PC 1280px·모바일 375px) 실측 → `docs/2026-11-12-improvement-backlog.md` 작성. 10-17 보고서 항목은 오늘 코드에서 다시 찾아 아직 안 된 것만 옮김. 코드 변경 없음
+- [ ] 주인님 선택 대기: 권장 순서(문서 5절), B절 결정 5개, C절 내용 보강 범위
+- [ ] 미확인: `/consult` 375px 가로 넘침(측정 브라우저 확장 프로그램이 섞여 확정 못 함, 문서 A15)
+
+### 2026-11-12 묶음 1 구현 — 없는 파일 404·아이콘·보안 헤더 (문서 A2·A11·A1, Sonnet 서브에이전트 구현 → Claude가 diff와 검사 재실행으로 확인) — 미커밋·미배포
+
+- [x] A2: `vercel.json` 마지막 rewrite source를 `/((?!api/|assets/|images/|.*\.[A-Za-z0-9]+$).*)`로 변경(destination `/spa-fallback.html` 그대로). `verify-dist.mjs`는 catch-all을 destination으로 찾게 바꿈. `vercelConfig.test.ts`에 경로 11개 검사 추가
+- [x] A11: `public/apple-touch-icon.png`(180×180), `public/favicon.ico`(32×32) 추가, `index.html`에 apple-touch-icon 링크. ProfileCard `<img>` 크기 속성은 문구 변경 파일과 얽혀 하지 않음
+- [x] A1: `vercel.json` 공통 헤더(nosniff, Referrer-Policy, X-Frame-Options DENY, Permissions-Policy, CSP **Report-Only**), `/assets` 1년 immutable, `/images` 1일. `api/_cors.mjs`에 Vary: Origin·nosniff·no-store(핸들러가 먼저 정한 Cache-Control은 유지), 허용 출처에서 github.io 삭제. 카드 밖 수정 1건: `api/_visa-handoff-handler.test.mjs` 응답 mock에 `getHeader` 추가
+- [x] `npm run check` 재실행: 68파일 697테스트 통과, 가드 5파일 106테스트 통과, 사전 렌더링 19경로, verify-dist 통과
+- [ ] 미확인: 새 rewrite가 Vercel 라우터에서 실제로 같게 동작하는지(테스트는 JS 정규식으로 옮겨 본 것). 미리보기 배포에서 `/nofile.png` 404·`/no-such-page` 200·`/admin` 200·`/sitemap.xml` 200 확인 필요
+- [ ] 미확인: 배포 뒤 헤더 실측, 브라우저 콘솔 CSP 위반 0건(19경로·/admin·진단→상담). 0건 확인 뒤에만 강제 전환
+- [ ] github.io 출처를 뺐으므로 예전 github.io 주소의 관리 화면이 있다면 API 호출이 막힘(로컬 연동기는 서버 간 호출이라 무관)
+- 커밋·배포는 승인 대기
+
+### 2026-11-12 묶음 1 미리보기 배포 실측 (주인님: "미리보기 배포 확인") — 운영 미배포·미커밋
+
+- [x] `npx --yes vercel deploy --yes`(운영 아님, Vercel CLI 65.14.0) → `jm-office-homepage-p0pr36ipf-sngbusa100-9725s-projects.vercel.app`. 미리보기는 Vercel 로그인 보호(302)라 curl로는 못 보고, ego-browser(로그인된 브라우저)의 페이지 안 fetch로 실측. 작업 폴더 전체가 올라가므로 11-06 미커밋 문구 3차 정리도 이 미리보기에 들어 있음
+- [x] 주소 규칙: `/`, `/no-such-page`, `/admin`, `/check/dui/result`, `/services/dui`, `/about`, `/v1.2/page` 200 HTML / `/nofile.png`, `/assets/none.js`, `/images/none.jpg` **404** / `/favicon.ico`, `/apple-touch-icon.png`, `/sitemap.xml`, `/robots.txt`, `/images/og-image-v2.png`, 실제 `/assets` JS·CSS 200
+- [x] 헤더: 모든 응답에 nosniff, Referrer-Policy, X-Frame-Options DENY, Permissions-Policy, CSP Report-Only. 강제 CSP 없음. `/assets` max-age=31536000 immutable, `/images` max-age=86400. `/admin`·`/check/dui/result` X-Robots-Tag noindex, nofollow 유지. POST `/api/consult` 503 + no-store, Vary: Origin, nosniff
+- [x] CSP Report-Only 위반: 21개 경로(색인 19 + /admin + 없는 주소)와 인허가 진단 12단계 → 결과 → 상담 이동에서, 사이트 자체 위반 0건. 잡힌 것은 미리보기에만 붙는 Vercel 도구(`vercel.live` 스크립트·프레임) 2종뿐
+- [ ] 보지 못한 것: /admin 로그인 뒤 화면, 상담 폼 실제 전송(접수 닫힘), 운영 도메인에서의 위반. 강제 CSP 전환 전에 운영 배포 뒤 한 번 더 확인
+- [ ] 참고: `/assets/없는파일`의 404 응답에도 1년 캐시 헤더가 붙는다. 해시 파일명은 빌드마다 달라 실제 문제 가능성은 낮음
+- 미리보기 배포는 지우지 않고 남겨 둠(로그인 보호 상태)
+
+### 2026-11-12 묶음 1 운영 배포 (주인님: "묶음 1 커밋 배포해... 묶음별로 작업 종료하면 커밋 배포 자동적으로 해... FABLE은 그냥 관리만 하고 실제 코딩은 저렴한 모델로 하자")
+
+- [x] `8889a16` 08:32:06 푸시 → 08:32:48 운영 반영 확인. 묶음 1 파일 10개만 커밋(11-06 문구 3차 정리 5개 파일은 그대로 미커밋)
+- [x] 운영 실측(curl): `/`, `/no-such-page`, `/admin`, `/services/dui` 200 HTML / `/nofile.png`, `/assets/none.js` 404 / `/favicon.ico`, `/apple-touch-icon.png`, `/sitemap.xml` 200. 헤더 nosniff·Referrer-Policy·X-Frame-Options·Permissions-Policy·CSP Report-Only 표시, HSTS 유지. `/assets` JS 1년 immutable, og 이미지 1일. `/api/consult` 503 + no-store·Vary: Origin·nosniff, github.io 출처는 허용되지 않음(Allow-Origin이 기본 도메인)
+- [ ] 운영 도메인에서 브라우저 콘솔 CSP 위반 확인은 아직(미리보기에서는 사이트 자체 0건)
+- 이후 진행 방식: 묶음이 끝나고 검수를 통과하면 커밋·배포·실측까지 자동. 코딩은 Sonnet 서브에이전트, Fable은 지시·검수·배포·기록
+
+### 2026-11-12 묶음 2 구현·운영 배포 — 모바일 누르는 영역·간격·글꼴·스크롤 (문서 A6·A7·A8·A10, Sonnet 서브에이전트 구현 → Claude 검수) + 11-06 문구 3차 정리 함께 배포(주인님: "함께 배포")
+
+- [x] A6: 모바일에서 메뉴 버튼, FAQ 줄, `.text-link`, 업무 카드 글자 링크, 단계 표시 링크, 진단 선택지(label), 푸터 링크 높이 44px 이상. 줄 간격은 음수 margin으로 유지
+- [x] A7: `.service-landing`의 접이 상자(details) 위아래 52px, `#channels` 아래 18px
+- [x] A8: body 글꼴 대체 순서 보강, 굵기 650·800 → 700
+- [x] A10: `Layout.tsx` 첫 로드에서는 스크롤·초점을 건드리지 않음, 이동 때 `focus({preventScroll})`·즉시 맨 위, 해시가 있으면 해당 요소로. 테스트 1개 추가
+- [x] `npm run check` 재실행: 68파일 698테스트, 가드 106테스트, 사전 렌더링 19경로, verify-dist 통과
+- [x] 미리보기 배포 실측(ego-browser 375px): 7개 화면에서 44px 미만으로 남은 것은 본문 문장 속 링크 4개뿐(공식 출처 링크 30, 동의 문구의 방침 링크 30, /about 전화 25, /location 이메일 25). 푸터 높이 581px, 가로 넘침 없음(/consult 제외). 업무 상세 구역 간격 375·1280px 모두 52px, 상담 채널 제목 아래 18px. 1,600px 내린 뒤 메뉴 이동 → 맨 위(y=0), 초점 main
+- [x] 커밋: `3601f8f`(11-06 문구 3차 정리) + `e65cf7e`(묶음 2). 08:37:55 푸시 → 08:38:39 운영 CSS(`index-Ck1F3tZF.css`)에 새 규칙 확인, 홈 HTML에 "셀프 진단(4종) / 비자 진단(5개 언어)" 있음·기한 줄 없음, 주요 경로 200, /api/consult 503
+- [ ] 보지 못한 것: 푸터·FAQ의 모바일 화면 캡처(숫자로만 확인), 실제 휴대폰 기기, 해시가 붙은 주소로의 이동(단위 테스트로만 확인)
+- [ ] **/consult 375px 가로 넘침은 사이트 문제로 확인**: `#main`의 scrollWidth 427px(화면 375px). 화면 밖으로 나간 요소는 좌표로는 잡히지 않음(숨김 입력 등 의심). 문서 A15에서 원인 찾아 수정
+- [ ] 남은 본문 속 링크 4개의 누르는 영역은 다음 CSS 작업 때 함께
