@@ -36,6 +36,18 @@ describe('사전 렌더링', () => {
     }
   });
 
+  it('사전 렌더링 푸터에 비자 사전 진단 링크(utm_content=jm_main_lang)가 있다', () => {
+    const html = renderPage('/');
+    expect(html).toContain('href="https://visa.jungmyungoffice.com/?utm_content=jm_main_lang"');
+    expect(html).toContain('Visa Pre-Check');
+    expect(html).toContain('lang="vi"');
+  });
+
+  it('출입국 업무 상세와 상담 안내 사전 렌더링에 1345 안내가 있다', () => {
+    expect(renderPage('/services/immigration')).toContain('1345');
+    expect(renderPage('/consult')).toContain('1345');
+  });
+
   it('오시는 길 사전 렌더링 결과에 LegalService JSON-LD가 있다', () => {
     const html = renderPage('/location');
     expect(html).toContain('application/ld+json');

@@ -24,10 +24,10 @@ describe('접근성', () => {
 
   it('업무 상세 경로에는 분야별 문서 제목과 설명이 적용된다', () => {
     render(<MemoryRouter initialEntries={['/services/dui']}><AppRouter /></MemoryRouter>);
-    expect(document.title).toContain('음주운전 면허 구제');
+    expect(document.title).toContain('음주운전 면허 취소·정지');
     expect(document.querySelector('meta[name="description"]')).toHaveAttribute(
       'content',
-      expect.stringContaining('면허 정지·취소'),
+      expect.stringContaining('면허 취소·정지'),
     );
   });
 });

@@ -68,12 +68,12 @@ export const PAGE_UPDATED_AT: Record<string, string> = {
   '/why': '2026-10-19',
   '/services': '2026-11-02',
   '/check': '2026-11-02',
-  '/consult': '2026-10-21',
+  '/consult': '2026-11-12',
   '/privacy': '2026-10-21',
   '/disclaimer': '2026-10-19',
   '/location': '2026-11-12',
   '/services/license': '2026-11-02',
-  '/services/immigration': '2026-11-02',
+  '/services/immigration': '2026-11-12',
   '/services/documents': '2026-11-02',
   '/services/suspension': '2026-11-02',
   '/services/dui': '2026-11-02',
@@ -109,8 +109,8 @@ export function getPageMeta(pathname: string): PageMeta {
     const service = findService(serviceMatch[1]);
     if (service) {
       return buildMeta(normalized, {
-        title: `${service.name} | 정명 행정사사무소`,
-        description: service.short,
+        title: `${service.seoTitle ?? service.name} | 정명 행정사사무소`,
+        description: service.metaDescription ?? service.short,
       });
     }
   }
@@ -131,7 +131,7 @@ export function getPageMeta(pathname: string): PageMeta {
     const definition = findCheck(checkMatch[1]);
     if (definition) {
       return buildMeta(normalized, {
-        title: `${definition.title} | 정명 행정사사무소`,
+        title: `${definition.title} (3분 자가 점검) | 정명 행정사사무소`,
         description: definition.intro,
       });
     }

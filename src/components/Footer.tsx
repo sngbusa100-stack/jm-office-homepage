@@ -1,8 +1,14 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { office, isAcceptingRequests } from '../data/office';
+import { attributedExternalUrl, captureAttribution } from '../lib/funnel';
 import { mapLinks } from '../lib/officeContact';
 
 export function Footer() {
+  // 사전 렌더링(Node)에는 window가 없으므로 빈 유입정보로 대신한다(sessionStorage를 읽지 않는다).
+  const [attribution] = useState(() => (
+    typeof window === 'undefined' ? {} : captureAttribution(window.location.search)
+  ));
   const maps = office.mapQuery ? mapLinks(office.mapQuery) : null;
   return (
     <footer className="footer">
@@ -39,6 +45,11 @@ export function Footer() {
         {office.blogUrl && (
           <p><a href={office.blogUrl} target="_blank" rel="noopener noreferrer">네이버 블로그</a></p>
         )}
+        <p className="footer__visa">
+          <a href={attributedExternalUrl('https://visa.jungmyungoffice.com', 'jm_main_lang', attribution)}>Visa Pre-Check</a>
+          {' · '}
+          <span lang="en">English</span> / <span lang="zh">中文</span> / <span lang="vi">Tiếng Việt</span> / <span lang="ja">日本語</span>
+        </p>
         {isAcceptingRequests(office) ? (
           <p>
             행정사 등록번호 {office.registrationNumber} | 사업자등록번호 {office.businessNumber}

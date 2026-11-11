@@ -100,6 +100,16 @@ describe('사무소 연락처 데이터', () => {
 describe('개업 전 연락처 공개', () => {
   beforeEach(() => sessionStorage.clear());
 
+  it('하단에 외국어 방문자용 비자 사전 진단 링크가 같은 창으로 열리고 접점 표시가 붙는다', () => {
+    renderAt('/');
+    const footer = within(screen.getByRole('contentinfo'));
+    const link = footer.getByRole('link', { name: 'Visa Pre-Check' });
+    expect(link.getAttribute('href')).toContain('https://visa.jungmyungoffice.com');
+    expect(link.getAttribute('href')).toContain('utm_content=jm_main_lang');
+    expect(link).not.toHaveAttribute('target');
+    expect(footer.getByText('Tiếng Việt')).toHaveAttribute('lang', 'vi');
+  });
+
   it('하단에 대표·주소·전화·팩스·이메일·블로그·지도를 보여주고 등록번호는 개업 후로 남긴다', () => {
     renderAt('/');
     const footer = within(screen.getByRole('contentinfo'));

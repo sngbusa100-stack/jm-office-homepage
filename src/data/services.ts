@@ -10,6 +10,8 @@ export interface ServiceLink { label: string; url: string }
 export interface Service {
   slug: string;
   name: string;
+  seoTitle?: string;           // 검색 결과 제목용(화면 제목과 별개)
+  metaDescription?: string;    // 검색 결과 설명용
   short: string;               // 홈 카드용 한 줄
   headline: string;            // 상세 페이지 제목
   target: string[];            // 이런 분께 필요합니다
@@ -32,6 +34,8 @@ export interface Service {
 export const services: Service[] = [
   {
     slug: 'license',
+    seoTitle: '인허가 신청 대행: 공장등록·비영리법인 설립허가·영업 인허가 반려 대응',
+    metaDescription: '공장등록, 비영리법인 설립허가, 영업 인허가 신청을 준비 중이거나 반려·보완 요구를 받았다면 요건과 서류부터 점검하세요. 광명KTX역 앞 정명 행정사사무소.',
     name: '인허가 대리',
     short: '비영리법인 설립 허가, 공장 등록, 각종 영업 인허가 신청을 대행합니다.',
     headline: '반려 사유를 없애고 신청하는 것이 가장 빠른 길입니다',
@@ -60,6 +64,8 @@ export const services: Service[] = [
   },
   {
     slug: 'immigration',
+    seoTitle: '외국인 비자 발급·연장·체류자격 변경(E-7·F-6·F-5)',
+    metaDescription: '외국인 비자 발급·연장과 체류자격 변경에 필요한 요건과 서류를 확인합니다. 비자별 사전 진단은 5개 언어로 제공합니다. 광명KTX역 앞 정명 행정사사무소.',
     name: '출입국 · 비자',
     short: '외국인 비자 발급·연장과 체류 자격 변경에 필요한 요건과 서류를 확인합니다.',
     headline: '비자 문제는 체류 목적과 자격 요건부터 확인해야 합니다',
@@ -67,6 +73,7 @@ export const services: Service[] = [
     process: ['체류 목적과 현재 자격 확인', '자격별 요건·서류 확인', '신청·변경 절차 준비'],
     documents: ['여권·외국인등록증', '체류 자격별 요건 서류'],
     faqs: [
+      { q: '체류기간이 곧 끝나거나 이미 지났어요.', a: '체류기간 만료일부터 확인하세요. 만료가 가깝거나 이미 지났다면 미루지 말고 외국인종합안내센터(국번 없이 1345)나 관할 출입국·외국인관서에 문의해 필요한 절차를 확인하시기 바랍니다.' },
       { q: '비자 사전 확인은 어디에서 하나요?', a: `정명 비자 진단센터에서 비자별 일반 정보와 준비·공식 확인 항목을 확인할 수 있습니다. ${office.isOpen ? '개별 상담은 상담 신청 화면에서 신청하실 수 있습니다.' : '개별 상담 접수는 개업 후 시작됩니다.'}` },
     ],
     quickChecks: [
@@ -78,6 +85,8 @@ export const services: Service[] = [
     officialSources: [
       { label: '하이코리아 — 체류민원·최신 공지', url: 'https://www.hikorea.go.kr', checkedAt: '2026-07-25' },
       { label: '대한민국 비자포털 — 사증 안내', url: 'https://www.visa.go.kr', checkedAt: '2026-07-25' },
+      { label: '법무부 출입국·외국인정책본부 — 외국인종합안내센터(1345) 안내', url: 'https://www.immigration.go.kr/immigration/1530/subview.do', checkedAt: '2026-11-12' },
+      { label: '법무부 출입국·외국인정책본부 — 소속기관(관할 출입국·외국인관서) 목록', url: 'https://www.immigration.go.kr/immigration/2057/subview.do', checkedAt: '2026-11-12' },
     ],
     selfService: ['여권·외국인등록증의 표기 내용과 만료일 확인', '입국·체류 목적과 예정 활동 정리', '고용계약·학력·가족관계 등 기본 증빙 확보'],
     professionalReview: ['현재 자격에서 변경 가능한 체류자격 판단', '직종·소득·학력·고용주 요건의 최신 기준 대조', '보완 가능성과 신청 시점·관할 출입국기관 검토'],
@@ -98,6 +107,8 @@ export const services: Service[] = [
   },
   {
     slug: 'documents',
+    seoTitle: '토지보상 이의신청서·내용증명·계약서 작성 준비',
+    metaDescription: '토지보상 단계의 의견서·이의신청서, 내용증명, 계약서 작성 전에 확인할 사항과 서류를 안내합니다. 광명KTX역 앞 정명 행정사사무소.',
     name: '토지보상 · 내용증명 · 계약서',
     short: '토지보상 단계 확인과 의견서·이의신청서 작성·제출 대행, 내용증명 작성, 계약서 검토로 권리를 지키도록 돕습니다.',
     headline: '문서로 남기지 않은 권리는 지키기 어렵습니다',
@@ -129,6 +140,8 @@ export const services: Service[] = [
   },
   {
     slug: 'suspension',
+    seoTitle: '영업정지·과징금 처분 의견제출·행정심판 준비',
+    metaDescription: '영업정지·과징금 처분 사전통지를 받았다면 의견제출 기한부터 확인하세요. 의견제출서와 행정심판 청구서 준비에 필요한 서류를 안내합니다. 광명KTX역 앞 정명 행정사사무소.',
     name: '영업정지 · 행정심판',
     short: '영업정지·과징금 처분에 대한 의견제출서·행정심판 청구서 작성과 제출을 돕습니다.',
     headline: '영업정지 통지, 받은 날부터 대응 시계가 돌아갑니다',
@@ -160,6 +173,8 @@ export const services: Service[] = [
   },
   {
     slug: 'dui',
+    seoTitle: '음주운전 면허 취소·정지 이의신청·행정심판 기한과 준비서류',
+    metaDescription: '음주운전으로 면허 취소·정지 처분을 받았다면 이의신청과 행정심판에는 정해진 기한이 있습니다. 기한과 준비서류를 확인하세요. 광명KTX역 앞 정명 행정사사무소.',
     name: '음주운전 면허 구제',
     short: '면허 정지·취소 처분에 대한 이의신청·행정심판을 준비합니다.',
     headline: '음주운전 면허 정지·취소, 다툴 수 있는 기한이 정해져 있습니다',
@@ -191,6 +206,8 @@ export const services: Service[] = [
   },
   {
     slug: 'veterans',
+    seoTitle: '국가유공자·보훈보상대상자 등록 신청과 불복',
+    metaDescription: '국가유공자·보훈보상대상자 등록 신청 절차와 서류, 비해당 결정을 받았을 때 확인할 기한을 안내합니다. 광명KTX역 앞 정명 행정사사무소.',
     name: '국가보훈 등록',
     short: '국가유공자·보훈보상대상자 등록 신청과 비해당 결정 불복을 돕습니다.',
     headline: '국가를 위한 헌신, 기록으로 입증해야 인정받습니다',

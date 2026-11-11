@@ -36,6 +36,11 @@ describe('상담 페이지 (개업 전)', () => {
     expect(screen.getAllByText(/110/).length).toBeGreaterThan(0);
   });
 
+  it('외국인종합안내센터(1345)를 분야와 상관없이 안내한다', () => {
+    renderAt('/consult');
+    expect(screen.getByText(/외국인종합안내센터\(국번 없이 1345\)/)).toBeInTheDocument();
+  });
+
   it('고지 페이지들이 열린다', () => {
     renderAt('/privacy');
     expect(screen.getByRole('heading', { level: 1, name: /개인정보/ })).toBeInTheDocument();

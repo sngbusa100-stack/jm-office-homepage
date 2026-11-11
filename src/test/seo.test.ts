@@ -1,12 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { services } from '../data/services';
 import { PAGE_UPDATED_AT, buildSitemapXml, DEFAULT_DESCRIPTION, getIndexablePaths, getPageMeta } from '../lib/pageMeta';
 
 describe('검색 노출 기반', () => {
   it('업무 상세 경로에 고유 제목·설명·canonical을 제공한다', () => {
     const meta = getPageMeta('/services/dui');
-    expect(meta.title).toContain('음주운전 면허 구제');
-    expect(meta.description).toContain('면허 정지·취소');
+    expect(meta.title).toContain('음주운전 면허 취소·정지');
+    expect(meta.description).toContain('면허 취소·정지');
     expect(meta.canonical).toBe('https://jungmyungoffice.com/services/dui');
     expect(meta.robots).toBe('index, follow');
   });
@@ -112,5 +113,43 @@ describe('검색 노출 기반', () => {
       key: 'X-Robots-Tag',
       value: 'noindex, nofollow',
     });
+  });
+
+  it('업무 6개 모두 검색용 제목·설명이 있고 길이·중복 기준을 지킨다', () => {
+    expect(services).toHaveLength(6);
+    const titles: string[] = [];
+    const descriptions: string[] = [];
+    for (const service of services) {
+      expect(service.seoTitle, service.slug).toBeTruthy();
+      expect(service.metaDescription, service.slug).toBeTruthy();
+      const meta = getPageMeta(`/services/${service.slug}`);
+      expect(meta.title, service.slug).toBe(`${service.seoTitle} | 정명 행정사사무소`);
+      expect(meta.description, service.slug).toBe(service.metaDescription);
+      expect(meta.title.length, `${service.slug} title ${meta.title.length}자`).toBeLessThanOrEqual(60);
+      expect(meta.description.length, `${service.slug} description ${meta.description.length}자`).toBeGreaterThanOrEqual(60);
+      expect(meta.description.length, `${service.slug} description ${meta.description.length}자`).toBeLessThanOrEqual(110);
+      titles.push(meta.title);
+      descriptions.push(meta.description);
+    }
+    expect(new Set(titles).size).toBe(titles.length);
+    expect(new Set(descriptions).size).toBe(descriptions.length);
+  });
+
+  it('진단 페이지 제목은 업무 상세 제목과 다르고 3분 자가 점검 표기가 붙는다', () => {
+    expect(getPageMeta('/check/dui').title).toMatch(/ (3분 자가 점검) | 정명 행정사사무소$/);
+    expect(getPageMeta('/check/dui').title).not.toBe(getPageMeta('/services/dui').title);
+    expect(getPageMeta('/check/dui/result').title).toMatch(/ 결과 | 정명 행정사사무소$/);
+    for (const domain of ['permit', 'suspension', 'dui', 'veterans']) {
+      const service = services.find((s) => s.checkDomain === domain)!;
+      expect(getPageMeta(`/check/${domain}`).title).not.toBe(getPageMeta(`/services/${service.slug}`).title);
+    }
+  });
+
+  it('출입국 업무 상세에 외국인종합안내센터 1345 안내와 공식 출처가 있다', () => {
+    const immigration = services.find((s) => s.slug === 'immigration')!;
+    expect(immigration.faqs[0].a).toContain('1345');
+    const urls = immigration.officialSources.map((source) => source.url);
+    expect(urls).toContain('https://www.immigration.go.kr/immigration/1530/subview.do');
+    expect(urls).toContain('https://www.immigration.go.kr/immigration/2057/subview.do');
   });
 });
