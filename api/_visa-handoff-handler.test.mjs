@@ -7,6 +7,7 @@ function response() {
     body: null,
     headers: {},
     setHeader(key, value) { this.headers[key] = value; },
+    getHeader(key) { return this.headers[key]; },
     status(code) { this.statusCode = code; return this; },
     json(body) { this.body = body; return this; },
     end() { return this; },

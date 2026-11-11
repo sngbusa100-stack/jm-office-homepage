@@ -103,6 +103,16 @@ describe('상담 API 핸들러', () => {
     expect(backend.fetch).not.toHaveBeenCalled();
   });
 
+  it('응답에 no-store·Vary: Origin·nosniff를 붙이고 github.io 출처는 허용하지 않는다', async () => {
+    const backend = createBackend();
+    vi.stubGlobal('fetch', backend.fetch);
+    const res = await invoke(validBody, { origin: 'https://sngbusa100-stack.github.io' });
+    expect(res.headers['Cache-Control']).toBe('no-store');
+    expect(res.headers['Vary']).toBe('Origin');
+    expect(res.headers['X-Content-Type-Options']).toBe('nosniff');
+    expect(res.headers['Access-Control-Allow-Origin']).toBe('https://jungmyungoffice.com');
+  });
+
   it('정상 접수는 저장하고 개인정보 없는 알림을 보낸다', async () => {
     const backend = createBackend();
     vi.stubGlobal('fetch', backend.fetch);

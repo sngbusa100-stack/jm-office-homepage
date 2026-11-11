@@ -3,8 +3,6 @@
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://jungmyungoffice.com',
   'https://visa.jungmyungoffice.com',
-  // 이전 주소: 관리 화면·로컬 연동기가 계속 쓸 수 있도록 유지
-  'https://sngbusa100-stack.github.io',
   'https://jm-office-homepage.vercel.app',
   'https://jm-visa-precheck.vercel.app',
   'http://localhost:5173',
@@ -25,6 +23,10 @@ export function applyCors(req, res, { methods }) {
   res.setHeader('Access-Control-Allow-Origin', allowed.includes(origin) ? origin : allowed[0]);
   res.setHeader('Access-Control-Allow-Methods', methods);
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // 핸들러가 먼저 정한 Cache-Control(예: no-store, private)은 덮어쓰지 않는다.
+  if (!res.getHeader?.('Cache-Control')) res.setHeader('Cache-Control', 'no-store');
 
   if (req.method === 'OPTIONS') {
     res.status(204).end();

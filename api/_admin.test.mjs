@@ -89,6 +89,19 @@ describe('관리자 API 핸들러', () => {
     vi.unstubAllGlobals();
   });
 
+  it('모든 응답에 no-store·Vary: Origin·nosniff를 붙이고 github.io 출처는 허용하지 않는다', async () => {
+    stubRedis();
+    const res = mockRes();
+    await handler({ method: 'GET', headers: { origin: 'https://sngbusa100-stack.github.io' } }, res);
+    expect(res.headers['Cache-Control']).toBe('no-store');
+    expect(res.headers['Vary']).toBe('Origin');
+    expect(res.headers['X-Content-Type-Options']).toBe('nosniff');
+    expect(res.headers['Access-Control-Allow-Origin']).toBe('https://jungmyungoffice.com');
+    const local = mockRes();
+    await handler({ method: 'GET', headers: { origin: 'http://localhost:5173' } }, local);
+    expect(local.headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+  });
+
   it('토큰이 없거나 틀리면 401', async () => {
     stubRedis();
     const res = mockRes();

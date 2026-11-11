@@ -39,7 +39,7 @@ if (locs.length === 0) fail('sitemap.xml에 주소가 없습니다.');
 
 const vercel = JSON.parse(readFileSync(resolve(here, '../vercel.json'), 'utf8'));
 const rewrites = vercel.rewrites ?? [];
-const fallbackIndex = rewrites.findIndex((rule) => rule.source === '/((?!api/).*)');
+const fallbackIndex = rewrites.findIndex((rule) => rule.destination === '/spa-fallback.html');
 if (fallbackIndex === -1 || rewrites[fallbackIndex].destination !== '/spa-fallback.html') {
   fail('vercel.json catch-all이 /spa-fallback.html을 가리키지 않습니다.');
 }
