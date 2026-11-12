@@ -78,21 +78,27 @@ describe('Vercel 연결 규칙', () => {
     const headerMap = (source: string) =>
       Object.fromEntries((vercel.headers.find((h) => h.source === source)?.headers ?? []).map((h) => [h.key, h.value]));
 
-    it('모든 경로에 기본 보안 헤더와 보고 전용 CSP가 있다', () => {
+    it('모든 경로에 기본 보안 헤더와 강제 CSP가 있다', () => {
       const all = headerMap('/(.*)');
       expect(all['X-Content-Type-Options']).toBe('nosniff');
       expect(all['Referrer-Policy']).toBe('strict-origin-when-cross-origin');
       expect(all['X-Frame-Options']).toBe('DENY');
       expect(all['Permissions-Policy']).toBe('camera=(), microphone=(), geolocation=()');
-      const csp = all['Content-Security-Policy-Report-Only'];
+      expect(all['Content-Security-Policy-Report-Only']).toBeUndefined();
+      const csp = all['Content-Security-Policy'];
       expect(csp).toContain("default-src 'self'");
+      expect(csp).toContain("script-src 'self'");
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).toContain("object-src 'none'");
+      expect(csp).not.toContain("'unsafe-eval'");
+      const scriptSrc = csp.split(';').map((d) => d.trim()).find((d) => d.startsWith('script-src')) ?? '';
+      expect(scriptSrc).not.toContain("'unsafe-inline'");
+      const styleSrc = csp.split(';').map((d) => d.trim()).find((d) => d.startsWith('style-src')) ?? '';
+      expect(styleSrc).toContain("'unsafe-inline'");
     });
 
-    it('강제 CSP와 직접 지정한 HSTS는 넣지 않는다', () => {
+    it('직접 지정한 HSTS는 넣지 않는다', () => {
       const keys = vercel.headers.flatMap((h) => h.headers.map((x) => x.key.toLowerCase()));
-      expect(keys).not.toContain('content-security-policy');
       expect(keys).not.toContain('strict-transport-security');
     });
 
