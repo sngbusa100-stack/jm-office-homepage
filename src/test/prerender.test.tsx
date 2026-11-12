@@ -66,6 +66,16 @@ describe('사전 렌더링', () => {
     expect(checkHtml).toContain('"item":"https://jungmyungoffice.com/check"');
   });
 
+  it('홈에 모바일용 대표 한 줄(hero__rep)이, 업무 상세에 담당 행정사 구역과 /about 링크가 사전 렌더링된다', () => {
+    const home = renderPage('/');
+    expect(home).toContain('hero__rep');
+    expect(home).toContain('대표 행정사 정재훈');
+    const html = renderPage('/services/dui');
+    expect(html).toContain('class="card service-rep"');
+    expect(html).toContain('aria-label="담당 행정사"');
+    expect(html).toMatch(/href="\/about"[^>]*>사무소 소개 보기/);
+  });
+
   it('업무 상세 본문에 그 분야의 제목과 FAQ 질문이 들어간다', () => {
     const service = findService('dui')!;
     const html = renderPage('/services/dui');

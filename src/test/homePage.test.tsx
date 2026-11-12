@@ -61,6 +61,22 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(within(hero).getByRole('link', { name: /바로 셀프 진단하기/ })).toHaveAttribute('href', '/check');
   });
 
+  it('모바일용 대표 한 줄(hero__rep)이 첫 제목 위에 있고, 사진 alt는 비어 있다', () => {
+    const { container } = renderAt('/');
+    const rep = container.querySelector('.hero__rep') as HTMLElement;
+    expect(rep).not.toBeNull();
+    expect(rep).toHaveTextContent('대표 행정사 정재훈');
+    expect(rep.textContent).not.toContain('JUNG JAE HOON');
+    const img = rep.querySelector('img') as HTMLImageElement;
+    expect(img).toHaveAttribute('src', profile.photo!.src);
+    expect(img).toHaveAttribute('alt', '');
+    expect(img).toHaveAttribute('width', '56');
+    expect(img).toHaveAttribute('height', '70');
+    expect(img).toHaveAttribute('decoding', 'async');
+    const h1 = container.querySelector('.hero h1') as HTMLElement;
+    expect(rep.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('대표 카드는 사진과 직함·이름 한 줄만 둔다', () => {
     renderAt('/');
     const card = screen.getByRole('complementary', { name: '대표 행정사 소개' });

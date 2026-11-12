@@ -34,8 +34,8 @@ function fail(message) {
   process.exit(1);
 }
 
-// 진입 JS 크기 상한: 관리자 화면을 따로 뺀 뒤 2026-11-12 실측 gzip 120,936바이트(분리 전 132,012)의 약 110%를 KB로 올림.
-const ENTRY_JS_GZIP_LIMIT_KB = 130;
+// 진입 JS 크기 상한: 관리자 화면을 따로 뺀 뒤 2026-11-12 실측 gzip 121,770바이트(분리 전 132,012)의 약 106%를 KB로 올림(126KB = 129,024바이트).
+const ENTRY_JS_GZIP_LIMIT_KB = 126;
 const entryMatch = index.match(/<script[^>]*\ssrc="(\/assets\/index-[^"]+\.js)"/);
 if (!entryMatch) fail('index.html에서 진입 JS(/assets/index-*.js)를 찾지 못했습니다.');
 const entryGzip = gzipSync(readFileSync(resolve(dist, `.${entryMatch[1]}`))).length;

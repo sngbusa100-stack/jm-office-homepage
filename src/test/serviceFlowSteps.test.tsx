@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import { profile } from '../data/profile';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ServiceFlowSteps } from '../components/ServiceFlowSteps';
 import { SERVICE_FLOW_STEPS } from '../data/serviceFlow';
@@ -113,6 +114,18 @@ describe('분야 상세의 단계 안내', () => {
     expect((sources as HTMLDetailsElement).open).toBe(false);
     // 제목은 summary 안에 있어 접혀도 보인다.
     expect(screen.getByRole('heading', { name: /공식 기준·조회 경로/ })).toBeInTheDocument();
+  });
+
+  it('다음 단계 바로 위에 담당 행정사 구역이 있고 /about으로 잇는다', () => {
+    renderPage('dui');
+    const rep = screen.getByRole('region', { name: '담당 행정사' });
+    expect(rep).toHaveTextContent('대표 행정사 정재훈');
+    expect(rep).toHaveTextContent(`${profile.strengths[0].title} ${profile.strengths[0].detail}`);
+    expect(within(rep).getByRole('link', { name: /사무소 소개 보기/ })).toHaveAttribute('href', '/about');
+    const img = rep.querySelector('img') as HTMLImageElement;
+    expect(img).toHaveAttribute('alt', '');
+    expect(img).toHaveAttribute('loading', 'lazy');
+    expect(rep.nextElementSibling).toHaveClass('service-next-step');
   });
 
   it('FAQ는 질문 목록이 보이도록 바깥으로 감싸지 않는다', () => {

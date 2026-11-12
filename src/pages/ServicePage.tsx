@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
+import { RepresentativeBadge } from '../components/RepresentativeBadge';
+import { profile } from '../data/profile';
 import { ServiceFlowSteps } from '../components/ServiceFlowSteps';
 import { ServiceNextStepBar } from '../components/ServiceNextStepBar';
 import { findService, type Service } from '../data/services';
@@ -190,6 +192,13 @@ export function ServicePage() {
         {service.faqs.map((faq) => (
           <details key={faq.q}><summary>{faq.q}</summary><p>{faq.a}</p></details>
         ))}
+      </section>
+
+      <section className="card service-rep" aria-label="담당 행정사">
+        <RepresentativeBadge profile={profile} lazy>
+          <p className="service-rep__line">{profile.strengths[0].title} {profile.strengths[0].detail}</p>
+          <Link className="text-link" to="/about">사무소 소개 보기 →</Link>
+        </RepresentativeBadge>
       </section>
 
       <aside className="card service-next-step" aria-labelledby="next-step">

@@ -233,6 +233,14 @@ nav#global-nav a.active {
 .profile-card__name { font-size: var(--fs-xl); letter-spacing: 0.16em; color: #fff; }
 .profile-card__en { color: #aab4c5; font-size: var(--fs-xs); letter-spacing: 0.12em; }
 
+/* --- 대표 행정사 작은 사진 + 이름 한 줄 (모바일 홈 첫 화면 hero__rep, 업무 상세 service-rep 공용) --- */
+.rep-badge { display: flex; align-items: center; gap: 12px; }
+.rep-badge__photo { flex: none; width: 56px; height: 70px; aspect-ratio: 4 / 5; object-fit: cover; object-position: center 20%; border-radius: var(--radius-sm); background: var(--surface-muted); }
+.rep-badge__text { min-width: 0; }
+.rep-badge__name { display: block; color: var(--text); font-size: var(--fs-base); }
+/* hero__rep는 모바일 전용: 아래 768px 미디어쿼리에서만 보인다 */
+.hero__rep { display: none; }
+
 /* --- 대표 인사말과 약속 --- */
 .greeting { scroll-margin-top: 80px; }
 .greeting__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 56px; align-items: start; }
@@ -280,6 +288,8 @@ nav#global-nav a.active {
 @media (max-width: 768px) {
   .hero { padding: 52px 0; }
   .hero__grid { grid-template-columns: 1fr; gap: 36px; }
+  .hero__rep { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .hero .profile-card { display: none; }
   .hero h1 { font-size: clamp(2rem, 10vw, 2.75rem); }
   .prep-guide { grid-template-columns: 1fr; gap: 16px; padding: 24px; }
   .prep-guide .guide-list { grid-template-columns: 1fr; gap: 0; }
@@ -399,11 +409,19 @@ th { background: var(--surface-muted); font-weight: 700; }
   background: var(--accent);
 }
 
+/* 진단 화면 간격: 제목 → 진행 막대 → 질문 카드 */
+.narrow-page > h1 + .progress { margin-top: 14px; }
+.narrow-page > .progress + .question-card { margin-top: 22px; }
+/* legend를 float로 띄우면 fieldset 위 테두리에 걸치지 않고 카드 안쪽(패딩 안)에 놓인다 */
 .question-card legend {
+  float: left;
+  width: 100%;
+  padding: 0;
   font-weight: 700;
   font-size: var(--fs-lg);
   margin-bottom: 12px;
 }
+.question-card legend + * { clear: both; }
 
 .option-row {
   display: block;
@@ -655,6 +673,11 @@ th { background: var(--surface-muted); font-weight: 700; }
   text-decoration: none;
 }
 .related-link:hover { border-color: var(--accent); transform: translateY(-1px); }
+/* 업무 상세 "다음 단계" 위의 담당 행정사 한 구역. 모바일에서도 사진 왼쪽·글 오른쪽 가로 배치 유지.
+   앞 구역과의 간격은 .section > section + section(52px), 뒤 aside는 .service-next-step의 margin-top(52px)이 맡는다. */
+.service-rep .rep-badge { align-items: flex-start; gap: 16px; }
+.service-rep__line { color: var(--text-muted); margin: 4px 0 0; }
+.service-rep .rep-badge__text .text-link { display: inline-block; margin-top: 8px; }
 .service-next-step {
   margin-top: 52px;
   background: linear-gradient(135deg, var(--surface), var(--accent-soft));

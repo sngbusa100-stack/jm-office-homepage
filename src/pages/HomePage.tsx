@@ -6,6 +6,7 @@ import { profile } from '../data/profile';
 import { ConsultCta } from '../components/ConsultCta';
 import { OfficeStructuredData } from '../components/OfficeStructuredData';
 import { ProfileCard } from '../components/ProfileCard';
+import { RepresentativeBadge } from '../components/RepresentativeBadge';
 import { PromiseList } from '../components/PromiseList';
 import { ServiceAreaGrid } from '../components/ServiceAreaGrid';
 import { VisaCheckCard } from '../components/VisaCheckCard';
@@ -30,6 +31,8 @@ export function HomePage() {
       <section className="hero">
         <div className="page-shell hero__grid">
           <div className="hero__content">
+            {/* 모바일 전용 한 줄(CSS로 768px 이하에서만 보임). 같은 폭에서 큰 ProfileCard는 숨긴다 */}
+            <RepresentativeBadge className="hero__rep" profile={profile} />
             {/* 맨 위 '광명KTX역 5번출구 앞 행정사사무소' 글씨는 차별점 셋째 줄과 겹쳐 뺐다(2026-11-06 주인님 지시) */}
             <h1 className="hero__slogan">
               복잡한 행정절차를{' '}<br />

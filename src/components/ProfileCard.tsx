@@ -16,6 +16,7 @@ export function ProfileCard({ profile }: { profile: Profile }) {
             alt={profile.photo.alt}
             width={profile.photo.width}
             height={profile.photo.height}
+            decoding="async"
           />
         ) : (
           <img className="profile-card__emblem" src={`${base}images/logo-mark-128.png`} alt="" width={128} height={128} />
