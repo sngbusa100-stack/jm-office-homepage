@@ -46,7 +46,26 @@ export interface ConsultPayload {
   submissionId?: string;
 }
 
-export type SubmitResult = { status: 'sent'; id?: string } | { status: 'error' };
+/**
+ * 전송 실패 종류(10-17 검토 CV-12, 2026-11-14). 503이라도 원인이 여럿이라 서버 error 코드로 나눈다.
+ * closed: 접수 닫힘(503 not_accepting) / retry: 잠시 뒤 다시(429·409) / invalid: 입력값 거절(400) / outage: 일시 장애(그 밖의 5xx·네트워크)
+ */
+export type SubmitErrorKind = 'closed' | 'retry' | 'invalid' | 'outage';
+export type SubmitResult = { status: 'sent'; id?: string } | { status: 'error'; kind: SubmitErrorKind };
+
+async function errorKind(response: Response): Promise<SubmitErrorKind> {
+  if (response.status === 400) return 'invalid';
+  if (response.status === 429 || response.status === 409) return 'retry';
+  if (response.status === 503) {
+    try {
+      const data: unknown = typeof response.json === 'function' ? await response.json() : null;
+      if (data && typeof data === 'object' && (data as { error?: unknown }).error === 'not_accepting') return 'closed';
+    } catch {
+      // 본문을 읽지 못하면 일시 장애로 본다.
+    }
+  }
+  return 'outage';
+}
 
 export async function submitConsult(endpoint: string, payload: ConsultPayload): Promise<SubmitResult> {
   try {
@@ -55,7 +74,7 @@ export async function submitConsult(endpoint: string, payload: ConsultPayload): 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) return { status: 'error' };
+    if (!response.ok) return { status: 'error', kind: await errorKind(response) };
     let id: string | undefined;
     try {
       const data: unknown = typeof response.json === 'function' ? await response.json() : null;
@@ -67,6 +86,6 @@ export async function submitConsult(endpoint: string, payload: ConsultPayload): 
     }
     return { status: 'sent', id };
   } catch {
-    return { status: 'error' };
+    return { status: 'error', kind: 'outage' };
   }
 }

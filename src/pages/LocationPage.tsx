@@ -1,6 +1,7 @@
 import { office } from '../data/office';
 import { OfficeLocation } from '../components/OfficeLocation';
 import { OfficeStructuredData } from '../components/OfficeStructuredData';
+import { trackContactClick } from '../lib/funnel';
 
 export function LocationPage() {
   return (
@@ -30,12 +31,12 @@ export function LocationPage() {
           <h2 id="location-contact">연락처</h2>
           {office.phone && (
             <p>
-              <a className="button button--primary" href={`tel:${office.phone}`}>{office.phone}</a>
+              <a className="button button--primary" href={`tel:${office.phone}`} onClick={() => trackContactClick('phone')}>{office.phone}</a>
             </p>
           )}
           {office.fax && <p>팩스 {office.fax}</p>}
           {office.email && (
-            <p>이메일 <a href={`mailto:${office.email}`}>{office.email}</a></p>
+            <p>이메일 <a href={`mailto:${office.email}`} onClick={() => trackContactClick('email')}>{office.email}</a></p>
           )}
         </section>
       )}

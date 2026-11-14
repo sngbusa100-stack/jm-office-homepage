@@ -5,6 +5,9 @@ export const FUNNEL_EVENTS = [
   'diagnosis_complete',
   'consult_view',
   'consult_submit',
+  // 연락 버튼 누름(2026-11-14 D13) — src/lib/funnel.ts와 같은 목록
+  'contact_phone_click',
+  'contact_email_click',
 ];
 
 export const FUNNEL_DOMAINS = [

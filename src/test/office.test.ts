@@ -6,14 +6,18 @@ describe('사무소 정보 단일 출처', () => {
     expect(REQUIRED_OFFICE_FIELDS).toEqual(REQUIRED_WHEN_OPEN);
   });
 
-  it('개업 전에는 접수를 받지 않고 개업일도 비어 있다', () => {
-    expect(office.isOpen).toBe(false);
-    expect(office.openedOn).toBeNull();
-    expect(isAcceptingRequests(office)).toBe(false);
+  it('개업 상태·개업일·접수 가능 여부가 서로 맞다', () => {
+    if (office.isOpen) {
+      expect(office.openedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(isAcceptingRequests(office)).toBe(true);
+    } else {
+      expect(office.openedOn).toBeNull();
+      expect(isAcceptingRequests(office)).toBe(false);
+    }
   });
 
   it('isOpen인데 필수 정보가 비어 있으면 유효하지 않다', () => {
-    const invalid = { ...office, isOpen: true };
+    const invalid = { ...office, isOpen: true, registrationNumber: null };
     expect(() => assertOfficeValid(invalid)).toThrow();
   });
 
@@ -28,6 +32,8 @@ describe('사무소 정보 단일 출처', () => {
       formEndpoint: 'https://formspree.io/f/example',
     };
     expect(() => assertOfficeValid(filled)).not.toThrow();
+    // D12: 카카오 채널 주소는 없어도 된다.
+    expect(() => assertOfficeValid({ ...filled, kakaoChannelUrl: null })).not.toThrow();
     expect(isAcceptingRequests(filled)).toBe(true);
   });
 });

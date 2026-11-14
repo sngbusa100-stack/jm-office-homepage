@@ -21,6 +21,12 @@ describe('개인정보 없는 퍼널 집계 저장소', () => {
       source: 'naver',
     });
     expect(sanitizeFunnelEvent({ event: 'phone_entered', domain: 'dui' })).toBeNull();
+    // 2026-11-14 D13: 연락 버튼 누름 두 가지만 더 받는다. 번호 같은 다른 필드는 버린다.
+    expect(sanitizeFunnelEvent({ event: 'contact_phone_click', domain: 'home', phone: '010-1234-5678' }))
+      .toEqual({ event: 'contact_phone_click', domain: 'home', source: 'direct' });
+    expect(sanitizeFunnelEvent({ event: 'contact_email_click', domain: 'visa' }))
+      .toEqual({ event: 'contact_email_click', domain: 'visa', source: 'direct' });
+    expect(sanitizeFunnelEvent({ event: 'contact_kakao_click', domain: 'home' })).toBeNull();
     expect(sanitizeFunnelEvent({ event: 'landing_view', domain: '홍길동' })).toBeNull();
   });
 

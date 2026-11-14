@@ -4,7 +4,7 @@ export default {
     "name": "정명 행정사사무소",
     "representative": "정재훈",
     "phone": "02-897-6251",
-    "email": "sngbusa10@naver.com"
+    "email": "jungmyung0909@naver.com"
   },
   "diagnosis": {
     "dui": {

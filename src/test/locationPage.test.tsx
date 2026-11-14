@@ -37,7 +37,7 @@ describe('오시는 길', () => {
     }
     expect(main.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
     expect(main.getByText(/02-897-6254/)).toBeInTheDocument();
-    expect(main.getByRole('link', { name: 'sngbusa10@naver.com' })).toHaveAttribute('href', 'mailto:sngbusa10@naver.com');
+    expect(main.getByRole('link', { name: 'jungmyung0909@naver.com' })).toHaveAttribute('href', 'mailto:jungmyung0909@naver.com');
   });
 
   it('상담 시간과 주차 안내를 보여준다(2026-11-02 주인님 지정 값)', () => {

@@ -297,6 +297,10 @@ export function AdminPage() {
             </article>
           ))}
         </div>
+        <p className="note">
+          연락 버튼 누름: 전화 {funnel?.totals.contact_phone_click ?? 0} · 이메일 {funnel?.totals.contact_email_click ?? 0}
+          (홈페이지에서 누른 횟수 — 실제 통화·메일 수와 다를 수 있습니다)
+        </p>
         {funnel && Object.keys(funnel.bySource).length > 0 && (
           <details className="card admin-item">
             <summary>유입 출처별 이벤트 합계</summary>

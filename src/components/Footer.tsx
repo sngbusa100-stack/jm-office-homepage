@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { office, isAcceptingRequests } from '../data/office';
-import { attributedExternalUrl, captureAttribution } from '../lib/funnel';
+import { attributedExternalUrl, captureAttribution, trackContactClick } from '../lib/funnel';
 import { mapLinks } from '../lib/officeContact';
 
 export function Footer() {
@@ -31,9 +31,9 @@ export function Footer() {
         )}
         {(office.phone || office.fax || office.email) && (
           <p>
-            {office.phone && <>전화 <a href={`tel:${office.phone}`}>{office.phone}</a></>}
+            {office.phone && <>전화 <a href={`tel:${office.phone}`} onClick={() => trackContactClick('phone')}>{office.phone}</a></>}
             {office.fax && <>{office.phone && ' | '}팩스 {office.fax}</>}
-            {office.email && <>{(office.phone || office.fax) && ' | '}이메일 <a href={`mailto:${office.email}`}>{office.email}</a></>}
+            {office.email && <>{(office.phone || office.fax) && ' | '}이메일 <a href={`mailto:${office.email}`} onClick={() => trackContactClick('email')}>{office.email}</a></>}
           </p>
         )}
         {(office.consultHours || office.parking) && (

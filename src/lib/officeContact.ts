@@ -23,6 +23,21 @@ function officeNodeId(siteUrl: string): string {
   return `${siteUrl}/#office`;
 }
 
+/**
+ * 상담 시간 문구("월~금 10:00~17:00")를 지도·검색용 영업시간(schema.org OpeningHoursSpecification)으로 바꾼다.
+ * 이 꼴이 아니면(공휴일·점심시간 등이 붙으면) 만들지 않는다 — 틀린 영업시간을 알리는 것보다 빼는 편이 낫다.
+ */
+export function parseConsultHours(text: string | null | undefined): Record<string, unknown> | null {
+  const m = text?.trim().match(/^월~금 ([01]\d|2[0-3]):([0-5]\d)~([01]\d|2[0-3]):([0-5]\d)$/);
+  if (!m) return null;
+  return {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    opens: `${m[1]}:${m[2]}`,
+    closes: `${m[3]}:${m[4]}`,
+  };
+}
+
 /** 검색엔진이 읽는 사무소 정보(schema.org LegalService). 주소·전화가 모두 없으면 만들지 않는다. */
 export function buildOfficeJsonLd(office: Office, siteUrl: string): Record<string, unknown> | null {
   if (!office.address && !office.phone) return null;
@@ -47,6 +62,9 @@ export function buildOfficeJsonLd(office: Office, siteUrl: string): Record<strin
   if (office.phone) data.telephone = toInternationalPhone(office.phone);
   if (office.fax) data.faxNumber = toInternationalPhone(office.fax);
   if (office.email) data.email = office.email;
+  // 영업시간은 개업 뒤에만 알린다(Fable 11-12 백로그 A4: "openingHours는 개업 뒤").
+  const hours = office.isOpen ? parseConsultHours(office.consultHours) : null;
+  if (hours) data.openingHoursSpecification = hours;
   if (office.streetAddress) {
     data.address = {
       '@type': 'PostalAddress',

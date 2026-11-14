@@ -3,9 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import { office, isAcceptingRequests } from '../data/office';
 import { removeStorage, safeSessionGet, safeSessionSet } from '../lib/browserStorage';
 import { submitConsult } from '../lib/consultSubmit';
-import type { ConsultDiagnosis, VisaConsultDiagnosis } from '../lib/consultSubmit';
+import type { ConsultDiagnosis, SubmitErrorKind, VisaConsultDiagnosis } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
-import { readAttribution, trackFunnelEvent } from '../lib/funnel';
+import { readAttribution, trackContactClick, trackFunnelEvent } from '../lib/funnel';
 import { OfficeLocation } from '../components/OfficeLocation';
 import { VisaIntakeFields } from '../components/VisaIntakeFields';
 import { DeadlineReportField } from '../components/DeadlineReportField';
@@ -258,6 +258,7 @@ export function ConsultPage() {
   const diagnosisViolation = typeof visaDiagnosis?.answers.violationStatus === 'string' ? visaDiagnosis.answers.violationStatus : '';
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<SubmitErrorKind>('outage');
   // 새로고침 뒤에도 실패한 제출은 같은 키를 써서 중복 등록을 막는다.
   const [submissionId] = useState<string>(readOrCreateSubmissionId);
 
@@ -360,6 +361,7 @@ export function ConsultPage() {
     });
     setStatus(result.status);
     setInquiryId(result.status === 'sent' ? (result.id ?? null) : null);
+    if (result.status === 'error') setErrorKind(result.kind);
     if (result.status === 'sent') {
       void trackFunnelEvent({
         event: 'consult_submit',
@@ -398,7 +400,7 @@ export function ConsultPage() {
           <article className="card">
             <h3>전화 상담</h3>
             {office.phone
-              ? <a className="button button--primary" href={`tel:${office.phone}`}>{office.phone}</a>
+              ? <a className="button button--primary" href={`tel:${office.phone}`} onClick={() => trackContactClick('phone', funnelDomain)}>{office.phone}</a>
               : <p className="note">개업 후 공개됩니다.</p>}
           </article>
           <article className="card">
@@ -533,7 +535,7 @@ export function ConsultPage() {
         )}
         {status === 'sent' && inquiryId && <CopyInquiryId id={inquiryId} />}
         {status === 'error' && (
-          <p className="note" role="alert">전송에 실패했습니다. 잠시 후 다시 시도하시거나 전화·카카오톡으로 문의해 주세요.</p>
+          <p className="note" role="alert">{submitErrorMessage(errorKind)}</p>
         )}
         {!accepting && <p className="note">개업 전에는 신청이 접수되지 않습니다. 상담·수임 접수는 개업 후 시작됩니다.</p>}
       </form>
@@ -548,6 +550,22 @@ export function ConsultPage() {
       {!urgentEntry && urgentNotice}
     </div>
   );
+}
+
+/** 전송 실패 안내(CV-12). 카카오는 채널이 있을 때만 말한다. */
+export function submitErrorMessage(kind: SubmitErrorKind): string {
+  const phone = office.phone ? `전화(${office.phone})` : '전화';
+  const other = office.kakaoChannelUrl ? `${phone}·카카오톡` : phone;
+  switch (kind) {
+    case 'closed':
+      return `지금은 홈페이지 접수를 받지 않고 있습니다. ${other}로 문의해 주세요.`;
+    case 'retry':
+      return '요청이 잠시 몰려 접수하지 못했습니다. 1~2분 뒤 다시 눌러 주세요. 같은 내용이 두 번 접수되지는 않습니다.';
+    case 'invalid':
+      return '입력하신 내용을 확인하지 못했습니다. 이름·연락처·문의 내용을 다시 확인한 뒤 눌러 주세요.';
+    default:
+      return `일시적인 문제로 전송하지 못했습니다. 잠시 후 다시 시도하시거나 ${other}로 문의해 주세요.`;
+  }
 }
 
 const urgentNotice = (

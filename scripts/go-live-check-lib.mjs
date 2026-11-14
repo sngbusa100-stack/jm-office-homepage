@@ -4,7 +4,7 @@ import { findPreOpenPhrases } from './pre-open-phrases.mjs';
 
 /** 개업 상태에서 반드시 채워야 하는 사무소 값. src/data/office.ts REQUIRED_WHEN_OPEN과 같아야 한다(테스트). */
 export const REQUIRED_OFFICE_FIELDS = [
-  'phone', 'kakaoChannelUrl', 'address', 'registrationNumber', 'businessNumber', 'formEndpoint',
+  'phone', 'address', 'registrationNumber', 'businessNumber', 'formEndpoint',
 ];
 
 /** 운영(Vercel Production)에 있어야 하는 환경변수 이름 */
@@ -148,7 +148,7 @@ export function manualItems() {
     '행정사 업무신고 수리(행정사법 제10조) — 수리 전 상담 응대는 제36조②1 처벌 대상',
     '대한행정사회 가입(행정사법 제26조의2)',
     '사업자등록 — 사업자등록번호를 office.json에 입력',
-    '카카오 채널 개설 — 주소를 office.json kakaoChannelUrl에 입력',
+    '카카오 채널(선택, D12) — 개설하면 주소를 office.json kakaoChannelUrl에 입력',
     '시험 접수 1건 왕복: Telegram 알림 → 로컬 대기함 → 회신 초안 → 종결 → 시험 건 파기',
     '네이버 서치어드바이저·구글 서치콘솔 재수집 요청, 카카오 공유 캐시 초기화',
     '명함·블로그 표기(등록번호·연락처) 확인',

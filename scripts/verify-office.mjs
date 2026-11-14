@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const office = JSON.parse(readFileSync(resolve(here, '../src/data/office.json'), 'utf8'));
-const required = ['phone', 'kakaoChannelUrl', 'address', 'registrationNumber', 'businessNumber', 'formEndpoint'];
+// 카카오 채널 주소는 필수값에서 뺐다(D12, 2026-11-13 결정 — 채널 없이도 홈페이지·전화·메일로 연다).
+const required = ['phone', 'address', 'registrationNumber', 'businessNumber', 'formEndpoint'];
 
 if (office.isOpen) {
   const missing = required.filter((key) => !office[key]);

@@ -285,7 +285,8 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('전송에 실패');
+    // 2026-11-14 CV-12: 네트워크 오류는 "일시적인 문제" 안내(접수 닫힘 안내와 구별)
+    expect(await screen.findByRole('alert')).toHaveTextContent('일시적인 문제로 전송하지 못했습니다');
     expect(sessionStorage.getItem('consult:submission')).toMatch(/^[A-Za-z0-9-]{8,64}$/);
   });
 

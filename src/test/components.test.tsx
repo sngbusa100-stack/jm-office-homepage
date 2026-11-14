@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Link, MemoryRouter } from 'react-router-dom';
 import { Layout } from '../components/Layout';
+import { office } from '../data/office';
 
 function renderLayout() {
   return render(
@@ -13,9 +14,12 @@ function renderLayout() {
 }
 
 describe('공통 레이아웃', () => {
-  it('개업 준비 중 안내를 표시한다', () => {
+  // 2026-11-15 개업 전환: 개업 상태면 준비 띠가 없어야 한다.
+  it('개업 상태에 맞는 안내 띠를 보여준다', () => {
     renderLayout();
-    expect(screen.getAllByText(/개업 준비 중/).length).toBeGreaterThan(0);
+    const count = screen.queryAllByText(/개업 준비 중/).length;
+    if (office.isOpen) expect(count).toBe(0);
+    else expect(count).toBeGreaterThan(0);
   });
 
   it('본문 건너뛰기 링크와 주요 메뉴를 제공한다', () => {

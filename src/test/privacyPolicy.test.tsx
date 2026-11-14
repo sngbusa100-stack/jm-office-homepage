@@ -36,7 +36,7 @@ describe('개인정보처리방침 법정 기재사항', () => {
     renderAt('/privacy');
     const section = within(screen.getByRole('region', { name: '개인정보 보호책임자' }));
     expect(section.getByText(/대표 행정사 정재훈/)).toBeInTheDocument();
-    expect(section.getByRole('link', { name: 'sngbusa10@naver.com' })).toHaveAttribute('href', 'mailto:sngbusa10@naver.com');
+    expect(section.getByRole('link', { name: 'jungmyung0909@naver.com' })).toHaveAttribute('href', 'mailto:jungmyung0909@naver.com');
     expect(section.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
   });
 

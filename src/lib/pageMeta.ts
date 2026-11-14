@@ -69,7 +69,7 @@ export const PAGE_UPDATED_AT: Record<string, string> = {
   '/services': '2026-11-02',
   '/check': '2026-11-02',
   '/consult': '2026-11-12',
-  '/privacy': '2026-10-21',
+  '/privacy': '2026-11-15',
   '/disclaimer': '2026-10-19',
   '/location': '2026-11-12',
   '/services/license': '2026-11-02',

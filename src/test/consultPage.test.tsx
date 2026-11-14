@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
+import { office } from '../data/office';
 
 function renderAt(path: string) {
   return render(
@@ -13,11 +14,17 @@ function renderAt(path: string) {
 describe('상담 페이지 (개업 전)', () => {
   beforeEach(() => sessionStorage.clear());
 
-  it('개업 전에는 접수 불가 안내와 비활성 폼을 보여준다', () => {
+  it.skipIf(office.isOpen)('개업 전에는 접수 불가 안내와 비활성 폼을 보여준다', () => {
     renderAt('/consult');
     expect(screen.getAllByText(/개업 후 시작됩니다/).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /상담 신청하기/ })).toBeDisabled();
     expect(screen.queryByText(/02-1234/)).toBeNull();
+  });
+
+  it.runIf(office.isOpen)('개업 상태에서는 접수 폼이 열려 있다', () => {
+    renderAt('/consult');
+    expect(screen.queryAllByText(/개업 후 시작됩니다/)).toHaveLength(0);
+    expect(screen.getByRole('button', { name: /상담 신청하기/ })).toBeEnabled();
   });
 
   it('진단 요약이 있으면 상담 내용에 미리 채운다', () => {

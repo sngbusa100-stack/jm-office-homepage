@@ -1,10 +1,10 @@
 {
-  "isOpen": false,
-  "openedOn": null,
+  "isOpen": true,
+  "openedOn": "2026-11-15",
   "representative": "정재훈",
   "phone": "02-897-6251",
   "fax": "02-897-6254",
-  "email": "sngbusa10@naver.com",
+  "email": "jungmyung0909@naver.com",
   "blogUrl": "https://blog.naver.com/jungmyung0909",
   "kakaoChannelUrl": null,
   "address": "경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호",
@@ -15,7 +15,7 @@
   "mapQuery": "경기도 광명시 새빛공원로 67",
   "consultHours": "월~금 10:00~17:00",
   "parking": "1시간 30분 무료",
-  "registrationNumber": null,
-  "businessNumber": null,
+  "registrationNumber": "제3900000202611호",
+  "businessNumber": "462-02-03645",
   "formEndpoint": "https://jungmyungoffice.com/api/consult"
 }

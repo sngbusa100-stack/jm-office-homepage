@@ -43,7 +43,7 @@ describe('회신 초안 공통', () => {
     const lines = text.split('\n');
     expect(lines[0]).toBe('홍길동 님, 안녕하세요. 정명 행정사사무소 대표 행정사 정재훈입니다.');
     expect(lines[1]).toBe('접수번호 JM-20261020-AB12 상담 신청 확인했습니다.');
-    expect(text).toContain('정명 행정사사무소 대표 행정사 정재훈\n전화 02-897-6251 · 이메일 sngbusa10@naver.com');
+    expect(text).toContain('정명 행정사사무소 대표 행정사 정재훈\n전화 02-897-6251 · 이메일 jungmyung0909@naver.com');
     for (const secret of ['010-1234-5678', 'hong@example.com', '상담 내용 비밀 문장']) {
       expect(text).not.toContain(secret);
     }

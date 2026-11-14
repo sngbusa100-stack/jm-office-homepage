@@ -25,8 +25,9 @@ export interface Office {
   formEndpoint: string | null;
 }
 
+/** 카카오 채널 주소는 선택값(D12, 2026-11-13) — 없으면 상담 화면에서 카카오 버튼만 빠진다. */
 export const REQUIRED_WHEN_OPEN: (keyof Office)[] = [
-  'phone', 'kakaoChannelUrl', 'address', 'registrationNumber', 'businessNumber', 'formEndpoint',
+  'phone', 'address', 'registrationNumber', 'businessNumber', 'formEndpoint',
 ];
 
 export function assertOfficeValid(candidate: Office): void {

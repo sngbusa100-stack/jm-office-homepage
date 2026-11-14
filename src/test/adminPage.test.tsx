@@ -189,7 +189,7 @@ describe('접수 관리 페이지', () => {
     expect(draft.value).toContain('JM-20260717-AB12');
     expect(draft.value).toContain('혈중알코올농도');
     expect(draft.value).toContain('정명 행정사사무소 대표 행정사 정재훈입니다.');
-    expect(draft.value).toContain('이메일 sngbusa10@naver.com');
+    expect(draft.value).toContain('이메일 jungmyung0909@naver.com');
   });
 
   it('비자 접수 답변은 다시 묻지 않고, 연락 언어가 한국어가 아니면 번역 검수 메모를 보여준다', async () => {

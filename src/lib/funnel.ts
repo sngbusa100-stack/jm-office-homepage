@@ -7,6 +7,9 @@ export const FUNNEL_EVENTS = [
   'diagnosis_complete',
   'consult_view',
   'consult_submit',
+  // 연락 버튼 누름(2026-11-14 D13). 단계가 아니라 창구별 횟수라 관리 화면 퍼널 칸에는 넣지 않는다.
+  'contact_phone_click',
+  'contact_email_click',
 ] as const;
 
 export const FUNNEL_DOMAINS = [
@@ -169,4 +172,17 @@ export async function trackFunnelEvent(
   } catch {
     // 통계 전송 장애는 공개 기능과 상담 신청에 영향을 주지 않는다.
   }
+}
+
+/**
+ * 전화·이메일 연결 버튼을 누른 횟수만 센다(2026-11-14 D13). 번호·주소·누른 사람은 보내지 않는다.
+ * 링크 이동을 막지 않도록 기다리지 않는다(keepalive 전송).
+ */
+export function trackContactClick(kind: 'phone' | 'email', domain: FunnelDomain = 'home'): void {
+  const path = typeof window === 'undefined' ? '/' : window.location.pathname;
+  void trackFunnelEvent({
+    event: kind === 'phone' ? 'contact_phone_click' : 'contact_email_click',
+    domain,
+    path,
+  });
 }

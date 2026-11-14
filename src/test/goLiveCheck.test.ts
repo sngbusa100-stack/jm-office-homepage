@@ -27,7 +27,7 @@ describe('사무소 정보', () => {
   it('개업 전이면 개업 전에 채울 값을 알려 준다', () => {
     const result = checkOffice(CLOSED_OFFICE);
     expect(result.status).toBe('fail');
-    expect(result.detail).toContain('kakaoChannelUrl');
+    expect(result.detail).not.toContain('kakaoChannelUrl'); // D12: 카카오는 선택값
     expect(result.detail).toContain('registrationNumber');
     expect(result.detail).toContain('openedOn');
   });

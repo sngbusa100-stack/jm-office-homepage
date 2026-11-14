@@ -13,7 +13,8 @@ function visibleText(html: string): string {
   return html.replace(/<!--.*?-->/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 }
 
-describe('개업 전 화면 문구(현재 상태)', () => {
+// 2026-11-15 개업 전환 뒤에는 건너뛴다(개업 뒤 문구는 goLiveWording.open.test.tsx).
+describe.skipIf(office.isOpen)('개업 전 화면 문구(현재 상태)', () => {
   it('지금은 개업 전이다', () => {
     expect(office.isOpen).toBe(false);
   });
