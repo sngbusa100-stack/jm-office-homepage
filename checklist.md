@@ -894,5 +894,5 @@
 ## 2026-11-15 즉시 개업 전환 (Claude, Codex 이어받음)
 - [x] 준비 패치 적용(office.json 제외 후 손으로), isOpen·openedOn·이메일, D12 카카오 선택값
 - [x] 처리방침 F2 상담 창구 문장·시행일·동의 버전·이력, 시험 상태별로 고침 — check 통과
-- [ ] Vercel `CONSULT_OPEN=true` → 커밋·push → 운영 화면·API 확인·go-live:check --strict
+- [x] Vercel `CONSULT_OPEN=true` → 커밋 `84582df` push → 운영 확인(ego-browser: 상담 폼 활성·바닥글 등록번호·새 이메일·방침 11-15·개업 전 문구 0·가로 넘침 0), `go-live:check --strict` 통과 9·실패 0·건너뜀 0
 - [ ] 남은 것: 시험 접수 1건 왕복(C13), 위임 업무 방침 문장(F10·F9 뒤), 카카오 채널, 검색엔진 재수집
