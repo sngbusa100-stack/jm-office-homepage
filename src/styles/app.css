@@ -455,6 +455,7 @@ th { background: var(--surface-muted); font-weight: 700; }
 /* 숨김 입력: 아래 입력 규칙의 padding·border가 .sr-only를 이기지 못하게 한다. */
 .consult-form .sr-only { padding: 0; border: 0; width: 1px; height: 1px; }
 .location-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.location-map { display: block; width: 100%; height: 320px; margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; }
 .consult-form label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
 .consult-form input[type='text'],
 .consult-form input[type='tel'],

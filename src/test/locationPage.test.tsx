@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
 import { office } from '../data/office';
 import { getPageMeta } from '../lib/pageMeta';
-import { mapLinks } from '../lib/officeContact';
+import { mapEmbedUrl, mapLinks } from '../lib/officeContact';
 
 function renderAt(path: string) {
   return render(
@@ -35,6 +35,8 @@ describe('오시는 길', () => {
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     }
+    // 지도는 페이지 안에 바로 보인다(2026-11-17 주인님 지시). CSP frame-src와 짝이다.
+    expect(main.getByTitle('정명 행정사사무소 위치 지도')).toHaveAttribute('src', mapEmbedUrl(office.mapQuery!));
     expect(main.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
     expect(main.getByText(/02-897-6254/)).toBeInTheDocument();
     expect(main.getByRole('link', { name: 'jungmyung0909@naver.com' })).toHaveAttribute('href', 'mailto:jungmyung0909@naver.com');

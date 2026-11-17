@@ -6,6 +6,14 @@ export function toInternationalPhone(phone: string): string {
   return `+82-${phone.replace(/^0/, '')}`;
 }
 
+/**
+ * 오시는 길 페이지에 띄우는 지도 iframe 주소. 구글 지도 퍼가기는 API 키가 필요 없다
+ * (네이버·카카오 지도는 개발자 키·도메인 등록이 필요해 2026-11-17 구글로 정함). vercel.json CSP frame-src와 짝이다.
+ */
+export function mapEmbedUrl(query: string): string {
+  return `https://www.google.com/maps?q=${encodeURIComponent(query)}&hl=ko&z=17&output=embed`;
+}
+
 /** 외부 스크립트 없이 지도 앱 검색 화면을 여는 바로가기 주소. */
 export function mapLinks(query: string): { naver: string; kakao: string } {
   const encoded = encodeURIComponent(query);

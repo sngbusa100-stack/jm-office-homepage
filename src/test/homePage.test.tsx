@@ -114,20 +114,18 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     expect(services).toBeLessThan(check);
   });
 
-  it('대표 인사말 요약에 변호사와 같은 공간을 쓰는 이유가 있고, 전문은 /about으로 간다', () => {
+  it('대표 인사말 요약은 최선의 다짐과 같은 사무실 변호사 상담을 담고, 전문은 /about으로 간다', () => {
     renderAt('/');
     // 인사말 제목은 인사 한 줄이다(따로 있던 인사 문단과 합침, 2026-11-06)
     expect(profile.greetingTitle).toBe('안녕하세요, 대표 행정사 정재훈입니다.');
     const section = screen.getByRole('region', { name: profile.greetingTitle });
     expect(within(section).getAllByText('안녕하세요, 대표 행정사 정재훈입니다.')).toHaveLength(1);
-    expect(section.textContent).toContain('변호사 사무실과 같은 공간에 행정사사무소를 열었습니다');
-    // 2026-11-06 주인님 문장: "처음부터 다시 설명하고 많이 비용을 부담하지 않도록"('많이 비용을'만 '많은 비용을'로)
-    expect(section.textContent).toContain('새로 변호사를 찾아 처음부터 다시 설명하고 많은 비용을 부담하지 않도록, 변호사 사무실과 같은 공간에');
-    expect(profile.greeting.join('\n')).toContain('시간도 비용도 마음도 두 번 듭니다');
-    // 예전 세 번째 카드에만 있던 변호사 이름은 인사말 문단으로 옮겼다(2026-11-06)
-    expect(section.textContent).toContain('같은 사무실의 이동호 변호사(DHL 법률사무소)에게 바로 상담받으실 수 있습니다');
-    // 마지막 다짐은 주인님 문장(2026-11-06): "~ 결과가 나오는 것을 목표로 최선을 다하겠습니다"
-    expect(profile.greetingSummary.at(-1)).toBe('의뢰인께 가장 좋은 결과가 나오는 것을 목표로 최선을 다하겠습니다.');
+    // 2026-11-17 주인님 지시: 변호사 사무실 홍보처럼 읽히지 않게 "분야가 넓어 다 알기 어렵지만 최선 + 옆 변호사에게 바로 상담" 취지로
+    expect(section.textContent).toContain('분야가 넓어 모든 부분을 다 알기는 어렵습니다');
+    expect(section.textContent).toContain('의뢰인께 가장 좋은 결과가 나오는 것을 목표로 항상 최선을 다하겠습니다');
+    expect(section.textContent).toContain('같은 사무실의 이동호 변호사에게 바로 상담받으실 수 있습니다');
+    expect(section.textContent).not.toContain('변호사 사무실과 같은 공간에 행정사사무소를 열었습니다');
+    expect(section.textContent).not.toContain('DHL 법률사무소');
     expect(within(section).getByRole('link', { name: /인사말 전문 보기/ })).toHaveAttribute('href', '/about');
     const promises = within(section).getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
     expect(promises).toEqual(['정확하게', '명쾌하게']);

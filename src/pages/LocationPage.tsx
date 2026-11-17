@@ -2,6 +2,7 @@ import { office } from '../data/office';
 import { OfficeLocation } from '../components/OfficeLocation';
 import { OfficeStructuredData } from '../components/OfficeStructuredData';
 import { trackContactClick } from '../lib/funnel';
+import { mapEmbedUrl } from '../lib/officeContact';
 
 export function LocationPage() {
   return (
@@ -14,6 +15,15 @@ export function LocationPage() {
       <section className="card" aria-labelledby="location-address">
         <h2 id="location-address">주소</h2>
         <OfficeLocation />
+        {office.mapQuery && (
+          <iframe
+            className="location-map"
+            title="정명 행정사사무소 위치 지도"
+            src={mapEmbedUrl(office.mapQuery)}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        )}
       </section>
 
       {(office.consultHours || office.parking) && (

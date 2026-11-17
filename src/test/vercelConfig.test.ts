@@ -90,6 +90,8 @@ describe('Vercel 연결 규칙', () => {
       expect(csp).toContain("script-src 'self'");
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).toContain("object-src 'none'");
+      // 오시는 길 지도 iframe(mapEmbedUrl)만 허용한다
+      expect(csp).toContain('frame-src https://www.google.com https://maps.google.com');
       expect(csp).not.toContain("'unsafe-eval'");
       const scriptSrc = csp.split(';').map((d) => d.trim()).find((d) => d.startsWith('script-src')) ?? '';
       expect(scriptSrc).not.toContain("'unsafe-inline'");
