@@ -121,8 +121,8 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     const section = screen.getByRole('region', { name: profile.greetingTitle });
     expect(within(section).getAllByText('안녕하세요, 대표 행정사 정재훈입니다.')).toHaveLength(1);
     // 2026-11-17 주인님 지시: 변호사 사무실 홍보처럼 읽히지 않게 "분야가 넓어 다 알기 어렵지만 최선 + 옆 변호사에게 바로 상담" 취지로
-    expect(section.textContent).toContain('분야가 넓어 모든 부분을 다 알기는 어렵습니다');
-    expect(section.textContent).toContain('의뢰인께 가장 좋은 결과가 나오는 것을 목표로 항상 최선을 다하겠습니다');
+    // 2026-11-17 주인님 지시: 두 문장을 "~ 어렵지만, 의뢰인께 ~" 한 문장으로
+    expect(section.textContent).toContain('분야가 넓어 모든 부분을 다 알기는 어렵지만, 의뢰인께 가장 좋은 결과가 나오는 것을 목표로 항상 최선을 다하겠습니다');
     expect(section.textContent).toContain('같은 사무실의 이동호 변호사에게 바로 상담받으실 수 있습니다');
     expect(section.textContent).not.toContain('변호사 사무실과 같은 공간에 행정사사무소를 열었습니다');
     expect(section.textContent).not.toContain('DHL 법률사무소');
