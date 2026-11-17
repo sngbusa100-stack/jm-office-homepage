@@ -40,7 +40,7 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     renderAt('/');
     const list = screen.getByRole('list', { name: '정명 행정사사무소의 특징' });
     const items = within(list).getAllByRole('listitem').map((li) => li.querySelector('strong')?.textContent);
-    expect(items).toEqual(['대표 행정사가 직접', '변호사 사무실과 같은 공간', '셀프 진단(4종) / 비자 진단(5개 언어)', '광명KTX역 5번출구 앞']);
+    expect(items).toEqual(['대표 행정사가 직접', '셀프 진단(4종) / 비자 진단(5개 언어)', '변호사 사무실과 같은 공간', '광명KTX역 5번출구 앞']);
   });
 
   it('첫 화면에 같은 말을 두 번 쓰지 않는다 — 맨 위 위치 글씨를 빼고 KTX역 안내는 차별점 한 줄만(2026-11-06 주인님 지시)', () => {
