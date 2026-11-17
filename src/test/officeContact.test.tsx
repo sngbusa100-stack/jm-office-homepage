@@ -17,7 +17,7 @@ describe('사무소 연락처 데이터', () => {
   it('사무실 연락처와 주소를 갖고 있다', () => {
     expect(office.phone).toBe('02-897-6251');
     expect(office.fax).toBe('02-897-6254');
-    expect(office.email).toBe('jungmyung0909@naver.com');
+    expect(office.email).toBe('jungmyungoffice@naver.com');
     expect(office.representative).toBe('정재훈');
     expect(office.address).toBe(`${office.addressRegion} ${office.addressLocality} ${office.streetAddress}`);
     expect(office.address).toBe('경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호');
@@ -43,7 +43,7 @@ describe('사무소 연락처 데이터', () => {
       url: 'https://jungmyungoffice.com',
       telephone: '+82-2-897-6251',
       faxNumber: '+82-2-897-6254',
-      email: 'jungmyung0909@naver.com',
+      email: 'jungmyungoffice@naver.com',
       address: {
         '@type': 'PostalAddress',
         addressCountry: 'KR',
@@ -119,7 +119,7 @@ describe('개업 전 연락처 공개', () => {
     expect(footer.getByText(/경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호/)).toBeInTheDocument();
     expect(footer.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
     expect(footer.getByText(/02-897-6254/)).toBeInTheDocument();
-    expect(footer.getByRole('link', { name: 'jungmyung0909@naver.com' })).toHaveAttribute('href', 'mailto:jungmyung0909@naver.com');
+    expect(footer.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
     expect(footer.getByRole('link', { name: /네이버 블로그/ })).toHaveAttribute('href', 'https://blog.naver.com/jungmyung0909');
     expect(footer.getByRole('link', { name: '네이버 지도' })).toHaveAttribute('href', mapLinks(office.mapQuery!).naver);
     if (office.isOpen) {
@@ -162,7 +162,7 @@ describe('개업 전 연락처 공개', () => {
   it('개인정보처리방침 문의처를 공개된 사무소 연락처로 안내한다', () => {
     renderAt('/privacy');
     const contact = within(screen.getByRole('region', { name: '개인정보 보호책임자' }));
-    expect(contact.getByRole('link', { name: 'jungmyung0909@naver.com' })).toHaveAttribute('href', 'mailto:jungmyung0909@naver.com');
+    expect(contact.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
     expect(contact.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
     expect(contact.queryByText(/개업 후 이 사이트와 사무소 안내에 공개되는 연락처/)).toBeNull();
   });

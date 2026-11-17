@@ -86,3 +86,8 @@
 - 주인님 지시: "지도가 보이도록", 인사말이 "변호사실 홍보하는 것 같다". `/location`에 구글 지도 iframe(`mapEmbedUrl`, API 키 불필요)을 넣고 `vercel.json` CSP에 `frame-src https://www.google.com https://maps.google.com`을 더했다. 네이버·카카오 지도는 개발자 키·도메인 등록이 필요해 쓰지 않았다.
 - 홈 요약·/about 인사말을 "분야가 넓어 다 알기 어렵지만 항상 최선" + "같은 사무실 이동호 변호사에게 바로 상담" 취지로 고쳤다. 첫 화면 장점 줄 "변호사 사무실과 같은 공간"은 그대로 두었다.
 - `9393101` 운영 배포, 운영 화면에서 지도·문구 확인.
+
+### 2026-11-17 공개 이메일 교체 (Claude)
+
+- 주인님이 사무소 전용 네이버 계정 jungmyungoffice@naver.com을 새로 만들고 "홈페이지에 적용해줘" 지시. 메인·비자 사이트의 공개 이메일을 바꿨다(메인은 office.json 원본, 답장 초안 라벨 api/_reply-labels.mjs, 시험). 블로그 blog.naver.com/jungmyung0909는 그대로. 두 저장소 `npm run check` 통과.
+
