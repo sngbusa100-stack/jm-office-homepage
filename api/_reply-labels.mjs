@@ -3,7 +3,7 @@ export default {
   "office": {
     "name": "정명 행정사사무소",
     "representative": "정재훈",
-    "phone": "02-897-6251",
+    "phone": "02-899-1849",
     "email": "jungmyungoffice@naver.com"
   },
   "diagnosis": {

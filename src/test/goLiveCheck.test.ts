@@ -15,7 +15,7 @@ import {
 } from '../../scripts/go-live-check-lib.mjs';
 
 const CLOSED_OFFICE = {
-  isOpen: false, openedOn: null, phone: '02-897-6251', kakaoChannelUrl: null, address: '경기도 광명시',
+  isOpen: false, openedOn: null, phone: '02-899-1849', kakaoChannelUrl: null, address: '경기도 광명시',
   registrationNumber: null, businessNumber: null, formEndpoint: 'https://jungmyungoffice.com/api/consult',
 };
 const OPEN_OFFICE = {

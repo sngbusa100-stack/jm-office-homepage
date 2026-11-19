@@ -1,7 +1,7 @@
 import type { Office } from '../data/office';
 import { SLOGAN } from '../data/profile';
 
-/** 국내 전화번호(02-897-6251)를 국제 표기(+82-2-897-6251)로 바꾼다. */
+/** 국내 전화번호(02-899-1849)를 국제 표기(+82-2-899-1849)로 바꾼다. */
 export function toInternationalPhone(phone: string): string {
   return `+82-${phone.replace(/^0/, '')}`;
 }

@@ -37,7 +37,7 @@ describe('오시는 길', () => {
     }
     // 지도는 페이지 안에 바로 보인다(2026-11-17 주인님 지시). CSP frame-src와 짝이다.
     expect(main.getByTitle('정명 행정사사무소 위치 지도')).toHaveAttribute('src', mapEmbedUrl(office.mapQuery!));
-    expect(main.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
+    expect(main.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
     expect(main.getByText(/02-897-6254/)).toBeInTheDocument();
     expect(main.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
   });

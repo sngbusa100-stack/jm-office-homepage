@@ -37,7 +37,7 @@ describe('개인정보처리방침 법정 기재사항', () => {
     const section = within(screen.getByRole('region', { name: '개인정보 보호책임자' }));
     expect(section.getByText(/대표 행정사 정재훈/)).toBeInTheDocument();
     expect(section.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
-    expect(section.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
+    expect(section.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
   });
 
   it('국외 이전은 수탁자별로 이전받는 자·연락처·국가·항목·시기와 방법·목적·보유 기간을 표로 적는다', () => {

@@ -91,3 +91,8 @@
 
 - 주인님이 사무소 전용 네이버 계정 jungmyungoffice@naver.com을 새로 만들고 "홈페이지에 적용해줘" 지시. 메인·비자 사이트의 공개 이메일을 바꿨다(메인은 office.json 원본, 답장 초안 라벨 api/_reply-labels.mjs, 시험). 블로그 blog.naver.com/jungmyung0909는 그대로. 두 저장소 `npm run check` 통과.
 
+
+### 2026-11-19 사무실 전화번호 교체 (Claude)
+
+- 주인님 "사무실 일반전화 개설했어... 02-899-1849... 홈페이지 반영해줘". 메인(office.json 원본, 답장 초안 라벨, 시험)·비자 사이트(contact.ts, 국제 표기 +82-2-899-1849) 전화번호를 바꿨다. 팩스는 말씀이 없어 그대로 뒀다. 두 저장소 `npm run check` 통과.
+

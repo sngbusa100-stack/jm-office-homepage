@@ -15,7 +15,7 @@ function renderAt(path: string) {
 
 describe('사무소 연락처 데이터', () => {
   it('사무실 연락처와 주소를 갖고 있다', () => {
-    expect(office.phone).toBe('02-897-6251');
+    expect(office.phone).toBe('02-899-1849');
     expect(office.fax).toBe('02-897-6254');
     expect(office.email).toBe('jungmyungoffice@naver.com');
     expect(office.representative).toBe('정재훈');
@@ -24,7 +24,7 @@ describe('사무소 연락처 데이터', () => {
   });
 
   it('국내 번호를 국제 표기로 바꾼다', () => {
-    expect(toInternationalPhone('02-897-6251')).toBe('+82-2-897-6251');
+    expect(toInternationalPhone('02-899-1849')).toBe('+82-2-899-1849');
     expect(toInternationalPhone('010-9480-1849')).toBe('+82-10-9480-1849');
   });
 
@@ -41,7 +41,7 @@ describe('사무소 연락처 데이터', () => {
       '@type': 'LegalService',
       name: '정명 행정사사무소',
       url: 'https://jungmyungoffice.com',
-      telephone: '+82-2-897-6251',
+      telephone: '+82-2-899-1849',
       faxNumber: '+82-2-897-6254',
       email: 'jungmyungoffice@naver.com',
       address: {
@@ -117,7 +117,7 @@ describe('개업 전 연락처 공개', () => {
     const footer = within(screen.getByRole('contentinfo'));
     expect(footer.getByText(/대표 행정사 정재훈/)).toBeInTheDocument();
     expect(footer.getByText(/경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호/)).toBeInTheDocument();
-    expect(footer.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
+    expect(footer.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
     expect(footer.getByText(/02-897-6254/)).toBeInTheDocument();
     expect(footer.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
     expect(footer.getByRole('link', { name: /네이버 블로그/ })).toHaveAttribute('href', 'https://blog.naver.com/jungmyung0909');
@@ -134,7 +134,7 @@ describe('개업 전 연락처 공개', () => {
   it('상담 안내에 전화 걸기 버튼과 오시는 길을 보여주고 온라인 접수는 계속 닫아 둔다', () => {
     renderAt('/consult');
     const main = within(screen.getByRole('main'));
-    expect(main.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
+    expect(main.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
     expect(main.getByText('준비 중입니다.')).toBeInTheDocument();
     expect(main.queryByText('개업 후 공개됩니다.')).toBeNull();
 
@@ -163,7 +163,7 @@ describe('개업 전 연락처 공개', () => {
     renderAt('/privacy');
     const contact = within(screen.getByRole('region', { name: '개인정보 보호책임자' }));
     expect(contact.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
-    expect(contact.getByRole('link', { name: '02-897-6251' })).toHaveAttribute('href', 'tel:02-897-6251');
+    expect(contact.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
     expect(contact.queryByText(/개업 후 이 사이트와 사무소 안내에 공개되는 연락처/)).toBeNull();
   });
 
