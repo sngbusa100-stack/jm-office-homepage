@@ -406,7 +406,7 @@ export function ConsultPage() {
           <article className="card">
             <h3>카카오톡 채널</h3>
             {office.kakaoChannelUrl
-              ? <a className="button button--primary" href={office.kakaoChannelUrl}>카카오톡으로 문의</a>
+              ? <a className="button button--primary" href={office.kakaoChannelUrl} target="_blank" rel="noopener noreferrer">카카오톡으로 문의</a>
               : <p className="note">준비 중입니다.</p>}
           </article>
           <article className="card">

@@ -135,7 +135,9 @@ describe('개업 전 연락처 공개', () => {
     renderAt('/consult');
     const main = within(screen.getByRole('main'));
     expect(main.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
-    expect(main.getByText('준비 중입니다.')).toBeInTheDocument();
+    // 2026-11-19 카카오톡 채널 개설: 채팅 주소로 바로 연결한다.
+    expect(main.getByRole('link', { name: '카카오톡으로 문의' })).toHaveAttribute('href', 'https://pf.kakao.com/_KxhlvX/chat');
+    expect(main.queryByText('준비 중입니다.')).toBeNull();
     expect(main.queryByText('개업 후 공개됩니다.')).toBeNull();
 
     const location = within(main.getByRole('region', { name: '오시는 길' }));
