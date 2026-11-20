@@ -412,6 +412,7 @@ th { background: var(--surface-muted); font-weight: 700; }
 /* 진단 화면 간격: 제목 → 진행 막대 → 질문 카드 */
 .narrow-page > h1 + .progress { margin-top: 14px; }
 .narrow-page > .progress + .question-card { margin-top: 22px; }
+.narrow-page > .question-card + .button-row { margin-top: 20px; }
 /* legend를 float로 띄우면 fieldset 위 테두리에 걸치지 않고 카드 안쪽(패딩 안)에 놓인다 */
 .question-card legend {
   float: left;
