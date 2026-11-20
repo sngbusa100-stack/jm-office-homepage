@@ -100,6 +100,35 @@ describe('개인정보처리방침 법정 기재사항', () => {
     expect(screen.getByText(new RegExp(`${koreanDate(PRIVACY_EFFECTIVE_DATE)}부터 시행`))).toBeInTheDocument();
   });
 
+  // 위임 업무 문장(50번 F2 대조표 2·3·4·8번 줄) — 서류를 받기 전에 공개한다.
+  it('위임 업무에서 받는 서류와 고유식별·민감정보 처리 조건을 적는다', () => {
+    renderAt('/privacy');
+    const purpose = screen.getByRole('region', { name: '처리 목적' }).textContent ?? '';
+    expect(purpose).toContain('위임 업무 수행');
+    expect(purpose).toContain('업무처리부');
+    const items = screen.getByRole('region', { name: '처리하는 개인정보 항목' }).textContent ?? '';
+    for (const word of ['업무를 맡기신 뒤', '자료 요청서', '여권·외국인등록증 사본', '따로 동의를 받은 뒤', '뒷자리를 가린 사본']) {
+      expect(items, word).toContain(word);
+    }
+    // 상담 신청 단계에서는 여전히 받지 않는다.
+    expect(items).toContain('상담 신청 단계에서 받지 않습니다');
+  });
+
+  it('위임 업무 자료의 보유 기간과 법정 보존 항목을 적고, 예고 문장은 남기지 않는다', () => {
+    renderAt('/privacy');
+    const retention = screen.getByRole('region', { name: '보유 기간과 파기' }).textContent ?? '';
+    for (const word of [
+      '업무를 맡기신 경우', '계약이 끝나는 날부터 최대 1년', '기관의 최종 결과', '고유식별번호는 가려서 보관',
+      '행정사법 제24조', '국세기본법 제85조의3', '사건마다 따로 암호화한 저장 공간', '종이 서류는 파쇄',
+    ]) {
+      expect(retention, word).toContain(word);
+    }
+    expect(retention).not.toContain('다시 공개합니다');
+    // 대행기관 등록 전이라 대행 접수대장은 적지 않는다(등록 뒤 제출 대행을 시작할 때 더한다).
+    expect(retention).not.toContain('접수대장');
+    expect(screen.getByRole('region', { name: '안전성 확보 조치' }).textContent ?? '').toContain('디스크 전체를 암호화');
+  });
+
   it('상담 신청 동의 문구에 국외 이전과 거부 시 대안을 적는다', () => {
     renderAt('/consult');
     const consent = screen.getByLabelText(/개인정보 수집·이용에 동의/).closest('label')!;
