@@ -4,6 +4,9 @@ import { sanitizeVisaHandoff } from './_visa-handoff.mjs';
 import { sanitizeVisaIntake } from './_visa-intake.mjs';
 import { DEADLINE_REPORTS } from './_urgency.mjs';
 
+/** 텔레그램 알림에서 바로 여는 관리 화면 주소. 뒤에 #접수번호를 붙이면 그 접수를 펼쳐 보여 준다(AdminPage). */
+export const ADMIN_URL = 'https://jungmyungoffice.com/admin';
+
 export const TOPICS = [
   '음주운전 면허 구제',
   '영업정지 · 행정심판',
@@ -161,7 +164,8 @@ export function formatTelegramMessage(value, meta = {}) {
   if (meta.inquiryId) lines.push(`접수번호: ${meta.inquiryId}`);
   lines.push(...urgentLines);
   if (meta.indexWarning) lines.push('⚠ 접수 목록 인덱스 확인 필요');
-  lines.push('상세는 관리자 화면(/admin)에서 확인하세요.');
+  // 주소 끝 #접수번호는 서버로 가지 않고 관리 화면이 그 접수를 펼치는 데만 쓴다(개인정보 아님).
+  lines.push(`상세 보기: ${ADMIN_URL}${meta.inquiryId ? `#${meta.inquiryId}` : ''}`);
   return lines.join('\n');
 }
 

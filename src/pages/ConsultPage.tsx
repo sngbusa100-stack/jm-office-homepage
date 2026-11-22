@@ -11,6 +11,7 @@ import { VisaIntakeFields } from '../components/VisaIntakeFields';
 import { DeadlineReportField } from '../components/DeadlineReportField';
 import type { DeadlineReport } from '../data/deadlineReport';
 import { findCheck } from '../data/checks';
+import { CONSULT_TOPIC_BY_SLUG } from '../data/consultTopics';
 import { EMPTY_VISA_INTAKE, buildVisaIntakePayload, intakeWording } from '../data/visaIntake';
 import type { VisaIntakeAnswers } from '../data/visaIntake';
 
@@ -24,14 +25,7 @@ const LEVEL_LABEL: Record<ResultLevel, string> = {
 const LEVEL_KEYS: ResultLevel[] = ['urgent', 'documents', 'official', 'ready'];
 
 /** 외부 사이트(비자 진단 등)에서 ?topic=슬러그로 분야를 미리 선택해 진입할 수 있다. */
-const TOPIC_SLUGS: Record<string, string> = {
-  dui: '음주운전 면허 구제',
-  suspension: '영업정지 · 행정심판',
-  permit: '인허가',
-  visa: '출입국 · 비자',
-  veterans: '국가보훈',
-  land: '토지보상 · 내용증명 · 계약서',
-};
+const TOPIC_SLUGS = CONSULT_TOPIC_BY_SLUG;
 
 const TOPIC_FUNNEL = {
   dui: 'dui',

@@ -1,16 +1,88 @@
-// 회신 초안용 라벨 묶음 — scripts/gen-reply-labels.ts와 동기화 테스트만 쓴다.
+// 회신 초안·상담 준비 메모용 라벨 묶음 — scripts/gen-reply-labels.ts와 동기화 테스트만 쓴다.
 // 이 파일은 화면 번들에 들어가지 않지만, 생성된 api/_reply-labels.mjs는 /admin(AdminPage)을 통해 들어간다(공개 정보만 담김).
 import { checks } from '../data/checks';
+import { CONSULT_TOPIC_BY_SLUG } from '../data/consultTopics';
+import { DEADLINE_REPORT_OPTIONS, URGENT_REASON_LABELS } from '../data/deadlineReport';
 import office from '../data/office.json';
+import { services } from '../data/services';
 import { VISA_INTAKE_LABELS } from '../data/visaIntake';
+import type { ResultLevel } from '../types/content';
+
+/** 상담 준비 메모(api/_consult-brief.mjs)가 쓰는 분야별 업무 안내 — 업무 상세 페이지(services.ts)와 같은 내용. */
+export interface BriefTopicLabels {
+  service: string;
+  deadlines: string[];
+  documents: string[];
+  process: string[];
+  review: string[];
+  sources: { label: string; url: string }[];
+}
+
+/** 셀프 진단 결과 화면이 고객에게 보여 준 안내(src/domain/diagnosis.ts classifyAnswers와 같은 규칙). */
+export interface BriefCheckLabels {
+  title: string;
+  /** 문항 순서대로. 선택지별 등급·안내문·근거 */
+  questions: { id: string; options: Record<string, { level: ResultLevel; note: string; lawRef?: string }> }[];
+  overrides: { questionId: string; when: Record<string, string[]>; note: string; lawRef?: string }[];
+}
 
 export interface ReplyLabels {
   office: { name: string; representative: string; phone: string; email: string };
   diagnosis: Record<string, Record<string, { text: string; options: Record<string, string> }>>;
   visa: Record<string, { question: string; options?: Record<string, string> }>;
+  brief: {
+    topics: Record<string, BriefTopicLabels>;
+    checks: Record<string, BriefCheckLabels>;
+    deadlineReport: Record<string, string>;
+    urgentReasons: Record<string, string>;
+  };
 }
 
 export const OFFICE_NAME = '정명 행정사사무소';
+
+function buildBriefLabels(): ReplyLabels['brief'] {
+  const topics: Record<string, BriefTopicLabels> = {};
+  for (const service of services) {
+    const topic = CONSULT_TOPIC_BY_SLUG[service.consultTopic];
+    if (!topic) continue;
+    topics[topic] = {
+      service: service.name,
+      deadlines: service.deadlines ?? [],
+      documents: service.documents,
+      process: service.process,
+      review: service.professionalReview,
+      sources: service.officialSources.map((s) => ({ label: s.label, url: s.url })),
+    };
+  }
+  return {
+    topics,
+    checks: Object.fromEntries(
+      Object.entries(checks).map(([domain, definition]) => [
+        domain,
+        {
+          title: definition.title,
+          questions: definition.questions.map((q) => ({
+            id: q.id,
+            options: Object.fromEntries(
+              q.options.map((o) => [
+                o.id,
+                { level: o.level, note: o.note, ...(o.lawRef ? { lawRef: o.lawRef } : {}) },
+              ]),
+            ),
+          })),
+          overrides: (definition.overrides ?? []).map((o) => ({
+            questionId: o.questionId,
+            when: o.when,
+            note: o.note,
+            ...(o.lawRef ? { lawRef: o.lawRef } : {}),
+          })),
+        },
+      ]),
+    ),
+    deadlineReport: Object.fromEntries(DEADLINE_REPORT_OPTIONS.map((o) => [o.value, o.label])),
+    urgentReasons: { ...URGENT_REASON_LABELS },
+  };
+}
 
 export function buildReplyLabels(): ReplyLabels {
   return {
@@ -41,5 +113,6 @@ export function buildReplyLabels(): ReplyLabels {
         },
       ]),
     ),
+    brief: buildBriefLabels(),
   };
 }

@@ -261,6 +261,19 @@ describe('연동기 API 핸들러', () => {
     expect(JSON.parse(data.get('inquiry:JM-1')).replyDraft).toBeUndefined();
   });
 
+  it('GET은 상담 준비 메모를 계산해 붙이고 저장하지는 않는다', async () => {
+    const { data, index } = stubRedis();
+    data.set('inquiry:JM-1', JSON.stringify(buildInquiryRecord(value, {}, { id: 'JM-1', now: NOW })));
+    index.push('JM-1');
+    const res = mockRes();
+    await handler({ method: 'GET', headers: AUTH }, res);
+    const [item] = res.body.items;
+    expect(item.consultBrief[0].title).toBe('한눈에');
+    expect(item.consultBrief.map((s) => s.title)).toContain('받아 둘 서류');
+    expect(JSON.stringify(item.consultBrief)).not.toContain(value.name);
+    expect(JSON.parse(data.get('inquiry:JM-1')).consultBrief).toBeUndefined();
+  });
+
   it('GET은 접수마다 긴급 근거를 계산해 붙이고 저장하지는 않는다', async () => {
     const { data, index } = stubRedis();
     data.set('inquiry:JM-1', JSON.stringify(buildInquiryRecord(

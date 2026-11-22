@@ -311,15 +311,14 @@ function planVisa(record) {
 }
 
 /**
- * 첫 회신 초안을 만든다. 파기됐거나 이름이 없거나 모르는 분야면 null.
- * @returns {{ text: string, notes: string[] } | null} notes는 행정사용 내부 메모(발송 본문에 넣지 않음)
+ * 분야 템플릿에 접수 답을 대조해 되짚을 것(recap)·물어볼 것(asks)·내부 메모(notes)를 정한다.
+ * 회신 초안과 상담 준비 메모(api/_consult-brief.mjs)가 같은 결과를 쓴다. 모르는 분야면 null.
+ * urgent이면 asks는 기한 질문이 앞에 온다.
  */
-export function buildReplyDraft(record) {
-  if (!record || record.purged || !record.name) return null;
+export function planReply(record) {
+  if (!record) return null;
   const template = REPLY_TEMPLATES.find((t) => t.topic === record.topic);
   if (!template) return null;
-  const { office } = LABELS;
-
   const plan = template.visa ? planVisa(record) : planDiagnosis(template, record);
   // 고객이 기한 '급함·모름'을 골랐는데 이 분야 질문에 기한 질문이 없으면 기한 날짜부터 묻는다.
   if (urgentReasons(record).includes('selfReported') && !plan.asks.some((a) => a.deadline)) {
@@ -329,10 +328,36 @@ export function buildReplyDraft(record) {
   const asks = urgent
     ? [...plan.asks.filter((a) => a.deadline), ...plan.asks.filter((a) => !a.deadline)]
     : plan.asks;
+  return { template, recap: plan.recap, asks, notes: plan.notes, urgent };
+}
 
+/**
+ * 첫 회신 초안을 만든다. 파기됐거나 이름이 없거나 모르는 분야면 null.
+ * @returns {{ text: string, notes: string[] } | null} notes는 행정사용 내부 메모(발송 본문에 넣지 않음)
+ */
+export function buildReplyDraft(record) {
+  if (!record || record.purged || !record.name) return null;
+  return composeReplyDraft(record);
+}
+
+/**
+ * 전화·카카오톡·이메일로 받은 문의의 첫 회신 초안(/admin '다른 경로 문의 응대 메모').
+ * 저장하지 않고 화면에서만 만든다. 성함을 모르면 인사만 한다. 모르는 분야면 null.
+ */
+export function buildDirectReplyDraft({ topic, name = '' } = {}) {
+  return composeReplyDraft({ topic, name: typeof name === 'string' ? name.trim() : '' });
+}
+
+function composeReplyDraft(record) {
+  const plan = planReply(record);
+  if (!plan) return null;
+  const { template, urgent, asks } = plan;
+  const { office } = LABELS;
+
+  const greeting = record.name ? `${record.name} 님, 안녕하세요.` : '안녕하세요.';
   const lines = [
-    `${record.name} 님, 안녕하세요. ${office.name} 대표 행정사 ${office.representative}입니다.`,
-    `접수번호 ${record.id} 상담 신청 확인했습니다.`,
+    `${greeting} ${office.name} 대표 행정사 ${office.representative}입니다.`,
+    record.id ? `접수번호 ${record.id} 상담 신청 확인했습니다.` : '문의 주셔서 감사합니다.',
     '',
   ];
   if (urgent) lines.push(URGENT_LINE, '');

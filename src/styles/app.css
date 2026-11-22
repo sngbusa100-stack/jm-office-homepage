@@ -557,6 +557,8 @@ th { background: var(--surface-muted); font-weight: 700; }
 .admin-item summary {
   cursor: pointer;
 }
+/* 텔레그램 링크(#접수번호)로 내려왔을 때 제목줄이 상단 메뉴에 가리지 않게 */
+.admin-item[id] { scroll-margin-top: 80px; }
 .admin-badge-urgent {
   display: inline-block;
   margin-right: 6px;
@@ -590,6 +592,19 @@ th { background: var(--surface-muted); font-weight: 700; }
 }
 .admin-reply {
   margin-top: 12px;
+}
+.admin-brief {
+  margin-top: 8px;
+  padding: 4px 12px 12px;
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+}
+.admin-brief h4 {
+  margin: 12px 0 4px;
+  font-size: var(--fs-base);
+}
+.admin-brief li {
+  overflow-wrap: anywhere;
 }
 .admin-purge {
   margin-top: 16px;

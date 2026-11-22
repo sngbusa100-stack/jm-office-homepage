@@ -276,7 +276,8 @@ describe('텔레그램 메시지 포맷', () => {
     });
     expect(text).toContain('새 상담 접수');
     expect(text).toContain('접수번호: JM-20260718-AB12');
-    expect(text).toContain('관리자 화면');
+    // 누르면 관리 화면이 그 접수를 바로 펼친다. 주소에는 접수번호만 붙는다.
+    expect(text).toContain('상세 보기: https://jungmyungoffice.com/admin#JM-20260718-AB12');
     expect(text).not.toContain('홍길동');
     expect(text).not.toContain('010-1234-5678');
     expect(text).not.toContain(TOPICS[0]);

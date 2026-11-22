@@ -51,8 +51,9 @@ describe('접수 연동 계약 (api/_inquiry-contract.json)', () => {
     expect(Object.values(contract.topics).filter((r) => (r as { route: string }).route === 'case')).toHaveLength(2);
   });
 
-  it('연동기 GET은 저장하지 않는 회신 초안과 긴급 근거를 함께 돌려준다', () => {
-    expect(contract.connectorGetExtras).toEqual(['replyDraft', 'urgentReasons']);
+  it('연동기 GET은 저장하지 않는 회신 초안·긴급 근거·상담 준비 메모를 함께 돌려준다', () => {
+    expect(contract.connectorGetExtras).toEqual(['replyDraft', 'urgentReasons', 'consultBrief']);
+    expect(contract.recordFields).not.toContain('consultBrief');
     expect(contract.recordFields).not.toContain('replyDraft');
     expect(contract.recordFields).not.toContain('urgentReasons');
   });

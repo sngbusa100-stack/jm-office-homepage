@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { removeStorage, safeSessionGet, safeSessionSet } from '../lib/browserStorage';
+import { readStorage, removeStorage, safeSessionGet, safeSessionSet, writeStorage } from '../lib/browserStorage';
 import {
   fetchAdminDashboard,
   patchInquiry,
@@ -7,13 +7,64 @@ import {
   summarizeInquiries,
 } from '../lib/adminApi';
 import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/adminApi';
-import { buildReplyDraft } from '../../api/_reply-draft.mjs';
+import { TOPIC_ROUTES, buildDirectReplyDraft, buildReplyDraft } from '../../api/_reply-draft.mjs';
+import { buildConsultBrief, consultBriefText } from '../../api/_consult-brief.mjs';
+import type { ConsultBriefSection } from '../../api/_consult-brief.mjs';
 import { findCheck } from '../data/checks';
 import { describeVisaDiagnosisAnswer } from '../data/visaDiagnosisLabels';
 import { describeVisaIntake } from '../data/visaIntake';
 import { DEADLINE_REPORT_OPTIONS, URGENT_REASON_LABELS } from '../data/deadlineReport';
 
 const TOKEN_KEY = 'admin:token';
+/** 접수 주소 끝의 #접수번호(텔레그램 알림 링크). 형식이 맞을 때만 쓴다. */
+const INQUIRY_HASH = /^#(JM-\d{8}-[A-Z0-9]{4})$/;
+const DIRECT_TOPICS = Object.keys(TOPIC_ROUTES);
+
+function readSavedToken(): string | null {
+  // 탭을 닫으면 지워지는 세션 저장이 기본이고, '이 기기에서 로그인 유지'를 고른 기기에만 오래 남긴다.
+  return safeSessionGet(TOKEN_KEY) ?? readStorage('localStorage', TOKEN_KEY);
+}
+
+function forgetToken() {
+  removeStorage('sessionStorage', TOKEN_KEY);
+  removeStorage('localStorage', TOKEN_KEY);
+}
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // 클립보드 권한이 없으면 화면의 글을 직접 복사하면 된다.
+    return false;
+  }
+}
+
+/** 상담 준비 메모(행정사용, 고객에게 보내지 않음). api/_consult-brief.mjs가 만든 구역을 그대로 보여 준다. */
+function ConsultBriefView({ sections, copyKey, copiedKey, onCopy }: {
+  sections: ConsultBriefSection[];
+  copyKey: string;
+  copiedKey: string | null;
+  onCopy: (key: string, text: string) => void;
+}) {
+  return (
+    <div className="admin-brief">
+      {sections.map((section) => (
+        <section key={section.title}>
+          <h4>{section.title}</h4>
+          <ul className="admin-stat-list">
+            {section.lines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <button className="button" type="button" onClick={() => onCopy(copyKey, consultBriefText(sections))}>
+        {copiedKey === copyKey ? '메모 복사됨' : '메모 복사'}
+      </button>
+    </div>
+  );
+}
 
 const STATUS_KEYS = ['new', 'in_progress', 'done', 'on_hold'] as const;
 
@@ -77,8 +128,14 @@ function formatDateTime(iso: string): string {
 }
 
 export function AdminPage() {
-  const [token, setToken] = useState<string | null>(() => safeSessionGet(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(readSavedToken);
   const [tokenInput, setTokenInput] = useState('');
+  const [rememberDevice, setRememberDevice] = useState(false);
+  const [focusId] = useState<string | null>(() => INQUIRY_HASH.exec(window.location.hash)?.[1] ?? null);
+  const [directTopic, setDirectTopic] = useState(DIRECT_TOPICS[0] ?? '');
+  const [directName, setDirectName] = useState('');
+  const [directResult, setDirectResult] = useState<{ brief: ConsultBriefSection[]; draft: string; notes: string[] } | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [items, setItems] = useState<InquiryRecord[] | null>(null);
   const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +150,7 @@ export function AdminPage() {
     const result = await fetchAdminDashboard(activeToken);
     if (!result.ok) {
       if (result.error === 'unauthorized') {
-        removeStorage('sessionStorage', TOKEN_KEY);
+        forgetToken();
         setToken(null);
         setError('관리자 토큰이 올바르지 않습니다.');
       } else {
@@ -111,12 +168,38 @@ export function AdminPage() {
     if (token) void load(token);
   }, [token, load]);
 
+  // 텔레그램 알림 링크(#접수번호)로 들어오면 목록을 불러온 뒤 그 접수로 내려간다.
+  useEffect(() => {
+    if (!focusId || !items) return;
+    document.getElementById(`inquiry-${focusId}`)?.scrollIntoView?.({ block: 'start' });
+  }, [focusId, items]);
+
   function handleTokenSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = tokenInput.trim();
     if (!value) return;
     safeSessionSet(TOKEN_KEY, value);
+    if (rememberDevice) writeStorage('localStorage', TOKEN_KEY, value);
     setToken(value);
+  }
+
+  function handleLogout() {
+    forgetToken();
+    setToken(null);
+    setItems(null);
+    setFunnel(null);
+  }
+
+  async function handleCopy(key: string, text: string) {
+    if (await copyText(text)) setCopiedKey(key);
+  }
+
+  function handleDirectBuild(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const brief = buildConsultBrief({ topic: directTopic }) ?? [];
+    const draft = buildDirectReplyDraft({ topic: directTopic, name: directName });
+    setDirectResult({ brief, draft: draft?.text ?? '', notes: draft?.notes ?? [] });
+    setCopiedKey(null);
   }
 
   function replaceItem(updated: InquiryRecord) {
@@ -175,12 +258,7 @@ export function AdminPage() {
   async function handleCopyReply(id: string) {
     const text = replyDrafts[id];
     if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(id);
-    } catch {
-      // 클립보드 권한이 없으면 textarea에서 직접 복사하면 된다.
-    }
+    if (await copyText(text)) setCopiedId(id);
   }
 
   const stats = useMemo(() => summarizeInquiries(items ?? []), [items]);
@@ -214,6 +292,14 @@ export function AdminPage() {
               autoComplete="off"
             />
           </label>
+          <label className="agree">
+            <input
+              type="checkbox"
+              checked={rememberDevice}
+              onChange={(e) => setRememberDevice(e.target.checked)}
+            />
+            이 기기에서 로그인 유지(대표님 개인 휴대폰·PC에서만 선택)
+          </label>
           <button className="button button--primary" type="submit">
             접속
           </button>
@@ -232,6 +318,9 @@ export function AdminPage() {
       <header className="page-header">
         <h1>접수 관리</h1>
         <p className="note">상담 접수 현황을 확인하고 상태·메모·회신문을 관리합니다.</p>
+        <button className="button" type="button" onClick={handleLogout}>
+          로그아웃(이 기기에서 토큰 지우기)
+        </button>
       </header>
 
       {error && (
@@ -313,6 +402,65 @@ export function AdminPage() {
         )}
       </section>
 
+      <section aria-labelledby="direct-inquiry">
+        <h2 id="direct-inquiry">전화·카카오톡·이메일 문의 응대 메모</h2>
+        <details className="card admin-item">
+          <summary>분야를 고르면 상담 준비 메모와 첫 회신 초안을 만듭니다</summary>
+          <p className="note">
+            사이트 상담 신청 밖으로 들어온 문의용입니다. 이 화면에서만 만들고 어디에도 저장하지 않습니다.
+            카카오톡 답장·문자·이메일에 복사해 고쳐 쓰세요.
+          </p>
+          <form className="consult-form" onSubmit={handleDirectBuild}>
+            <label>
+              분야
+              <select value={directTopic} onChange={(e) => setDirectTopic(e.target.value)}>
+                {DIRECT_TOPICS.map((topic) => (
+                  <option key={topic} value={topic}>{topic}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              성함(선택 — 회신 첫 줄에만 씀)
+              <input type="text" value={directName} onChange={(e) => setDirectName(e.target.value)} autoComplete="off" />
+            </label>
+            <button className="button button--primary" type="submit">메모·회신 초안 만들기</button>
+          </form>
+          {directResult && (
+            <>
+              <h3>상담 준비 메모</h3>
+              <ConsultBriefView
+                sections={directResult.brief}
+                copyKey="direct-brief"
+                copiedKey={copiedKey}
+                onCopy={(key, text) => void handleCopy(key, text)}
+              />
+              {directResult.draft && (
+                <div className="admin-reply">
+                  {directResult.notes.map((note) => (
+                    <p className="note" key={note}>{note}</p>
+                  ))}
+                  <label>
+                    첫 회신 초안
+                    <textarea
+                      rows={12}
+                      value={directResult.draft}
+                      onChange={(e) => setDirectResult((prev) => (prev ? { ...prev, draft: e.target.value } : prev))}
+                    />
+                  </label>
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => void handleCopy('direct-draft', directResult.draft)}
+                  >
+                    {copiedKey === 'direct-draft' ? '초안 복사됨' : '초안 복사'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </details>
+      </section>
+
       <section aria-labelledby="inquiries">
         <h2 id="inquiries">접수 목록</h2>
         <div className="admin-filter" role="group" aria-label="상태 필터">
@@ -346,7 +494,12 @@ export function AdminPage() {
         {items !== null && visible.length === 0 && <p className="note">표시할 접수가 없습니다.</p>}
 
         {visible.map((item) => (
-          <details className="card admin-item" key={item.id}>
+          <details
+            className="card admin-item"
+            key={item.id}
+            id={`inquiry-${item.id}`}
+            open={item.id === focusId || undefined}
+          >
             <summary>
               {isUrgentItem(item) && (
                 <span className="admin-badge-urgent" title={urgentTitle(item)}>⏰ 기한 우선</span>
@@ -371,6 +524,20 @@ export function AdminPage() {
                     </>
                   )}
                 </p>
+                {(() => {
+                  const brief = buildConsultBrief(item);
+                  return brief && brief.length > 0 ? (
+                    <details className="admin-item" open>
+                      <summary>상담 준비 메모 — 전화·회신 전에 보는 정리(고객에게 보내지 않음)</summary>
+                      <ConsultBriefView
+                        sections={brief}
+                        copyKey={`brief-${item.id}`}
+                        copiedKey={copiedKey}
+                        onCopy={(key, text) => void handleCopy(key, text)}
+                      />
+                    </details>
+                  ) : null;
+                })()}
                 {item.localCaseId && (
                   <p className="note">
                     행정심판 시스템: {item.localStatus ? LOCAL_STATUS_LABEL[item.localStatus] : '대기함 등록'}

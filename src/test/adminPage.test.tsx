@@ -133,6 +133,8 @@ async function login(fetchMock = stubAdminFetch()) {
 describe('접수 관리 페이지', () => {
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
+    window.location.hash = '';
     vi.restoreAllMocks();
   });
 
@@ -211,7 +213,8 @@ describe('접수 관리 페이지', () => {
     const draft = within(item).getByLabelText(/회신문 초안/) as HTMLTextAreaElement;
     expect(draft.value).toContain('- 체류기간 만료일: 2026-12-31');
     expect(draft.value).not.toContain('Tiếng Việt');
-    expect(within(item).getByText(/연락 언어: Tiếng Việt — 발송 전 번역·검수 필요/)).toBeInTheDocument();
+    // 회신문 위 내부 메모와 상담 준비 메모 양쪽에 나온다.
+    expect(within(item).getAllByText(/연락 언어: Tiếng Việt — 발송 전 번역·검수 필요/)).toHaveLength(2);
   });
 
   it('잘못된 토큰이면 오류를 보여주고 다시 입력을 받는다', async () => {
@@ -258,5 +261,71 @@ describe('접수 관리 페이지', () => {
     const item = screen.getByText(/JM-20260601-UR01/).closest('details')!;
     expect(within(item).getByText(/처분서·통지서 기한 — 고객 자가 응답\(증빙 미확인\)/)).toBeInTheDocument();
     expect(within(item).getByText('2주 안이거나 이미 지났습니다')).toBeInTheDocument();
+  });
+
+  it('접수마다 상담 준비 메모(물어볼 것·받아 둘 서류·법정 기한)를 펼쳐 보여 준다', async () => {
+    await login();
+    const item = screen.getByText(/JM-20260717-AB12/).closest('details')!;
+    const brief = within(item).getByText(/상담 준비 메모/).closest('details')!;
+    expect(brief).toHaveAttribute('open');
+    expect(within(brief).getByRole('heading', { name: '통화·회신 때 물어볼 것' })).toBeInTheDocument();
+    expect(within(brief).getByText('운전면허 취소·정지 결정통지서')).toBeInTheDocument();
+    expect(within(brief).getByText(/^행정심판: 처분이 있음을 안 날부터 90일 이내/)).toBeInTheDocument();
+    expect(within(brief).getByText(/로컬 사건 유형: 운전면허 행정심판/)).toBeInTheDocument();
+    // 메모에는 고객 성함·연락처를 넣지 않는다(복사해 다른 곳에 붙여도 식별정보가 따라가지 않게).
+    expect(within(brief).queryByText(/홍길동|010-1234-5678/)).toBeNull();
+  });
+
+  it('긴급 건 메모는 기한 근거와 고객이 진단에서 본 안내를 먼저 보여 준다', async () => {
+    await login(stubAdminFetch([URGENT_OLD]));
+    const item = screen.getByText(/JM-20260601-UR01/).closest('details')!;
+    const brief = within(item).getByText(/상담 준비 메모/).closest('details')!;
+    expect(within(brief).getByText(/⏰ 기한 우선 — 근거: 셀프 진단 · 고객 직접 선택/)).toBeInTheDocument();
+    const asks = within(brief).getByRole('heading', { name: '통화·회신 때 물어볼 것' }).parentElement!;
+    expect(within(asks).getAllByRole('listitem')[0].textContent).toMatch(/— 기한$/);
+  });
+
+  it('텔레그램 링크의 #접수번호로 들어오면 그 접수를 펼친다', async () => {
+    window.location.hash = '#JM-20260717-AB12';
+    await login();
+    const item = document.getElementById('inquiry-JM-20260717-AB12')!;
+    expect(item).toHaveAttribute('open');
+    expect(document.getElementById('inquiry-JM-20260701-ZZ99')).not.toHaveAttribute('open');
+  });
+
+  it('전화·카카오톡·이메일 문의는 분야만 골라 메모와 첫 회신 초안을 만들고 서버로 보내지 않는다', async () => {
+    const { user, fetchMock } = await login();
+    const callsBefore = fetchMock.mock.calls.length;
+    const section = screen.getByRole('heading', { name: '전화·카카오톡·이메일 문의 응대 메모' }).parentElement!;
+    await user.selectOptions(within(section).getByLabelText('분야'), '인허가');
+    await user.click(within(section).getByRole('button', { name: '메모·회신 초안 만들기' }));
+
+    expect(within(section).getByText('사업계획서')).toBeInTheDocument();
+    const draft = within(section).getByLabelText('첫 회신 초안') as HTMLTextAreaElement;
+    expect(draft.value).toContain('안녕하세요. 정명 행정사사무소 대표 행정사 정재훈입니다.');
+    expect(draft.value).toContain('문의 주셔서 감사합니다.');
+    expect(draft.value).not.toContain('접수번호');
+    expect(fetchMock.mock.calls.length).toBe(callsBefore);
+  });
+
+  it('로그인 유지는 고른 기기에만 남고, 로그아웃하면 지워진다', async () => {
+    const user = userEvent.setup();
+    stubAdminFetch();
+    renderPage();
+    await user.type(screen.getByLabelText(/관리자 토큰/), 'test-token');
+    await user.click(screen.getByLabelText(/이 기기에서 로그인 유지/));
+    await user.click(screen.getByRole('button', { name: '접속' }));
+    await screen.findByText(/접수 통계/);
+    expect(localStorage.getItem('admin:token')).toBe('test-token');
+
+    await user.click(screen.getByRole('button', { name: /로그아웃/ }));
+    expect(localStorage.getItem('admin:token')).toBeNull();
+    expect(sessionStorage.getItem('admin:token')).toBeNull();
+    expect(screen.getByLabelText(/관리자 토큰/)).toBeInTheDocument();
+  });
+
+  it('로그인 유지를 고르지 않으면 기기에 오래 남기지 않는다', async () => {
+    await login();
+    expect(localStorage.getItem('admin:token')).toBeNull();
   });
 });

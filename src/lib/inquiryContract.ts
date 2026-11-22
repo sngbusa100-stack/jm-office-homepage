@@ -54,8 +54,9 @@ export function buildInquiryContract() {
     // 상담 분야 → 처리 경로(case: 로컬 사건 유형으로 전환 / reply: 회신 처리). 로컬 라우팅의 기준이다.
     topics: TOPIC_ROUTES,
     // 연동기 GET 응답에만 붙고 레코드에는 저장하지 않는 필드
-    // (replyDraft: { text, notes } | null, urgentReasons: api/_urgency.mjs 순서의 긴급 근거 목록).
-    connectorGetExtras: ['replyDraft', 'urgentReasons'],
+    // (replyDraft: { text, notes } | null, urgentReasons: api/_urgency.mjs 순서의 긴급 근거 목록,
+    //  consultBrief: 상담 준비 메모 { title, lines }[] | null — api/_consult-brief.mjs).
+    connectorGetExtras: ['replyDraft', 'urgentReasons', 'consultBrief'],
     visaIntakeLabels,
     deadlineReportLabels: {
       question: DEADLINE_REPORT_QUESTION,

@@ -106,7 +106,8 @@
   },
   "connectorGetExtras": [
     "replyDraft",
-    "urgentReasons"
+    "urgentReasons",
+    "consultBrief"
   ],
   "visaIntakeLabels": {
     "requester": {
