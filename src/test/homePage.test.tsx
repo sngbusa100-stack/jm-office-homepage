@@ -89,7 +89,7 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
   it('대표 사진 파일이 public/images에 있다', () => {
     expect(profile.photo?.src).toBe('/images/profile-jung-jaehoon.jpg');
     expect(existsSync(join(__dirname, '../../public/images/profile-jung-jaehoon.jpg'))).toBe(true);
-    expect(profile.heroPhoto?.src).toBe('/images/hero-jung-jaehoon.jpg');
+    expect(profile.cardPhoto?.src).toBe('/images/hero-jung-jaehoon.jpg');
     expect(existsSync(join(__dirname, '../../public/images/hero-jung-jaehoon.jpg'))).toBe(true);
   });
 

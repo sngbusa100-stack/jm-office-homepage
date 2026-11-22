@@ -30,15 +30,25 @@ describe('대표 행정사 카드 — 사진과 그 아래 한 줄만', () => {
     expect(within(card).queryAllByRole('link')).toHaveLength(0);
   });
 
+  it('큰 카드는 행사 사진(cardPhoto)을 쓴다 — 홈·/about 같은 사진', () => {
+    renderCard();
+    expect(screen.getByRole('img', { name: '대표 행정사 정재훈' })).toHaveAttribute('src', '/images/hero-jung-jaehoon.jpg');
+  });
+
+  it('cardPhoto가 없으면 증명사진(photo)을 쓴다', () => {
+    renderCard({ ...profile, cardPhoto: null });
+    expect(screen.getByRole('img', { name: '대표 행정사 정재훈' })).toHaveAttribute('src', '/images/profile-jung-jaehoon.jpg');
+  });
+
   it('사진이 없으면 사진 자리에 사무소 엠블럼을 보여준다', () => {
-    renderCard({ ...profile, photo: null });
+    renderCard({ ...profile, cardPhoto: null, photo: null });
     const img = document.querySelector('.profile-card__portrait img');
     expect(img?.getAttribute('src')).toContain('logo-mark');
     expect(img).toHaveAttribute('alt', '');
   });
 
   it('사진을 넣으면 엠블럼 대신 사진이 대체 텍스트·크기와 함께 나온다', () => {
-    renderCard({ ...profile, photo: { src: '/images/representative.jpg', alt: '대표 행정사 정재훈', width: 800, height: 1000 } });
+    renderCard({ ...profile, cardPhoto: { src: '/images/representative.jpg', alt: '대표 행정사 정재훈', width: 800, height: 1000 } });
     const img = screen.getByRole('img', { name: '대표 행정사 정재훈' });
     expect(img).toHaveAttribute('src', '/images/representative.jpg');
     expect(img).toHaveAttribute('width', '800');
