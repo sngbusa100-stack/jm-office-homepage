@@ -52,7 +52,7 @@ export function HomePage() {
               <Link className="button button--ghost" to="/check">바로 셀프 진단하기</Link>
             </div>
           </div>
-          <ProfileCard profile={profile} />
+          <ProfileCard profile={profile} photo={profile.heroPhoto ?? profile.photo} />
         </div>
       </section>
 

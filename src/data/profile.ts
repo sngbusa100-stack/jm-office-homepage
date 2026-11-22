@@ -14,11 +14,19 @@ export interface ProfileStrength {
   detail: string;
 }
 
+export interface ProfilePhoto {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
 export interface Profile {
   name: string | null;
   role: string;
   nameEn: string;
-  photo: { src: string; alt: string; width: number; height: number } | null;
+  photo: ProfilePhoto | null;
+  heroPhoto: ProfilePhoto | null;
   intro: string;
   strengths: ProfileStrength[];
   greetingTitle: string;
@@ -29,7 +37,8 @@ export interface Profile {
 
 /**
  * 대표 행정사 소개. 사진·문구는 주인님이 확인한 사실만 넣고 지어내지 않는다.
- * - photo: 2026-11-02 주인님이 준 증명사진(임시, 나중에 교체). 파일만 바꾸면 되고 null이면 엠블럼으로 대체
+ * - photo: 2026-11-02 주인님이 준 증명사진. 작은 썸네일(모바일 홈·업무 상세)과 /about 카드에 쓴다. null이면 엠블럼으로 대체
+ * - heroPhoto: 홈 첫 화면 대표 카드 사진(2026-11-22 주인님이 준 행사 사진, 간판을 가리키는 모습을 4:5로 자름). null이면 photo를 쓴다
  * - 학력·경력·법률 업무제휴 약력은 싣지 않는다(2026-11-06 주인님: "별로 자랑할 게 못 돼... 그냥 빼"). 이동호 변호사는 인사말 본문에만 나온다
  * - 변호사 협업 문구는 변호사법 제34조④(고용·운영)·제112조 제3호(법률 상담 표시)를 피해
  *   "같은 공간에 행정사사무소를 열었다", "변호사에게 상담받는다"로 쓴다(docs/2026-11-02-home-intro-copy-plan.md 4절).
@@ -41,6 +50,7 @@ export const profile: Profile = {
   role: '대표 행정사',
   nameEn: 'JUNG JAE HOON',
   photo: { src: '/images/profile-jung-jaehoon.jpg', alt: '대표 행정사 정재훈', width: 352, height: 470 },
+  heroPhoto: { src: '/images/hero-jung-jaehoon.jpg', alt: '대표 행정사 정재훈', width: 720, height: 900 },
   // 첫 화면 소개 — 주인님이 직접 쓴 문장(2026-11-02). 다듬지 않는다.
   intro: '서류 한 장에도 의뢰인의 생업과 생활이 걸려 있다는 것을 명심하고, 맡겨 주신 일에 끝까지 최선을 다하겠습니다.',
   // '대표 행정사가 직접'은 2026-11-02 주인님 확인("내가 직접이라고 해야 좋을듯")

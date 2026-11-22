@@ -80,7 +80,7 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
   it('대표 카드는 사진과 직함·이름 한 줄만 둔다', () => {
     renderAt('/');
     const card = screen.getByRole('complementary', { name: '대표 행정사 소개' });
-    expect(within(card).getByRole('img', { name: '대표 행정사 정재훈' })).toHaveAttribute('src', '/images/profile-jung-jaehoon.jpg');
+    expect(within(card).getByRole('img', { name: '대표 행정사 정재훈' })).toHaveAttribute('src', '/images/hero-jung-jaehoon.jpg');
     expect(card.querySelector('.profile-card__id')).toHaveTextContent('대표 행정사정재훈JUNG JAE HOON');
     expect(within(card).queryByText('학력')).toBeNull();
     expect(within(card).queryAllByRole('link')).toHaveLength(0);
@@ -89,6 +89,8 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
   it('대표 사진 파일이 public/images에 있다', () => {
     expect(profile.photo?.src).toBe('/images/profile-jung-jaehoon.jpg');
     expect(existsSync(join(__dirname, '../../public/images/profile-jung-jaehoon.jpg'))).toBe(true);
+    expect(profile.heroPhoto?.src).toBe('/images/hero-jung-jaehoon.jpg');
+    expect(existsSync(join(__dirname, '../../public/images/hero-jung-jaehoon.jpg'))).toBe(true);
   });
 
   it('학력·경력·업무제휴 약력은 싣지 않는다(2026-11-06 주인님: "별로 자랑할 게 못 돼... 그냥 빼")', () => {
