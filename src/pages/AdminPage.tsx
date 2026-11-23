@@ -408,7 +408,8 @@ export function AdminPage() {
           <summary>분야를 고르면 상담 준비 메모와 첫 회신 초안을 만듭니다</summary>
           <p className="note">
             사이트 상담 신청 밖으로 들어온 문의용입니다. 이 화면에서만 만들고 어디에도 저장하지 않습니다.
-            카카오톡 답장·문자·이메일에 복사해 고쳐 쓰세요.
+            카카오톡 답장·문자·이메일에 복사해 고쳐 쓰세요. 회신 대기·종결·파기 관리는 사무실 PC 프로그램의
+            &lsquo;카카오톡·이메일·전화·방문 문의 등록&rsquo;에 남기면 됩니다(맡기지 않으면 마지막 연락일부터 3개월에 자동 파기).
           </p>
           <form className="consult-form" onSubmit={handleDirectBuild}>
             <label>

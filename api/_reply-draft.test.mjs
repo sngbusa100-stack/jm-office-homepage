@@ -49,6 +49,16 @@ describe('회신 초안 공통', () => {
     }
   });
 
+  it('마무리는 긍정형 다짐 한 문장이고 결과를 단정할 수 없다는 면책 문장은 쓰지 않는다(2026-11-23 주인님)', () => {
+    for (const template of REPLY_TEMPLATES) {
+      const { text } = buildReplyDraft(record(template.topic));
+      expect(text, template.topic).toContain(
+        '말씀해 주신 사정을 바탕으로 가장 좋은 결과가 나올 수 있는 길을 함께 찾겠습니다. 감사합니다.',
+      );
+      expect(text, template.topic).not.toMatch(/단정|어렵고/);
+    }
+  });
+
   it('파기됐거나 이름이 없거나 모르는 분야면 초안을 만들지 않는다', () => {
     expect(buildReplyDraft(record('인허가', { purged: true }))).toBeNull();
     expect(buildReplyDraft(record('인허가', { name: '' }))).toBeNull();
