@@ -9,7 +9,7 @@ export function Footer() {
   const [attribution] = useState(() => (
     typeof window === 'undefined' ? {} : captureAttribution(window.location.search)
   ));
-  const maps = office.mapQuery ? mapLinks(office.mapQuery) : null;
+  const maps = mapLinks(office);
   return (
     <footer className="footer">
       <div className="page-shell">

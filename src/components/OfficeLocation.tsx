@@ -3,8 +3,8 @@ import { mapLinks } from '../lib/officeContact';
 
 /** 주소·교통 안내·지도 바로가기. 오시는 길 페이지와 상담 안내가 함께 쓴다. */
 export function OfficeLocation() {
-  if (!office.address || !office.mapQuery) return null;
-  const maps = mapLinks(office.mapQuery);
+  const maps = mapLinks(office);
+  if (!office.address || !maps) return null;
   return (
     <>
       <p>{office.address}</p>

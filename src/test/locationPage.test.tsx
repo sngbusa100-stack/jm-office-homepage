@@ -28,7 +28,7 @@ describe('오시는 길', () => {
     expect(main.getByRole('heading', { level: 1, name: '오시는 길' })).toBeInTheDocument();
     expect(main.getByText('경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호')).toBeInTheDocument();
     expect(main.getByText('광명KTX역 5번출구 앞')).toBeInTheDocument();
-    const maps = mapLinks(office.mapQuery!);
+    const maps = mapLinks(office)!;
     for (const [name, href] of [['네이버 지도', maps.naver], ['카카오맵', maps.kakao]]) {
       const link = main.getByRole('link', { name });
       expect(link).toHaveAttribute('href', href);

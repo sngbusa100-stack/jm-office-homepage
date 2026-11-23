@@ -14,12 +14,16 @@ export function mapEmbedUrl(query: string): string {
   return `https://www.google.com/maps?q=${encodeURIComponent(query)}&hl=ko&z=17&output=embed`;
 }
 
-/** 외부 스크립트 없이 지도 앱 검색 화면을 여는 바로가기 주소. */
-export function mapLinks(query: string): { naver: string; kakao: string } {
-  const encoded = encodeURIComponent(query);
+/**
+ * 지도 바로가기 주소(외부 스크립트 없음). 등록된 장소 주소가 있으면 사무소 장소 화면을 바로 열고(2026-11-23),
+ * 없으면 주소 검색 화면을 연다. 주소가 없으면 만들지 않는다.
+ */
+export function mapLinks(office: Office): { naver: string; kakao: string } | null {
+  if (!office.mapQuery) return null;
+  const encoded = encodeURIComponent(office.mapQuery);
   return {
-    naver: `https://map.naver.com/p/search/${encoded}`,
-    kakao: `https://map.kakao.com/link/search/${encoded}`,
+    naver: office.naverPlaceUrl || `https://map.naver.com/p/search/${encoded}`,
+    kakao: office.kakaoPlaceUrl || `https://map.kakao.com/link/search/${encoded}`,
   };
 }
 
