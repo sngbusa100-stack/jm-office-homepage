@@ -165,12 +165,12 @@ nav#global-nav a.active {
 }
 .footer p { margin-bottom: 8px; color: #c3c9d4; }
 .footer p a { color: #fff; text-decoration: underline; }
-.footer nav[aria-label='법적 고지'] {
+.footer nav[aria-label='안내 및 법적 고지'] {
   display: flex;
   gap: 16px;
   margin: 16px 0;
 }
-.footer nav[aria-label='법적 고지'] a {
+.footer nav[aria-label='안내 및 법적 고지'] a {
   color: #fff;
   text-decoration: underline;
 }
@@ -895,7 +895,7 @@ th { background: var(--surface-muted); font-weight: 700; }
   .faq-list details p { padding: 0 22px 18px; }
   .option-row { min-height: 44px; }
   .footer p a { display: inline-block; padding: 10px 0; margin-block: -10px; }
-  .footer nav[aria-label='법적 고지'] a { padding: 10px 0; margin-block: -10px; }
+  .footer nav[aria-label='안내 및 법적 고지'] a { padding: 10px 0; margin-block: -10px; }
 }
 
 /* --- 빵부스러기(현재 위치) --- */

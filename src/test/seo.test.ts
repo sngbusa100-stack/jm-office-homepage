@@ -20,7 +20,7 @@ describe('검색 노출 기반', () => {
   it('색인 경로 목록이 정적 페이지·업무분야·진단을 모두 포함한다', () => {
     const paths = getIndexablePaths();
     expect(paths).toEqual([
-      '/', '/about', '/why', '/services', '/check', '/consult', '/privacy', '/disclaimer', '/location',
+      '/', '/about', '/why', '/process', '/services', '/check', '/consult', '/privacy', '/disclaimer', '/location',
       '/services/license', '/services/immigration', '/services/documents',
       '/services/suspension', '/services/dui', '/services/veterans',
       '/check/permit', '/check/suspension', '/check/dui', '/check/veterans',
@@ -39,17 +39,17 @@ describe('검색 노출 기반', () => {
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services/immigration</loc>');
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/check/permit</loc>');
     expect(sitemap).not.toContain('/result</loc>');
-    expect(sitemap.match(/<loc>/g)).toHaveLength(19);
+    expect(sitemap.match(/<loc>/g)).toHaveLength(20);
   });
 
-  it('sitemap 색인 경로 19개 모두에 사람이 적은 lastmod 날짜가 있다', () => {
+  it('sitemap 색인 경로 20개 모두에 사람이 적은 lastmod 날짜가 있다', () => {
     const paths = getIndexablePaths();
-    expect(paths).toHaveLength(19);
+    expect(paths).toHaveLength(20);
     for (const path of paths) {
       expect(PAGE_UPDATED_AT[path], path).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
     const sitemap = buildSitemapXml();
-    expect(sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)).toHaveLength(19);
+    expect(sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)).toHaveLength(20);
     expect(sitemap).toContain('<url><loc>https://jungmyungoffice.com/about</loc><lastmod>2026-11-12</lastmod></url>');
   });
 

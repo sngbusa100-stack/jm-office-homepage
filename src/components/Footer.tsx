@@ -57,7 +57,8 @@ export function Footer() {
         ) : (
           <p>행정사 등록번호·사업자등록번호는 정식 개업 후 게시됩니다.</p>
         )}
-        <nav aria-label="법적 고지">
+        <nav aria-label="안내 및 법적 고지">
+          <Link to="/process">의뢰 절차와 보수</Link>
           <Link to="/privacy">개인정보처리방침</Link>
           <Link to="/disclaimer">면책 고지</Link>
         </nav>

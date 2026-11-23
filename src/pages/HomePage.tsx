@@ -11,7 +11,7 @@ import { PromiseList } from '../components/PromiseList';
 import { ServiceAreaGrid } from '../components/ServiceAreaGrid';
 import { VisaCheckCard } from '../components/VisaCheckCard';
 
-// 비용을 시작 전에 글로 안내하는 단계는 FAQ "착수 전에 범위와 비용을 명확히 정하는 것을 원칙"과 같은 약속이다.
+// 비용을 시작 전에 글로 안내하는 단계는 FAQ "비용은 어떻게 되나요?"·/process 페이지의 견적서 안내와 같은 약속이다.
 const processSteps = [
   { title: '이야기 듣기', detail: '상황과 기한부터 확인합니다.' },
   { title: '방법과 비용 안내', detail: '할 일과 비용을 시작 전에 글로 알려 드립니다.' },
@@ -128,6 +128,7 @@ export function HomePage() {
             <li key={step.title}><h3>{step.title}</h3><p>{step.detail}</p></li>
           ))}
         </ol>
+        <p><Link className="text-link" to="/process">의뢰 절차와 보수 자세히 보기 →</Link></p>
       </section>
 
       <section className="section page-shell faq-section" aria-labelledby="faq-heading">

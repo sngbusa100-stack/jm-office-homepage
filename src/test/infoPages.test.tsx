@@ -72,3 +72,15 @@ describe('정보 페이지', () => {
     expect(screen.getByText(/페이지를 찾을 수 없습니다/)).toBeInTheDocument();
   });
 });
+
+describe('/process 의뢰 절차와 보수 안내', () => {
+  it('제목·6단계·보수 안내를 보여주고 금액은 적지 않는다', () => {
+    const { container } = renderAt('/process');
+    expect(screen.getByRole('heading', { level: 1, name: '의뢰 절차와 보수 안내' })).toBeInTheDocument();
+    for (const title of ['문의', '첫 안내', '범위와 보수 안내', '계약', '서류 작성과 제출', '결과 확인']) {
+      expect(screen.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
+    }
+    expect(screen.getByRole('heading', { level: 2, name: '보수는 이렇게 정합니다' })).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/\d[\d,]*\s*원|만\s?원/);
+  });
+});

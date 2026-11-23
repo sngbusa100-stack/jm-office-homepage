@@ -30,6 +30,10 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
     title: '행정사가 필요한 이유 | 정명 행정사사무소',
     description: '행정사가 수행하는 업무와 변호사·법무사의 역할 차이, 행정 절차에서 전문가의 도움이 필요한 때를 안내합니다.',
   },
+  '/process': {
+    title: '의뢰 절차와 보수 안내 | 정명 행정사사무소',
+    description: '정명 행정사사무소에 일을 맡기는 순서와 보수를 정하는 방식 — 견적서로 먼저 안내하고, 실비는 따로 영수증대로 정산합니다.',
+  },
   '/services': {
     title: '업무 분야 | 정명 행정사사무소',
     description: '인허가·등록·변경, 출입국·비자, 토지개발·보상, 행정심판·권리구제, 공공조달·기업인증 — 정명 행정사사무소의 다섯 가지 업무 분야를 확인하세요.',
@@ -66,6 +70,7 @@ export const PAGE_UPDATED_AT: Record<string, string> = {
   '/': '2026-11-12',
   '/about': '2026-11-12',
   '/why': '2026-10-19',
+  '/process': '2026-11-23',
   '/services': '2026-11-02',
   '/check': '2026-11-02',
   '/consult': '2026-11-12',

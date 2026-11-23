@@ -5,6 +5,7 @@ import { HomePage } from '../pages/HomePage';
 import { AboutPage } from '../pages/AboutPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { WhyPage } from '../pages/WhyPage';
+import { ProcessPage } from '../pages/ProcessPage';
 import { ServicePage } from '../pages/ServicePage';
 import { ServicesPage } from '../pages/ServicesPage';
 import { CheckSelectPage } from '../pages/CheckSelectPage';
@@ -25,6 +26,7 @@ export function AppRouter() {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/why" element={<WhyPage />} />
+        <Route path="/process" element={<ProcessPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/services/:slug" element={<ServicePage />} />
         <Route path="/check" element={<CheckSelectPage />} />
