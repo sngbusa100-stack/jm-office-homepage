@@ -204,3 +204,9 @@
 - [x] /admin 응대 메모 설명에 사무실 프로그램 '문의 등록' 안내
 - [x] `npm run check` 통과(vitest 761), 커밋·배포
 - 계획 문서: 행정심판 저장소 `docs/2026-11-23-office-operations-plan.md`(아침 할 일 알림은 그쪽 구현)
+
+## 2026-11-23 지도 3곳 sameAs (Claude, 목록표 C19)
+
+- [x] 지도 주소 확인(ego lite): 네이버 place 3457747262, 카카오맵 577766464(파트너센터 매장 id 1279114와 다름), 구글 인증 프로필(상점 코드 04408035580735708339) cid 1861953194817191948
+- [x] `office.json`에 `naverPlaceUrl`·`kakaoPlaceUrl`·`googleMapsUrl`, `officeSameAs()`가 블로그·카카오 채널 홈(채팅 주소에서 `/chat`을 뗌)·지도 3곳을 LegalService·Organization 두 블록 sameAs에 넣음. 시험 763 통과
+- [x] 커밋·푸시(=배포) — 주인님 "커밋·푸시 승인"(2026-11-23)

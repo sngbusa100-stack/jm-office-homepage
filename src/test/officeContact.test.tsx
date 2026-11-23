@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
 import { office } from '../data/office';
 import { SLOGAN } from '../data/profile';
-import { buildOfficeJsonLd, buildSiteChannelJsonLd, mapLinks, serializeJsonLd, toInternationalPhone } from '../lib/officeContact';
+import { buildOfficeJsonLd, buildSiteChannelJsonLd, mapLinks, officeSameAs, serializeJsonLd, toInternationalPhone } from '../lib/officeContact';
 
 function renderAt(path: string) {
   return render(
@@ -75,7 +75,16 @@ describe('사무소 연락처 데이터', () => {
   });
 
   // 네이버 서치어드바이저 '사이트 연관채널'(2026-11-06 확인): Person/Organization, name(사이트 이름)·url·sameAs 필수
-  it('네이버 연관채널용 Organization에 사이트 이름·주소·블로그를 넣고 사무소 정보와 같은 개체로 묶는다', () => {
+  // 2026-11-23 지도 3곳(네이버 11-23 등록·카카오·구글 인증 프로필)과 카카오 채널 홈을 sameAs에 더했다.
+  const EXPECTED_SAME_AS = [
+    'https://blog.naver.com/jungmyung0909',
+    'https://pf.kakao.com/_KxhlvX',
+    'https://map.naver.com/p/entry/place/3457747262',
+    'https://place.map.kakao.com/577766464',
+    'https://www.google.com/maps?cid=1861953194817191948',
+  ];
+
+  it('네이버 연관채널용 Organization에 사이트 이름·주소·블로그·지도를 넣고 사무소 정보와 같은 개체로 묶는다', () => {
     const channel = buildSiteChannelJsonLd(office, 'https://jungmyungoffice.com');
     expect(channel).toEqual({
       '@context': 'https://schema.org',
@@ -83,13 +92,27 @@ describe('사무소 연락처 데이터', () => {
       '@id': 'https://jungmyungoffice.com/#office',
       name: '정명 행정사사무소',
       url: 'https://jungmyungoffice.com',
-      sameAs: ['https://blog.naver.com/jungmyung0909'],
+      sameAs: EXPECTED_SAME_AS,
     });
     expect(buildOfficeJsonLd(office, 'https://jungmyungoffice.com')?.['@id']).toBe(channel?.['@id']);
   });
 
-  it('연관 채널이 없으면 연관채널용 정보를 만들지 않는다', () => {
-    expect(buildSiteChannelJsonLd({ ...office, blogUrl: null }, 'https://jungmyungoffice.com')).toBeNull();
+  it('사무소 정보(LegalService)에도 같은 sameAs를 넣는다', () => {
+    expect(buildOfficeJsonLd(office, 'https://jungmyungoffice.com')?.sameAs).toEqual(EXPECTED_SAME_AS);
+  });
+
+  it('sameAs에는 카카오 채팅 주소가 아니라 채널 홈을 넣고, 빈 주소는 뺀다', () => {
+    expect(officeSameAs(office)).not.toContain('https://pf.kakao.com/_KxhlvX/chat');
+    expect(officeSameAs({ ...office, kakaoChannelUrl: null, naverPlaceUrl: null, googleMapsUrl: undefined })).toEqual([
+      'https://blog.naver.com/jungmyung0909',
+      'https://place.map.kakao.com/577766464',
+    ]);
+  });
+
+  it('연관 채널이 없으면 연관채널용 정보와 sameAs를 만들지 않는다', () => {
+    const none = { ...office, blogUrl: null, kakaoChannelUrl: null, naverPlaceUrl: null, kakaoPlaceUrl: null, googleMapsUrl: null };
+    expect(buildSiteChannelJsonLd(none, 'https://jungmyungoffice.com')).toBeNull();
+    expect(buildOfficeJsonLd(none, 'https://jungmyungoffice.com')).not.toHaveProperty('sameAs');
   });
 
   it('구조화 데이터 글자 안의 <는 이스케이프해 script가 일찍 끝나지 않게 한다', () => {

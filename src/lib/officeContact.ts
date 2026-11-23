@@ -46,6 +46,17 @@ export function parseConsultHours(text: string | null | undefined): Record<strin
   };
 }
 
+/**
+ * 같은 사무소의 다른 공식 주소(sameAs): 블로그·카카오 채널 홈·지도 3곳(2026-11-23).
+ * 카카오 채널은 상담 버튼용 채팅 주소(…/chat)에서 채널 홈 주소를 얻는다 — 주소 원본은 office.json 하나다.
+ */
+export function officeSameAs(office: Office): string[] {
+  const kakaoChannelHome = office.kakaoChannelUrl?.replace(/\/chat$/, '');
+  return [office.blogUrl, kakaoChannelHome, office.naverPlaceUrl, office.kakaoPlaceUrl, office.googleMapsUrl].filter(
+    (url): url is string => Boolean(url),
+  );
+}
+
 /** 검색엔진이 읽는 사무소 정보(schema.org LegalService). 주소·전화가 모두 없으면 만들지 않는다. */
 export function buildOfficeJsonLd(office: Office, siteUrl: string): Record<string, unknown> | null {
   if (!office.address && !office.phone) return null;
@@ -82,6 +93,9 @@ export function buildOfficeJsonLd(office: Office, siteUrl: string): Record<strin
       streetAddress: office.streetAddress,
     };
   }
+  // 구글은 이 블록(LegalService)을 읽으므로 지도 주소도 여기 같이 넣는다(연관채널 블록과 같은 @id).
+  const sameAs = officeSameAs(office);
+  if (sameAs.length > 0) data.sameAs = sameAs;
   return data;
 }
 
@@ -91,7 +105,7 @@ export function buildOfficeJsonLd(office: Office, siteUrl: string): Record<strin
  * 로봇이 자동으로 뽑으므로 이 마크업이 그 이름을 정해 주지는 않는다. 사무소 정보(LegalService)와 같은 @id로 한 개체로 묶는다.
  */
 export function buildSiteChannelJsonLd(office: Office, siteUrl: string): Record<string, unknown> | null {
-  const sameAs = [office.blogUrl].filter((url): url is string => Boolean(url));
+  const sameAs = officeSameAs(office);
   if (sameAs.length === 0) return null;
   return {
     '@context': 'https://schema.org',

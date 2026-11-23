@@ -10,6 +10,10 @@ export interface Office {
   email?: string | null;
   blogUrl?: string | null;
   kakaoChannelUrl: string | null;
+  /** 지도 등록 주소(2026-11-23 확인). 구조화 데이터 sameAs로 같은 사무소임을 알린다. 구글은 인증된 프로필의 cid. */
+  naverPlaceUrl?: string | null;
+  kakaoPlaceUrl?: string | null;
+  googleMapsUrl?: string | null;
   address: string | null;
   addressRegion?: string | null;
   addressLocality?: string | null;
