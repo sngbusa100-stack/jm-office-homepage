@@ -9,6 +9,9 @@ export interface Office {
   fax?: string | null;
   email?: string | null;
   blogUrl?: string | null;
+  /** 티스토리(출입국·비자 글)·블로그스팟(토지보상 글). 구글 검색용 채널이라 하단 링크와 sameAs에 넣는다(2026-11-24). */
+  tistoryUrl?: string | null;
+  blogspotUrl?: string | null;
   kakaoChannelUrl: string | null;
   /** 지도 등록 주소(2026-11-23 확인). 구조화 데이터 sameAs로 같은 사무소임을 알린다. 구글은 인증된 프로필의 cid. */
   naverPlaceUrl?: string | null;

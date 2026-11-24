@@ -10,6 +10,11 @@ export function Footer() {
     typeof window === 'undefined' ? {} : captureAttribution(window.location.search)
   ));
   const maps = mapLinks(office);
+  const blogs = [
+    { href: office.blogUrl, label: '네이버 블로그' },
+    { href: office.tistoryUrl, label: '티스토리(출입국·비자)' },
+    { href: office.blogspotUrl, label: '블로그스팟(토지보상)' },
+  ].filter((blog): blog is { href: string; label: string } => Boolean(blog.href));
   return (
     <footer className="footer">
       <div className="page-shell">
@@ -42,8 +47,15 @@ export function Footer() {
             {office.parking && <>{office.consultHours && ' | '}주차 {office.parking}</>}
           </p>
         )}
-        {office.blogUrl && (
-          <p><a href={office.blogUrl} target="_blank" rel="noopener noreferrer">네이버 블로그</a></p>
+        {blogs.length > 0 && (
+          <p>
+            {blogs.map((blog, i) => (
+              <span key={blog.href}>
+                {i > 0 && ' · '}
+                <a href={blog.href} target="_blank" rel="noopener noreferrer">{blog.label}</a>
+              </span>
+            ))}
+          </p>
         )}
         <p className="footer__visa">
           <a href={attributedExternalUrl('https://visa.jungmyungoffice.com', 'jm_main_lang', attribution)}>Visa Pre-Check</a>

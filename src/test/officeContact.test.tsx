@@ -84,8 +84,11 @@ describe('사무소 연락처 데이터', () => {
 
   // 네이버 서치어드바이저 '사이트 연관채널'(2026-11-06 확인): Person/Organization, name(사이트 이름)·url·sameAs 필수
   // 2026-11-23 지도 3곳(네이버 11-23 등록·카카오·구글 인증 프로필)과 카카오 채널 홈을 sameAs에 더했다.
+  // 2026-11-24 티스토리·블로그스팟 홈도 더했다.
   const EXPECTED_SAME_AS = [
     'https://blog.naver.com/jungmyung0909',
+    'https://essay57391.tistory.com',
+    'https://jeongmyeonglab.blogspot.com',
     'https://pf.kakao.com/_KxhlvX',
     'https://map.naver.com/p/entry/place/3457747262',
     'https://place.map.kakao.com/577766464',
@@ -111,14 +114,16 @@ describe('사무소 연락처 데이터', () => {
 
   it('sameAs에는 카카오 채팅 주소가 아니라 채널 홈을 넣고, 빈 주소는 뺀다', () => {
     expect(officeSameAs(office)).not.toContain('https://pf.kakao.com/_KxhlvX/chat');
-    expect(officeSameAs({ ...office, kakaoChannelUrl: null, naverPlaceUrl: null, googleMapsUrl: undefined })).toEqual([
+    expect(officeSameAs({
+      ...office, tistoryUrl: null, blogspotUrl: undefined, kakaoChannelUrl: null, naverPlaceUrl: null, googleMapsUrl: undefined,
+    })).toEqual([
       'https://blog.naver.com/jungmyung0909',
       'https://place.map.kakao.com/577766464',
     ]);
   });
 
   it('연관 채널이 없으면 연관채널용 정보와 sameAs를 만들지 않는다', () => {
-    const none = { ...office, blogUrl: null, kakaoChannelUrl: null, naverPlaceUrl: null, kakaoPlaceUrl: null, googleMapsUrl: null };
+    const none = { ...office, blogUrl: null, tistoryUrl: null, blogspotUrl: null, kakaoChannelUrl: null, naverPlaceUrl: null, kakaoPlaceUrl: null, googleMapsUrl: null };
     expect(buildSiteChannelJsonLd(none, 'https://jungmyungoffice.com')).toBeNull();
     expect(buildOfficeJsonLd(none, 'https://jungmyungoffice.com')).not.toHaveProperty('sameAs');
   });
@@ -152,6 +157,8 @@ describe('개업 전 연락처 공개', () => {
     expect(footer.getByText(/02-897-6254/)).toBeInTheDocument();
     expect(footer.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
     expect(footer.getByRole('link', { name: /네이버 블로그/ })).toHaveAttribute('href', 'https://blog.naver.com/jungmyung0909');
+    expect(footer.getByRole('link', { name: /티스토리/ })).toHaveAttribute('href', 'https://essay57391.tistory.com');
+    expect(footer.getByRole('link', { name: /블로그스팟/ })).toHaveAttribute('href', 'https://jeongmyeonglab.blogspot.com');
     expect(footer.getByRole('link', { name: '네이버 지도' })).toHaveAttribute('href', mapLinks(office)!.naver);
     if (office.isOpen) {
       expect(footer.getByText(/행정사 등록번호 제3900000202611호 \| 사업자등록번호 462-02-03645/)).toBeInTheDocument();

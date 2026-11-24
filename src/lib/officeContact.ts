@@ -54,12 +54,15 @@ export function parseConsultHours(text: string | null | undefined): Record<strin
 }
 
 /**
- * 같은 사무소의 다른 공식 주소(sameAs): 블로그·카카오 채널 홈·지도 3곳(2026-11-23).
+ * 같은 사무소의 다른 공식 주소(sameAs): 블로그 3곳(네이버·티스토리·블로그스팟)·카카오 채널 홈·지도 3곳.
  * 카카오 채널은 상담 버튼용 채팅 주소(…/chat)에서 채널 홈 주소를 얻는다 — 주소 원본은 office.json 하나다.
  */
 export function officeSameAs(office: Office): string[] {
   const kakaoChannelHome = office.kakaoChannelUrl?.replace(/\/chat$/, '');
-  return [office.blogUrl, kakaoChannelHome, office.naverPlaceUrl, office.kakaoPlaceUrl, office.googleMapsUrl].filter(
+  return [
+    office.blogUrl, office.tistoryUrl, office.blogspotUrl,
+    kakaoChannelHome, office.naverPlaceUrl, office.kakaoPlaceUrl, office.googleMapsUrl,
+  ].filter(
     (url): url is string => Boolean(url),
   );
 }
