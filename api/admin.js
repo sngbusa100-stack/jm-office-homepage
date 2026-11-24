@@ -2,6 +2,7 @@
 // GET: 접수 목록(최신순) / PATCH: 상태 변경·메모 추가 / DELETE: 개인정보 파기(통계 필드만 보존)
 
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { loginWithPassword, validAdminSession } from './_admin-password.mjs';
 import { applyCors } from './_cors.mjs';
 import {
   applyInquiryPatch,
@@ -32,9 +33,13 @@ function withUrgency(item) {
 }
 
 export default async function handler(req, res) {
-  if (applyCors(req, res, { methods: 'GET, PATCH, DELETE, OPTIONS' })) return;
+  if (applyCors(req, res, { methods: 'GET, POST, PATCH, DELETE, OPTIONS' })) return;
 
-  if (!isAuthorized(req.headers.authorization, process.env.ADMIN_TOKEN)) {
+  if (req.method === 'POST') {
+    return loginWithPassword(req, res);
+  }
+
+  if (!isAuthorized(req.headers.authorization, process.env.ADMIN_TOKEN) && !validAdminSession(req.headers.authorization)) {
     // 무차별 대입 방지: 인증 "실패"만 IP당 5분에 10회로 제한한다 (정상 사용은 계수 안 함).
     const limiterCfg = redisConfig();
     if (limiterCfg) {

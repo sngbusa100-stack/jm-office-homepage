@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { readStorage, removeStorage, safeSessionGet, safeSessionSet, writeStorage } from '../lib/browserStorage';
 import {
   fetchAdminDashboard,
+  loginAdmin,
   patchInquiry,
   purgeInquiry,
   summarizeInquiries,
@@ -129,7 +130,8 @@ function formatDateTime(iso: string): string {
 
 export function AdminPage() {
   const [token, setToken] = useState<string | null>(readSavedToken);
-  const [tokenInput, setTokenInput] = useState('');
+  const [password, setPassword] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(false);
   const [focusId] = useState<string | null>(() => INQUIRY_HASH.exec(window.location.hash)?.[1] ?? null);
   const [directTopic, setDirectTopic] = useState(DIRECT_TOPICS[0] ?? '');
@@ -152,7 +154,7 @@ export function AdminPage() {
       if (result.error === 'unauthorized') {
         forgetToken();
         setToken(null);
-        setError('관리자 토큰이 올바르지 않습니다.');
+        setError('다시 로그인해 주세요.');
       } else {
         setError('접수 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
@@ -174,13 +176,26 @@ export function AdminPage() {
     document.getElementById(`inquiry-${focusId}`)?.scrollIntoView?.({ block: 'start' });
   }, [focusId, items]);
 
-  function handleTokenSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const value = tokenInput.trim();
-    if (!value) return;
-    safeSessionSet(TOKEN_KEY, value);
-    if (rememberDevice) writeStorage('localStorage', TOKEN_KEY, value);
-    setToken(value);
+    if (!password || loggingIn) return;
+    setLoggingIn(true);
+    setError(null);
+    const result = await loginAdmin(password);
+    setLoggingIn(false);
+    if (!result.ok) {
+      switch (result.error) {
+        case 'unauthorized': setError('비밀번호가 올바르지 않습니다.'); break;
+        case 'rate_limited': setError('시도가 많습니다. 잠시 후 다시 로그인해 주세요.'); break;
+        case 'unavailable': setError('지금은 비밀번호 로그인을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.'); break;
+        default: setError('로그인할 수 없습니다. 연결을 확인하고 다시 시도해 주세요.');
+      }
+      return;
+    }
+    setPassword('');
+    safeSessionSet(TOKEN_KEY, result.value);
+    if (rememberDevice) writeStorage('localStorage', TOKEN_KEY, result.value);
+    setToken(result.value);
   }
 
   function handleLogout() {
@@ -280,16 +295,16 @@ export function AdminPage() {
         <header className="page-header">
           <h1>접수 관리</h1>
         </header>
-        <form className="card consult-form" onSubmit={handleTokenSubmit}>
-          <p className="note">사무소 관리자 전용 페이지입니다. 관리자 토큰을 입력해 주세요.</p>
+        <form className="card consult-form" onSubmit={handleLogin}>
           <label>
-            관리자 토큰
+            관리자 비밀번호
             <input
               type="password"
-              name="adminToken"
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-              autoComplete="off"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
             />
           </label>
           <label className="agree">
@@ -300,8 +315,8 @@ export function AdminPage() {
             />
             이 기기에서 로그인 유지(대표님 개인 휴대폰·PC에서만 선택)
           </label>
-          <button className="button button--primary" type="submit">
-            접속
+          <button className="button button--primary" type="submit" disabled={loggingIn}>
+            {loggingIn ? '로그인 중…' : '로그인'}
           </button>
           {error && (
             <p className="note" role="alert">
@@ -319,7 +334,7 @@ export function AdminPage() {
         <h1>접수 관리</h1>
         <p className="note">상담 접수 현황을 확인하고 상태·메모·회신문을 관리합니다.</p>
         <button className="button" type="button" onClick={handleLogout}>
-          로그아웃(이 기기에서 토큰 지우기)
+          로그아웃
         </button>
       </header>
 

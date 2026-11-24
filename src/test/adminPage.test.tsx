@@ -72,6 +72,9 @@ const URGENT_OLD = {
 
 function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
   const fetchMock = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
+    if (options.method === 'POST') {
+      return { ok: true, status: 200, json: async () => ({ ok: true, sessionToken: 'test-token' }) };
+    }
     if (options.method === 'GET') {
       return {
         ok: true,
@@ -124,8 +127,8 @@ function renderPage() {
 async function login(fetchMock = stubAdminFetch()) {
   const user = userEvent.setup();
   renderPage();
-  await user.type(screen.getByLabelText(/관리자 토큰/), 'test-token');
-  await user.click(screen.getByRole('button', { name: '접속' }));
+  await user.type(screen.getByLabelText(/관리자 비밀번호/), 'test password!');
+  await user.click(screen.getByRole('button', { name: '로그인' }));
   await screen.findByText(/접수 통계/);
   return { user, fetchMock };
 }
@@ -142,17 +145,21 @@ describe('접수 관리 페이지', () => {
     vi.unstubAllGlobals();
   });
 
-  it('토큰 입력 전에는 목록을 요청하지 않는다', () => {
+  it('비밀번호 입력 전에는 목록을 요청하지 않는다', () => {
     const fetchMock = stubAdminFetch();
     renderPage();
-    expect(screen.getByLabelText(/관리자 토큰/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/관리자 비밀번호/)).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('토큰 접속 후 목록·통계를 Bearer 인증으로 불러온다', async () => {
+  it('비밀번호 로그인 후 목록·통계를 Bearer 인증으로 불러온다', async () => {
     const { fetchMock } = await login();
 
-    const [url, options] = fetchMock.mock.calls[0];
+    const [, loginOptions] = fetchMock.mock.calls[0];
+    expect(loginOptions.method).toBe('POST');
+    expect(JSON.parse(String(loginOptions.body))).toEqual({ password: 'test password!' });
+    expect(sessionStorage.getItem('admin:token')).toBe('test-token');
+    const [url, options] = fetchMock.mock.calls[1];
     expect(url).toBe('https://example.test/api/admin');
     expect((options.headers as Record<string, string>).Authorization).toBe('Bearer test-token');
 
@@ -217,18 +224,27 @@ describe('접수 관리 페이지', () => {
     expect(within(item).getAllByText(/연락 언어: Tiếng Việt — 발송 전 번역·검수 필요/)).toHaveLength(2);
   });
 
-  it('잘못된 토큰이면 오류를 보여주고 다시 입력을 받는다', async () => {
+  it('기존 기기의 저장된 인증값으로 비밀번호 재입력 없이 접속한다', async () => {
+    localStorage.setItem('admin:token', 'saved-token');
+    const fetchMock = stubAdminFetch();
+    renderPage();
+    await screen.findByText(/접수 통계/);
+    expect(fetchMock.mock.calls[0][1].method).toBe('GET');
+    expect((fetchMock.mock.calls[0][1].headers as Record<string, string>).Authorization).toBe('Bearer saved-token');
+  });
+
+  it('잘못된 비밀번호이면 오류를 보여주고 다시 입력을 받는다', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({ ok: false }) }),
     );
     const user = userEvent.setup();
     renderPage();
-    await user.type(screen.getByLabelText(/관리자 토큰/), 'wrong');
-    await user.click(screen.getByRole('button', { name: '접속' }));
+    await user.type(screen.getByLabelText(/관리자 비밀번호/), 'wrong');
+    await user.click(screen.getByRole('button', { name: '로그인' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('올바르지 않습니다');
-    expect(screen.getByLabelText(/관리자 토큰/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/관리자 비밀번호/)).toBeInTheDocument();
     expect(sessionStorage.getItem('admin:token')).toBeNull();
   });
   it('로컬 처리 상태(종결 사유·시각)를 접수마다 보여 준다', async () => {
@@ -312,16 +328,16 @@ describe('접수 관리 페이지', () => {
     const user = userEvent.setup();
     stubAdminFetch();
     renderPage();
-    await user.type(screen.getByLabelText(/관리자 토큰/), 'test-token');
+    await user.type(screen.getByLabelText(/관리자 비밀번호/), 'test password!');
     await user.click(screen.getByLabelText(/이 기기에서 로그인 유지/));
-    await user.click(screen.getByRole('button', { name: '접속' }));
+    await user.click(screen.getByRole('button', { name: '로그인' }));
     await screen.findByText(/접수 통계/);
     expect(localStorage.getItem('admin:token')).toBe('test-token');
 
     await user.click(screen.getByRole('button', { name: /로그아웃/ }));
     expect(localStorage.getItem('admin:token')).toBeNull();
     expect(sessionStorage.getItem('admin:token')).toBeNull();
-    expect(screen.getByLabelText(/관리자 토큰/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/관리자 비밀번호/)).toBeInTheDocument();
   });
 
   it('로그인 유지를 고르지 않으면 기기에 오래 남기지 않는다', async () => {

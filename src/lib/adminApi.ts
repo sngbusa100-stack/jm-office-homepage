@@ -1,6 +1,7 @@
 // 접수 관리 API 클라이언트 + 통계 집계 (관리자 페이지 전용)
 
 import { office } from '../data/office';
+import { SITE_URL } from './pageMeta';
 import type { DeadlineReport, UrgentReason } from '../data/deadlineReport';
 
 export interface InquiryMemo {
@@ -74,7 +75,34 @@ export type AdminResult<T> = { ok: true; value: T } | { ok: false; error: string
 /** 접수 엔드포인트(/api/consult)와 같은 서버의 관리 엔드포인트(/api/admin)를 쓴다. */
 export function adminEndpoint(): string | null {
   if (!office.formEndpoint) return null;
+  // 같은 사이트의 API를 사용해 별칭 도메인과 로컬 개발 서버에서도 현재 출처를 유지한다.
+  if (office.formEndpoint === `${SITE_URL}/api/consult`) return '/api/admin';
   return office.formEndpoint.replace(/\/consult$/, '/admin');
+}
+
+export async function loginAdmin(password: string): Promise<AdminResult<string>> {
+  const endpoint = adminEndpoint();
+  if (!endpoint) return { ok: false, error: 'no_endpoint' };
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+      redirect: 'error',
+      cache: 'no-store',
+    });
+    if (response.status === 401) return { ok: false, error: 'unauthorized' };
+    if (response.status === 429) return { ok: false, error: 'rate_limited' };
+    if (response.status === 503) return { ok: false, error: 'unavailable' };
+    if (!response.ok) return { ok: false, error: 'server' };
+    const data = await response.json();
+    if (data?.ok !== true || typeof data.sessionToken !== 'string' || !data.sessionToken) {
+      return { ok: false, error: 'server' };
+    }
+    return { ok: true, value: data.sessionToken };
+  } catch {
+    return { ok: false, error: 'network' };
+  }
 }
 
 async function callAdmin<T>(

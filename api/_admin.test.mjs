@@ -1,3 +1,4 @@
+import { scryptSync } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import handler, { isAuthorized } from './admin.js';
 import { buildInquiryRecord } from './_store.mjs';
@@ -318,5 +319,82 @@ describe('관리자 API 핸들러', () => {
       res2,
     );
     expect(res2.statusCode).toBe(409);
+  });
+});
+
+describe('관리자 비밀번호 로그인', () => {
+  const password = '가상 시험용 passphrase!';
+  const salt = '11'.repeat(16);
+  const digest = scryptSync(password, Buffer.from(salt, 'hex'), 64).toString('hex');
+  const hash = ['scrypt', salt, digest].join('$');
+
+  beforeEach(() => {
+    vi.stubEnv('ADMIN_TOKEN', 'test-admin-key');
+    vi.stubEnv('ADMIN_PASSWORD_HASH', hash);
+    vi.stubEnv('KV_REST_API_URL', 'https://redis.test');
+    vi.stubEnv('KV_REST_API_TOKEN', 'redis-token');
+    stubRedis();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  async function login(value, headers = {}) {
+    const res = mockRes();
+    await handler({ method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: { password: value } }, res);
+    return res;
+  }
+
+  async function dashboard(token) {
+    const res = mockRes();
+    await handler({ method: 'GET', headers: { authorization: 'Bearer ' + token } }, res);
+    return res.statusCode;
+  }
+
+  it('비밀번호 확인 후 관리자 API에 쓸 30일 인증값을 발급한다', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const res = await login(password);
+    expect(res.statusCode).toBe(200);
+    const { sessionToken } = res.body;
+    expect(sessionToken).toEqual(expect.any(String));
+    expect(sessionToken).not.toBe(password);
+    expect(sessionToken).not.toBe(process.env.ADMIN_TOKEN);
+    expect(res.headers['Cache-Control']).toContain('no-store');
+    expect(await dashboard(sessionToken)).toBe(200);
+    vi.setSystemTime(Date.now() + 30 * 86400 * 1000);
+    expect(await dashboard(sessionToken)).toBe(401);
+  });
+
+  it('비밀번호나 서버 인증 키 변경 시 이전 세션이 만료된다', async () => {
+    const res = await login(password);
+    expect(res.statusCode).toBe(200);
+    vi.stubEnv('ADMIN_TOKEN', 'new-server-key');
+    expect(await dashboard(res.body.sessionToken)).toBe(401);
+    vi.stubEnv('ADMIN_TOKEN', 'test-admin-key');
+    vi.stubEnv('ADMIN_PASSWORD_HASH', hash.replace(salt, '22'.repeat(16)));
+    expect(await dashboard(res.body.sessionToken)).toBe(401);
+  });
+
+  it('잘못된 비밀번호·단순 폼 전송·설정 누락을 거부한다', async () => {
+    expect((await login('틀린 비밀번호')).statusCode).toBe(401);
+    expect((await login(password, { 'content-type': 'text/plain' })).statusCode).toBe(415);
+    vi.stubEnv('ADMIN_PASSWORD_HASH', '');
+    expect((await login(password)).statusCode).toBe(503);
+  });
+
+  it.each([null, 'NaN', 0, -1, 1.5, true])('제한기가 올바른 횟수를 돌려주지 않으면 로그인할 수 없다 (%s)', async (count) => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => [{ result: count }, { result: 1 }],
+    })));
+    expect((await login(password)).statusCode).toBe(503);
+  });
+  it('로그인 요청 제한과 제한기 장애 시 비밀번호를 검증하지 않는다', async () => {
+    for (let i = 0; i < 10; i++) await login('틀린 비밀번호');
+    expect((await login(password)).statusCode).toBe(429);
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    expect((await login(password)).statusCode).toBe(503);
   });
 });

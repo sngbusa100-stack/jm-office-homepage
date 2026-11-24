@@ -357,8 +357,10 @@ export async function checkRateLimit(cfg, key, { limit = 5, windowSec = 60 } = {
     ],
     fetchImpl,
   );
-  const count = Number(results[0]);
-  return Number.isFinite(count) ? count <= limit : true;
+  const count = results[0];
+  // Redis INCR은 양의 정수를 돌려준다. 잘못된 응답은 호출자의 장애 처리 정책을 따른다.
+  if (!Number.isSafeInteger(count) || count < 1) throw new Error('redis_invalid_rate_limit_count');
+  return count <= limit;
 }
 
 /** Upstash Redis REST 기반 접수 저장소. fetchImpl 주입으로 테스트한다. */
