@@ -28,10 +28,10 @@ describe('사무소 연락처 데이터', () => {
     expect(toInternationalPhone('010-9480-1849')).toBe('+82-10-9480-1849');
   });
 
-  it('지도 바로가기는 등록된 장소 화면을 연다(2026-11-23)', () => {
+  it('지도 바로가기는 등록된 장소를 열고, 카카오는 로드뷰 상세가 아닌 지도 화면으로 연다(2026-11-24)', () => {
     expect(mapLinks(office)).toEqual({
       naver: 'https://map.naver.com/p/entry/place/3457747262',
-      kakao: 'https://place.map.kakao.com/577766464',
+      kakao: 'https://map.kakao.com/link/map/577766464',
     });
   });
 

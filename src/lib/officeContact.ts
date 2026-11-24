@@ -15,15 +15,18 @@ export function mapEmbedUrl(query: string): string {
 }
 
 /**
- * 지도 바로가기 주소(외부 스크립트 없음). 등록된 장소 주소가 있으면 사무소 장소 화면을 바로 열고(2026-11-23),
+ * 지도 바로가기 주소(외부 스크립트 없음). 등록된 장소 주소가 있으면 사무소 장소를 바로 열고(2026-11-23),
  * 없으면 주소 검색 화면을 연다. 주소가 없으면 만들지 않는다.
+ * 카카오 장소 주소(place.map.kakao.com/번호)는 로드뷰 사진이 붙은 상세 화면이라, 같은 번호로 지도 화면
+ * (map.kakao.com/link/map/번호, 사무소 핀과 정보창)을 연다(2026-11-24). 장소 주소 원본은 office.json 하나다.
  */
 export function mapLinks(office: Office): { naver: string; kakao: string } | null {
   if (!office.mapQuery) return null;
   const encoded = encodeURIComponent(office.mapQuery);
+  const kakaoPlaceId = office.kakaoPlaceUrl?.match(/place\.map\.kakao\.com\/(\d+)/)?.[1];
   return {
     naver: office.naverPlaceUrl || `https://map.naver.com/p/search/${encoded}`,
-    kakao: office.kakaoPlaceUrl || `https://map.kakao.com/link/search/${encoded}`,
+    kakao: kakaoPlaceId ? `https://map.kakao.com/link/map/${kakaoPlaceId}` : `https://map.kakao.com/link/search/${encoded}`,
   };
 }
 
