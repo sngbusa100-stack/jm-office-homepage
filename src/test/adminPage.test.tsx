@@ -187,6 +187,19 @@ describe('접수 관리 페이지', () => {
     expect(await within(item).findByText(/진행 중$/)).toBeInTheDocument();
   });
 
+  it('개인정보가 파기된 접수도 상태는 바꿀 수 있고, 메모·회신 칸은 없다', async () => {
+    const { user, fetchMock } = await login();
+
+    const item = screen.getByText(/JM-20260701-ZZ99/).closest('details')!;
+    expect(within(item).queryByRole('button', { name: '회신문 생성' })).toBeNull();
+    expect(within(item).queryByRole('button', { name: /수임/ })).toBeNull();
+    await user.click(within(item).getByRole('button', { name: /보류\(으\)로 변경/ }));
+
+    const patchCall = fetchMock.mock.calls.find(([, options]) => options.method === 'PATCH')!;
+    expect(JSON.parse(String(patchCall[1].body))).toEqual({ id: 'JM-20260701-ZZ99', status: 'on_hold' });
+    expect(await within(item).findByText(/보류$/)).toBeInTheDocument();
+  });
+
   it('회신문 생성 시 이름·접수번호·확인 질문이 채워진다', async () => {
     const { user } = await login();
 

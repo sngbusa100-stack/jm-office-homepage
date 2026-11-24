@@ -237,6 +237,15 @@ export function purgeInquiryRecord(record, now = new Date()) {
 }
 
 /**
+ * 파기된 접수의 상태 변경: 개인정보가 없으므로 통계용 상태만 바꾼다(메모·수임 단계는 막는다).
+ * 파기 레코드는 자동 파기 대상이 아니므로 doneAt은 기록하지 않는다.
+ */
+export function applyPurgedStatus(record, status, now = new Date()) {
+  if (!STATUSES.includes(status)) return { ok: false, errors: ['status'] };
+  return { ok: true, value: { ...record, status, updatedAt: now.toISOString() } };
+}
+
+/**
  * 자동 파기 대상 판정: 완료(done) 후 보존기간(RETENTION_DAYS)이 지난 미파기 레코드.
  * 과거(v1) 레코드에 doneAt이 없으면 updatedAt, 그것도 없으면 receivedAt을 기산점으로 쓴다.
  */

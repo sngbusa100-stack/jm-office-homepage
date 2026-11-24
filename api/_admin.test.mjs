@@ -312,13 +312,41 @@ describe('관리자 API 핸들러', () => {
     expect(saved.message).toBeUndefined();
     expect(saved.topic).toBe('국가보훈');
 
-    // 파기된 건은 재수정 불가
+    // 파기된 건은 상태만 바꿀 수 있고, 개인정보 필드는 되살아나지 않는다
     const res2 = mockRes();
     await handler(
       { method: 'PATCH', headers: AUTH, body: { id: 'JM-20260717-CCCC', status: 'done' } },
       res2,
     );
-    expect(res2.statusCode).toBe(409);
+    expect(res2.statusCode).toBe(200);
+    expect(res2.body.item.status).toBe('done');
+    const resaved = JSON.parse(data.get('inquiry:JM-20260717-CCCC'));
+    expect(resaved).toMatchObject({ purged: true, status: 'done', topic: '국가보훈' });
+    expect(resaved.name).toBeUndefined();
+    expect(resaved.memos).toBeUndefined();
+    expect(resaved.doneAt).toBeUndefined();
+  });
+
+  it('파기된 건의 메모·수임 단계 변경, 재파기, 잘못된 상태는 거절한다', async () => {
+    const { data } = stubRedis();
+    const purged = {
+      id: 'JM-P', schemaVersion: 1, receivedAt: '2026-07-18T14:06:03.000Z', topic: '인허가',
+      status: 'new', pipelineStage: 'inquiry', memoCount: 0, purged: true, purgedAt: '2026-07-20T00:00:00.000Z',
+    };
+    data.set('inquiry:JM-P', JSON.stringify(purged));
+    const cases = [
+      [{ method: 'PATCH', body: { id: 'JM-P', memo: '메모' } }, 409],
+      [{ method: 'PATCH', body: { id: 'JM-P', status: 'done', memo: '메모' } }, 409],
+      [{ method: 'PATCH', body: { id: 'JM-P', pipelineStage: 'retained' } }, 409],
+      [{ method: 'DELETE', body: { id: 'JM-P' } }, 409],
+      [{ method: 'PATCH', body: { id: 'JM-P', status: 'weird' } }, 400],
+    ];
+    for (const [req, code] of cases) {
+      const res = mockRes();
+      await handler({ ...req, headers: AUTH }, res);
+      expect(res.statusCode).toBe(code);
+    }
+    expect(JSON.parse(data.get('inquiry:JM-P'))).toEqual(purged);
   });
 });
 

@@ -1,11 +1,12 @@
 // 접수 관리 API — 사무소 관리자 전용 (ADMIN_TOKEN Bearer 인증)
-// GET: 접수 목록(최신순) / PATCH: 상태 변경·메모 추가 / DELETE: 개인정보 파기(통계 필드만 보존)
+// GET: 접수 목록(최신순) / PATCH: 상태 변경·메모 추가(파기된 접수는 상태만) / DELETE: 개인정보 파기(통계 필드만 보존)
 
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { loginWithPassword, validAdminSession } from './_admin-password.mjs';
 import { applyCors } from './_cors.mjs';
 import {
   applyInquiryPatch,
+  applyPurgedStatus,
   checkRateLimit,
   clientIp,
   createInquiryStore,
@@ -112,7 +113,20 @@ export default async function handler(req, res) {
         return;
       }
       if (record.purged) {
-        res.status(409).json({ ok: false, error: 'already_purged' });
+        // 파기된 접수는 통계용 상태만 바꿀 수 있다(메모·수임 단계·재파기는 거절).
+        const statusOnly =
+          req.method === 'PATCH' && body.memo === undefined && body.pipelineStage === undefined;
+        if (!statusOnly || body.status === undefined) {
+          res.status(409).json({ ok: false, error: 'already_purged' });
+          return;
+        }
+        const result = applyPurgedStatus(record, body.status);
+        if (!result.ok) {
+          res.status(400).json({ ok: false, errors: result.errors });
+          return;
+        }
+        await store.save(result.value);
+        res.status(200).json({ ok: true, item: withUrgency(result.value) });
         return;
       }
 

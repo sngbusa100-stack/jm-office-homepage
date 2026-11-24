@@ -228,6 +228,23 @@ export function AdminPage() {
     else setError('상태 변경에 실패했습니다.');
   }
 
+  function renderStatusActions(item: InquiryRecord) {
+    return (
+      <div className="admin-actions" role="group" aria-label={`${item.id} 상태 변경`}>
+        {STATUS_KEYS.filter((key) => key !== item.status).map((key) => (
+          <button
+            key={key}
+            className="button"
+            type="button"
+            onClick={() => void handleStatus(item.id, key)}
+          >
+            {STATUS_LABEL[key]}(으)로 변경
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   async function handlePipelineStage(
     id: string,
     pipelineStage: NonNullable<InquiryRecord['pipelineStage']>,
@@ -526,10 +543,13 @@ export function AdminPage() {
             </summary>
 
             {item.purged ? (
-              <p className="note">
-                개인정보가 파기된 접수입니다. 분야·접수일·상태만 통계용으로 보관됩니다. (메모{' '}
-                {item.memoCount ?? 0}건 함께 파기)
-              </p>
+              <>
+                <p className="note">
+                  개인정보가 파기된 접수입니다. 분야·접수일·상태만 통계용으로 보관됩니다. (메모{' '}
+                  {item.memoCount ?? 0}건 함께 파기)
+                </p>
+                {renderStatusActions(item)}
+              </>
             ) : (
               <>
                 <p>
@@ -633,18 +653,7 @@ export function AdminPage() {
                   </p>
                 )}
 
-                <div className="admin-actions" role="group" aria-label={`${item.id} 상태 변경`}>
-                  {STATUS_KEYS.filter((key) => key !== item.status).map((key) => (
-                    <button
-                      key={key}
-                      className="button"
-                      type="button"
-                      onClick={() => void handleStatus(item.id, key)}
-                    >
-                      {STATUS_LABEL[key]}(으)로 변경
-                    </button>
-                  ))}
-                </div>
+                {renderStatusActions(item)}
 
                 <div className="admin-pipeline">
                   <p className="note">
