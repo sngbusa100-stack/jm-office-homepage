@@ -274,6 +274,30 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(screen.queryByRole('button', { name: /접수번호 복사/ })).toBeNull();
   });
 
+  it('저장 장애 때 입력을 유지하고 다시 누르면 같은 제출 키로 접수한다', async () => {
+    const bodies: Array<{ submissionId: string }> = [];
+    vi.stubGlobal('fetch', vi.fn(async (url, init) => {
+      if (url !== 'https://example.test/api/consult') return { ok: true };
+      bodies.push(JSON.parse(init.body));
+      if (bodies.length === 1) {
+        return { ok: false, status: 503, json: async () => ({ error: 'inquiry_storage_unavailable' }) };
+      }
+      return { ok: true, json: async () => ({ id: 'JM-RETRY' }) };
+    }));
+    const user = userEvent.setup();
+    renderPage();
+    await fillContact(user);
+    await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
+    const submit = screen.getByRole('button', { name: /상담 신청하기/ });
+    await user.click(submit);
+    expect(await screen.findByRole('alert')).toHaveTextContent('1분 뒤 다시 신청');
+    expect(screen.getByLabelText(/성함/)).toHaveValue('홍길동');
+    await user.click(submit);
+    await screen.findByText(/JM-RETRY/);
+    expect(bodies[0].submissionId).toBeTruthy();
+    expect(bodies[1]).toEqual(bodies[0]);
+  });
+
   it('전송 실패 시 대체 채널 안내를 보여준다', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
     const user = userEvent.setup();

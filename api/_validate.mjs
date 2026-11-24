@@ -134,30 +134,15 @@ export function validateConsultPayload(body) {
 /**
  * 텔레그램(국외 사업자) 알림에는 개인정보(이름·연락처·분야·상담 내용)를 싣지 않는다.
  * 상세는 접근이 제한된 /admin 관리자 화면에서만 열람한다.
- * 예외: 저장 실패 시에는 이 알림이 유일한 기록이므로 유실 방지를 위해 전체 내용을 포함한다.
+ * 장애 때는 운영자가 대조할 번호와 장애 상태만 보낸다.
  * 긴급 근거(meta.urgentReasons, _urgency.mjs)는 분야가 드러나지 않게 '고객 답변 기준'과
  * '고객 직접 선택' 두 가지로만 표시한다.
  */
 export function formatTelegramMessage(value, meta = {}) {
   const urgentLines = urgentNoticeLines(meta.urgentReasons);
   if (meta.storeError) {
-    const lines = [
-      '📥 새 상담 신청 (홈페이지)',
-      '⚠ 접수 저장 실패 — 이 알림이 유일한 기록입니다.',
-      ...(meta.inquiryId ? [`접수번호: ${meta.inquiryId}`] : []),
-      ...urgentLines,
-      `이름: ${value.name}`,
-      `연락처: ${value.phone}`,
-      ...(value.email ? [`이메일: ${value.email}`] : []),
-      `분야: ${value.topic}`,
-    ];
-    if (value.message) {
-      lines.push('', '상담 내용:', value.message);
-    }
-    if (meta.origin) {
-      lines.push('', `출처: ${meta.origin}`);
-    }
-    return lines.join('\n');
+    return ['⚠ 홈페이지 접수 저장 확인 필요', meta.inquiryId && `확인번호: ${meta.inquiryId}`]
+      .filter(Boolean).join('\n');
   }
 
   const lines = ['📥 새 상담 접수'];

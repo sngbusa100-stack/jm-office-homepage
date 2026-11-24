@@ -45,8 +45,9 @@ function createBackend() {
     }
     if (name === 'GET') return values.get(args[0]) ?? null;
     if (name === 'ZADD') {
+      const added = index.has(args[2]) ? 0 : 1;
       index.set(args[2], Number(args[1]));
-      return 1;
+      return added;
     }
     throw new Error(`unsupported:${name}`);
   }
@@ -58,6 +59,7 @@ function createBackend() {
     }
     const command = JSON.parse(init.body);
     if (String(url).endsWith('/multi-exec')) {
+      if (state.saveUnavailable) return { ok: false, status: 503 };
       if (state.partialSave && command[0]?.[0] === 'SET' && String(command[0]?.[1]).startsWith('inquiry:')) {
         execute(command[0]);
         return { ok: true, json: async () => [{ result: 'OK' }, { error: 'ERR index' }] };
@@ -141,7 +143,6 @@ describe('상담 API 핸들러', () => {
     const backend = createBackend();
     vi.stubGlobal('fetch', backend.fetch);
     const first = await invoke();
-    backend.index.clear(); // 과거 부분 저장으로 본문만 남은 상황도 중복 경로에서 복구
     const second = await invoke();
     expect(second.statusCode).toBe(200);
     expect(second.body).toEqual({ ok: true, id: first.body.id, duplicate: true });
@@ -168,8 +169,19 @@ describe('상담 API 핸들러', () => {
     vi.stubGlobal('fetch', backend.fetch);
     const res = await invoke();
     expect(res.statusCode).toBe(503);
-    expect(res.body.error).toBe('idempotency_lookup_failed');
-    expect(backend.telegramTexts).toHaveLength(0);
+    expect(res.body.error).toBe('inquiry_storage_unavailable');
+    expect(backend.telegramTexts[0]).toContain('저장 확인 필요');
+  });
+
+  it('선점과 조회 사이에 기존 키가 만료되면 새 번호를 저장하지 않는다', async () => {
+    const backend = createBackend();
+    backend.fetch.mockImplementationOnce(backend.fetch.getMockImplementation())
+      .mockImplementationOnce(async () => ({ ok: true, json: async () => ({ result: null }) }))
+      .mockImplementationOnce(async () => ({ ok: true, json: async () => ({ result: null }) }));
+    vi.stubGlobal('fetch', backend.fetch);
+    const res = await invoke();
+    expect(res.statusCode).toBe(503);
+    expect(backend.index.size).toBe(0);
   });
 
   it('첫 요청이 아직 저장 중이면 두 번째 동시 요청은 알림 없이 pending을 반환한다', async () => {
@@ -194,7 +206,7 @@ describe('상담 API 핸들러', () => {
     vi.stubGlobal('fetch', backend.fetch);
     const res = await invoke();
     expect(res.statusCode).toBe(503);
-    expect(res.body.error).toBe('inquiry_index_unavailable');
+    expect(res.body.error).toBe('inquiry_storage_unavailable');
   });
 
   it('SET 뒤 인덱스 오류가 나면 read-back 후 인덱스를 복구한다', async () => {
@@ -214,9 +226,24 @@ describe('상담 API 핸들러', () => {
     backend.state.failEnsure = true;
     vi.stubGlobal('fetch', backend.fetch);
     const res = await invoke();
-    expect(res.statusCode).toBe(200);
-    expect(backend.telegramTexts[0]).toContain('인덱스 확인 필요');
+    expect(res.statusCode).toBe(503);
+    expect(backend.telegramTexts[0]).toContain('저장 확인 필요');
     expect(backend.telegramTexts[0]).not.toContain('홍길동');
+  });
+
+  it('부분 저장 후 재시도가 대기함을 복구하면 정상 접수 알림을 한 번 보낸다', async () => {
+    const backend = createBackend();
+    backend.state.partialSave = true;
+    backend.state.failEnsure = true;
+    vi.stubGlobal('fetch', backend.fetch);
+    expect((await invoke()).statusCode).toBe(503);
+    backend.state.failEnsure = false;
+    const retry = await invoke();
+    expect(retry.statusCode).toBe(200);
+    expect(backend.index.has(retry.body.id)).toBe(true);
+    expect(backend.telegramTexts[1]).toContain(`접수번호: ${retry.body.id}`);
+    expect((await invoke()).body.duplicate).toBe(true);
+    expect(backend.telegramTexts).toHaveLength(2);
   });
 
   it('저장 성공 뒤 텔레그램 실패는 중복 유발 없이 성공 응답한다', async () => {
@@ -228,15 +255,33 @@ describe('상담 API 핸들러', () => {
     expect(backend.values.has(`inquiry:${res.body.id}`)).toBe(true);
   });
 
-  it('저장소가 없으면 사용자 결정에 따른 개인정보 폴백 알림으로 유실을 막는다', async () => {
+  it('저장소가 없으면 접수 완료를 표시하지 않고 장애만 알린다', async () => {
     vi.stubEnv('KV_REST_API_URL', '');
     vi.stubEnv('KV_REST_API_TOKEN', '');
     const backend = createBackend();
     vi.stubGlobal('fetch', backend.fetch);
     const res = await invoke();
-    expect(res.statusCode).toBe(200);
-    expect(backend.telegramTexts[0]).toContain('접수 저장 실패');
-    expect(backend.telegramTexts[0]).toContain('홍길동');
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toEqual({ ok: false, error: 'inquiry_storage_unavailable' });
+    expect(backend.telegramTexts[0]).toMatch(/^⚠ 홈페이지 접수 저장 확인 필요\n확인번호: JM-/);
+    expect(backend.telegramTexts[0]).not.toContain(validBody.name);
+  });
+
+  it('저장 장애 뒤 같은 제출을 재시도하면 예약된 접수번호로 한 번만 저장한다', async () => {
+    const backend = createBackend();
+    vi.stubGlobal('fetch', backend.fetch);
+    backend.state.saveUnavailable = true;
+    const failed = await invoke();
+    expect(failed.statusCode).toBe(503);
+    expect(backend.index.size).toBe(0);
+    backend.state.saveUnavailable = false;
+    backend.values.delete('dedup:processing:submission-12345678'); // 처리 잠금 만료
+    const retry = await invoke();
+    expect(retry.statusCode).toBe(200);
+    expect(backend.telegramTexts[0]).toContain(retry.body.id);
+    expect(backend.index.size).toBe(1);
+    expect((await invoke()).body).toEqual({ ok: true, id: retry.body.id, duplicate: true });
+    expect(backend.telegramTexts).toHaveLength(2);
   });
 
   it('저장소와 텔레그램이 모두 없으면 성공으로 위장하지 않는다', async () => {
@@ -246,6 +291,6 @@ describe('상담 API 핸들러', () => {
     backend.state.telegramOk = false;
     vi.stubGlobal('fetch', backend.fetch);
     const res = await invoke();
-    expect(res.statusCode).toBe(502);
+    expect(res.statusCode).toBe(503);
   });
 });

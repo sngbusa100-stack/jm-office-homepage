@@ -1,3 +1,4 @@
+import { SITE_URL } from './pageMeta';
 import type { DeadlineReport } from '../data/deadlineReport';
 
 /** 진단 결과에서 상담으로 이동할 때 함께 전달되는 셀프 진단 상세. */
@@ -50,7 +51,7 @@ export interface ConsultPayload {
  * 전송 실패 종류(10-17 검토 CV-12, 2026-11-14). 503이라도 원인이 여럿이라 서버 error 코드로 나눈다.
  * closed: 접수 닫힘(503 not_accepting) / retry: 잠시 뒤 다시(429·409) / invalid: 입력값 거절(400) / outage: 일시 장애(그 밖의 5xx·네트워크)
  */
-export type SubmitErrorKind = 'closed' | 'retry' | 'invalid' | 'outage';
+export type SubmitErrorKind = 'closed' | 'retry' | 'invalid' | 'storage' | 'outage';
 export type SubmitResult = { status: 'sent'; id?: string } | { status: 'error'; kind: SubmitErrorKind };
 
 async function errorKind(response: Response): Promise<SubmitErrorKind> {
@@ -59,7 +60,10 @@ async function errorKind(response: Response): Promise<SubmitErrorKind> {
   if (response.status === 503) {
     try {
       const data: unknown = typeof response.json === 'function' ? await response.json() : null;
-      if (data && typeof data === 'object' && (data as { error?: unknown }).error === 'not_accepting') return 'closed';
+      if (data && typeof data === 'object' && 'error' in data) {
+        if (data.error === 'not_accepting') return 'closed';
+        if (data.error === 'inquiry_storage_unavailable') return 'storage';
+      }
     } catch {
       // 본문을 읽지 못하면 일시 장애로 본다.
     }
@@ -69,7 +73,9 @@ async function errorKind(response: Response): Promise<SubmitErrorKind> {
 
 export async function submitConsult(endpoint: string, payload: ConsultPayload): Promise<SubmitResult> {
   try {
-    const response = await fetch(endpoint, {
+    // Vite 개발 서버는 같은 출처의 /api 요청을 로컬 API 또는 모의 서버로 전달한다.
+    const url = import.meta.env.DEV && endpoint === `${SITE_URL}/api/consult` ? '/api/consult' : endpoint;
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

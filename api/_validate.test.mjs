@@ -311,38 +311,13 @@ describe('텔레그램 메시지 포맷', () => {
     for (const hint of ['비자', '진단', '음주', '영업', '보훈', '인허가', '토지']) expect(text).not.toContain(hint);
   });
 
-  it('저장 실패 폴백에도 긴급 줄을 접수번호 바로 아래에 넣는다', () => {
-    const text = formatTelegramMessage(sample, {
-      inquiryId: 'JM-20260718-AB12',
-      storeError: true,
-      urgentReasons: ['selfReported'],
-    });
-    const lines = text.split('\n');
-    const idLine = lines.indexOf('접수번호: JM-20260718-AB12');
-    expect(lines[idLine + 1]).toBe("⏰ 기한 우선 확인 — 고객이 '급함·모름'을 직접 선택");
-    expect(formatTelegramMessage(sample, { storeError: true })).not.toContain('⏰');
-  });
-
-  it('저장 실패 시에는 유실 방지를 위해 경고와 전체 내용을 담는다', () => {
+  it('저장 장애 알림에는 장애와 식별번호만 담는다', () => {
     const failed = formatTelegramMessage(sample, {
       inquiryId: 'JM-20260718-AB12',
       storeError: true,
+      urgentReasons: ['selfReported'],
       origin: 'https://example.com',
     });
-    expect(failed).toContain('저장 실패');
-    expect(failed).toContain('접수번호: JM-20260718-AB12');
-    expect(failed).toContain('홍길동');
-    expect(failed).toContain('010-1234-5678');
-    expect(failed).toContain(TOPICS[0]);
-    expect(failed).toContain('문의합니다');
-    expect(failed).toContain('https://example.com');
-  });
-
-  it('저장 실패 폴백에서 내용이 비면 상담 내용 줄을 생략한다', () => {
-    const text = formatTelegramMessage(
-      { name: 'a', phone: 'b', topic: 'c', message: '' },
-      { storeError: true },
-    );
-    expect(text).not.toContain('상담 내용');
+    expect(failed.split('\n')).toEqual(['⚠ 홈페이지 접수 저장 확인 필요', '확인번호: JM-20260718-AB12']);
   });
 });

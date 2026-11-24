@@ -549,16 +549,18 @@ export function ConsultPage() {
 /** 전송 실패 안내(CV-12). 카카오는 채널이 있을 때만 말한다. */
 export function submitErrorMessage(kind: SubmitErrorKind): string {
   const phone = office.phone ? `전화(${office.phone})` : '전화';
-  const other = office.kakaoChannelUrl ? `${phone}·카카오톡` : phone;
+  const contact = office.kakaoChannelUrl ? `${phone} 또는 카카오톡으로` : `${phone}로`;
   switch (kind) {
     case 'closed':
-      return `지금은 홈페이지 접수를 받지 않고 있습니다. ${other}로 문의해 주세요.`;
+      return `지금은 홈페이지 접수를 받지 않고 있습니다. ${contact} 문의해 주세요.`;
+    case 'storage':
+      return `접수 저장을 확인하지 못했습니다. 이 화면에서 1분 뒤 다시 신청해 주세요. 급한 경우 ${contact} 문의해 주세요.`;
     case 'retry':
       return '요청이 잠시 몰려 접수하지 못했습니다. 1~2분 뒤 다시 눌러 주세요. 같은 내용이 두 번 접수되지는 않습니다.';
     case 'invalid':
       return '입력하신 내용을 확인하지 못했습니다. 이름·연락처·문의 내용을 다시 확인한 뒤 눌러 주세요.';
     default:
-      return `일시적인 문제로 전송하지 못했습니다. 잠시 후 다시 시도하시거나 ${other}로 문의해 주세요.`;
+      return `일시적인 문제로 전송하지 못했습니다. 잠시 후 다시 시도하시거나 ${contact} 문의해 주세요.`;
   }
 }
 

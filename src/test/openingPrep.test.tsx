@@ -84,7 +84,24 @@ describe('C19 상담 전송 실패를 종류별로 안내(CV-12)', () => {
   const payload = { name: '시험', phone: '010-0000-0000', email: '', topic: 'other', message: '시험', consent: true, company: '' };
 
   it.each([
+    [true, 'https://jungmyungoffice.com/api/consult', '/api/consult'],
+    [false, 'https://jungmyungoffice.com/api/consult', 'https://jungmyungoffice.com/api/consult'],
+    [true, 'https://forms.example/custom', 'https://forms.example/custom'],
+  ] as const)('개발 환경 %s에서 %s 문의 주소를 처리한다', async (dev, endpoint, expected) => {
+    vi.stubEnv('DEV', dev);
+    const fetchMock = respond(200, { ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    try {
+      await submitConsult(endpoint, payload);
+      expect(fetchMock).toHaveBeenCalledWith(expected, expect.anything());
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it.each([
     [503, { ok: false, error: 'not_accepting' }, 'closed'],
+    [503, { ok: false, error: 'inquiry_storage_unavailable' }, 'storage'],
     [503, { ok: false, error: 'inquiry_index_unavailable' }, 'outage'],
     [502, { ok: false, error: 'notify_failed' }, 'outage'],
     [500, { ok: false, error: 'server_config' }, 'outage'],
@@ -106,7 +123,9 @@ describe('C19 상담 전송 실패를 종류별로 안내(CV-12)', () => {
     expect(submitErrorMessage('closed')).toContain(office.phone!);
     expect(submitErrorMessage('retry')).toContain('다시 눌러');
     expect(submitErrorMessage('outage')).not.toContain('받지 않고');
-    if (!office.kakaoChannelUrl) {
+    if (office.kakaoChannelUrl) {
+      expect(submitErrorMessage('storage')).toContain('또는 카카오톡으로 문의해 주세요');
+    } else {
       for (const k of ['closed', 'retry', 'invalid', 'outage'] as const) expect(submitErrorMessage(k)).not.toContain('카카오');
     }
   });

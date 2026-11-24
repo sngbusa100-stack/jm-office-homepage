@@ -14,7 +14,7 @@ export const PIPELINE_STAGES = ['inquiry', 'qualified', 'retained', 'work_comple
 export const SCHEMA_VERSION = 7;
 
 /** 개인정보 수집 동의 문구 버전 — 개인정보처리방침 개정일과 맞춘다. */
-export const CONSENT_VERSION = '2026-11-20';
+export const CONSENT_VERSION = '2026-11-24';
 
 /** 처리 완료(done) 후 개인정보 보존 일수 — 행정심판 청구기간(90일)과 후속 절차 대응을 고려해 120일. */
 export const RETENTION_DAYS = 120;
@@ -381,11 +381,12 @@ export function createInquiryStore(cfg, fetchImpl = fetch) {
     },
     /** 본문 저장 후 목록 인덱스가 빠진 경우 재등록한다(멱등). */
     async ensureIndexed(record) {
-      await command(
+      const added = await command(
         cfg,
         ['ZADD', INDEX_KEY, String(Date.parse(record.receivedAt)), record.id],
         fetchImpl,
       );
+      return added === 1;
     },
     /** 최신순 목록. limit 기본 500건 (저용량 사무소 규모 가정). */
     async list(limit = 500) {

@@ -57,7 +57,7 @@ describe('개인정보처리방침 법정 기재사항', () => {
     expect(section.queryByText(/개업 후 게시/)).toBeNull();
   });
 
-  it('Telegram으로는 평상시 접수번호만 가고, 저장 장애 때만 접수 내용이 간다고 적는다', () => {
+  it('Telegram으로는 평상시 접수번호와 저장 장애 때의 확인번호를 안내한다', () => {
     const telegram = OVERSEAS_TRANSFERS.find((row) => row.recipient.startsWith('Telegram'))!;
     expect(telegram.items).toContain('평상시 접수번호');
     expect(telegram.items).toContain('저장 장애');
