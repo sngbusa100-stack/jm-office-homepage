@@ -62,6 +62,7 @@ export function Footer() {
           <Link to="/privacy">개인정보처리방침</Link>
           <Link to="/disclaimer">면책 고지</Link>
         </nav>
+        <Link className="footer__admin" to="/admin">관리자</Link>
         <p className="footer__note">본 사이트의 안내는 일반 정보이며 법률 자문이 아닙니다.</p>
       </div>
     </footer>
