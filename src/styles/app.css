@@ -952,7 +952,7 @@ th { background: var(--surface-muted); font-weight: 700; }
   /* 본문 문장·목록 속 링크(공식 출처, 방침 링크, 전화·메일). 줄바꿈을 지키려고 inline 그대로 두고
      세로 padding으로 누르는 영역만 넓힌다(inline의 세로 padding은 줄 배치를 바꾸지 않는다). */
   main :is(p, dd, li, label) a:not([class]):not(.breadcrumbs a) { padding-block: 12px; }
-  .myth-list summary { padding-block: 7px; margin-block: -7px; }
+  .myth-list summary { padding-block: 8px; margin-block: -8px; } /* 7px이면 운영 실측 43.8px(2026-11-25) */
   .footer p a { display: inline-block; padding: 10px 0; margin-block: -10px; }
   .footer nav[aria-label='안내 및 법적 고지'] a { padding: 10px 0; margin-block: -10px; }
 }
