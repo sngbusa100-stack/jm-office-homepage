@@ -45,8 +45,9 @@ export function Footer() {
         )}
         {(office.consultHours || office.parking) && (
           <p>
-            {office.consultHours && <>상담 시간 {office.consultHours}</>}
-            {office.parking && <>{office.consultHours && ' | '}주차 {office.parking}</>}
+            {/* 각 항목은 통째로 줄바꿈한다(휴대폰에서 '주차 1시간 / 30분 무료'처럼 끊기지 않게). PC는 그대로 한 줄. */}
+            {office.consultHours && <span className="footer__nowrap">상담 시간 {office.consultHours}</span>}
+            {office.parking && <>{office.consultHours && ' | '}<span className="footer__nowrap">주차 {office.parking}</span></>}
           </p>
         )}
         {blogs.length > 0 && (
@@ -60,7 +61,7 @@ export function Footer() {
           </p>
         )}
         <p className="footer__visa">
-          <a href={attributedExternalUrl('https://visa.jungmyungoffice.com', 'jm_main_lang', attribution)}>Visa Pre-Check</a>
+          <a href={attributedExternalUrl('https://visa.jungmyungoffice.com', 'jm_main_lang', attribution)}>비자 진단(<span lang="en">Visa Pre-Check</span>)</a>
           {' · '}
           <span lang="en">English</span> / <span lang="zh">中文</span> / <span lang="vi">Tiếng Việt</span> / <span lang="ja">日本語</span>
         </p>
@@ -75,8 +76,9 @@ export function Footer() {
           <Link to="/process">의뢰 절차와 보수</Link>
           <Link to="/privacy">개인정보처리방침</Link>
           <Link to="/disclaimer">면책 고지</Link>
+          {/* 같은 줄 묶음에 둬서 휴대폰에서도 '면책 고지' 오른쪽에 온다(줄을 따로 쓰지 않게). */}
+          <Link className="footer__admin" to="/admin">관리자</Link>
         </nav>
-        <Link className="footer__admin" to="/admin">관리자</Link>
         <p className="footer__note">본 사이트의 안내는 일반 정보이며 법률 자문이 아닙니다.</p>
       </div>
     </footer>

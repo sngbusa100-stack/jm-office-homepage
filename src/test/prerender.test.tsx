@@ -39,7 +39,7 @@ describe('사전 렌더링', () => {
   it('사전 렌더링 푸터에 비자 사전 진단 링크(utm_content=jm_main_lang)가 있다', () => {
     const html = renderPage('/');
     expect(html).toContain('href="https://visa.jungmyungoffice.com/?utm_content=jm_main_lang"');
-    expect(html).toContain('Visa Pre-Check');
+    expect(html).toContain('비자 진단(<span lang="en">Visa Pre-Check</span>)');
     expect(html).toContain('lang="vi"');
   });
 
