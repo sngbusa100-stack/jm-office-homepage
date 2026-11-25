@@ -138,11 +138,21 @@ export async function fetchInquiries(token: string): Promise<AdminResult<Inquiry
   return { ok: true, value: result.value.items ?? [] };
 }
 
+/** 하루(KST)·이벤트·분야·유입 출처 한 칸의 건수 — api/_funnel.mjs summary()의 행. */
+export interface FunnelRow {
+  date: string;
+  event: string;
+  domain: string;
+  source: string;
+  count: number;
+}
+
 export interface FunnelSummary {
+  /** 서버가 보낸 기간(일). */
   days: number;
-  totals: Record<string, number>;
-  byDomain: Record<string, Record<string, number>>;
-  bySource: Record<string, number>;
+  /** 마지막 날(KST, YYYY-MM-DD). */
+  until: string;
+  rows: FunnelRow[];
 }
 
 export interface AdminDashboard {
@@ -150,12 +160,10 @@ export interface AdminDashboard {
   funnel: FunnelSummary;
 }
 
-const EMPTY_FUNNEL: FunnelSummary = {
-  days: 30,
-  totals: {},
-  byDomain: {},
-  bySource: {},
-};
+function emptyFunnel(): FunnelSummary {
+  const until = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return { days: 90, until, rows: [] };
+}
 
 export async function fetchAdminDashboard(token: string): Promise<AdminResult<AdminDashboard>> {
   const result = await callAdmin<{ items: InquiryRecord[]; funnel?: FunnelSummary }>('GET', token);
@@ -164,7 +172,8 @@ export async function fetchAdminDashboard(token: string): Promise<AdminResult<Ad
     ok: true,
     value: {
       items: result.value.items ?? [],
-      funnel: result.value.funnel ?? EMPTY_FUNNEL,
+      // 옛 서버 응답(rows 없음)이 와도 화면이 깨지지 않게 빈 퍼널로 본다.
+      funnel: Array.isArray(result.value.funnel?.rows) ? result.value.funnel : emptyFunnel(),
     },
   };
 }

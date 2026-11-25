@@ -51,7 +51,9 @@ describe('개인정보 없는 퍼널 집계 저장소', () => {
           json: async () => body.map((cmd) => ({
             result: cmd[1].endsWith('2026-07-25')
               ? ['landing_view|dui|naver', '10', 'diagnosis_start|dui|naver', '4', 'consult_view|dui|direct', '2']
-              : [],
+              : cmd[1].endsWith('2026-07-24')
+                ? ['consult_submit|permit|', '1', 'bogus|dui|naver', '9', 'landing_view|nowhere|naver', '3']
+                : [],
           })),
         };
       }
@@ -64,20 +66,24 @@ describe('개인정보 없는 퍼널 집계 저장소', () => {
     );
     const summary = await store.summary(2, new Date('2026-07-25T12:00:00Z'));
 
-    expect(summary.totals).toMatchObject({ landing_view: 10, diagnosis_start: 4, consult_view: 2 });
-    expect(summary.byDomain.dui).toMatchObject({ landing_view: 10, diagnosis_start: 4, consult_view: 2 });
-    expect(summary.bySource).toMatchObject({ naver: 14, direct: 2 });
-    expect(Object.getPrototypeOf(summary.bySource)).toBeNull();
-    expect(summary.days).toBe(2);
+    // 날짜(KST)별 행을 그대로 내보내고, 모르는 이벤트·분야는 버리며 빈 출처는 direct로 본다.
+    expect(summary).toEqual({
+      days: 2,
+      until: '2026-07-25',
+      rows: [
+        { date: '2026-07-25', event: 'landing_view', domain: 'dui', source: 'naver', count: 10 },
+        { date: '2026-07-25', event: 'diagnosis_start', domain: 'dui', source: 'naver', count: 4 },
+        { date: '2026-07-25', event: 'consult_view', domain: 'dui', source: 'direct', count: 2 },
+        { date: '2026-07-24', event: 'consult_submit', domain: 'permit', source: 'direct', count: 1 },
+      ],
+    });
   });
 
-  it('빈 요약은 모든 공개 단계가 0이다', () => {
-    expect(emptyFunnelSummary(30).totals).toMatchObject({
-      landing_view: 0,
-      diagnosis_start: 0,
-      diagnosis_complete: 0,
-      consult_view: 0,
-      consult_submit: 0,
+  it('빈 요약은 기준일(KST)과 빈 행을 준다', () => {
+    expect(emptyFunnelSummary(90, new Date('2026-07-25T20:00:00Z'))).toEqual({
+      days: 90,
+      until: '2026-07-26',
+      rows: [],
     });
   });
 });

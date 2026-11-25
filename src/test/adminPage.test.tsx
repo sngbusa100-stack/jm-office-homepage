@@ -83,17 +83,20 @@ function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
           ok: true,
           items,
           funnel: {
-            days: 30,
-            totals: {
-              landing_view: 100,
-              landing_cta_click: 30,
-              diagnosis_start: 20,
-              diagnosis_complete: 12,
-              consult_view: 8,
-              consult_submit: 3,
-            },
-            byDomain: {},
-            bySource: { naver: 70, direct: 30 },
+            days: 90,
+            until: '2026-07-20',
+            rows: [
+              { date: '2026-07-20', event: 'landing_view', domain: 'dui', source: 'naver', count: 70 },
+              { date: '2026-07-19', event: 'landing_view', domain: 'home', source: 'direct', count: 30 },
+              { date: '2026-07-20', event: 'landing_cta_click', domain: 'dui', source: 'naver', count: 30 },
+              { date: '2026-07-18', event: 'diagnosis_start', domain: 'dui', source: 'naver', count: 15 },
+              { date: '2026-07-18', event: 'diagnosis_start', domain: 'suspension', source: 'direct', count: 5 },
+              { date: '2026-07-18', event: 'diagnosis_complete', domain: 'dui', source: 'naver', count: 12 },
+              { date: '2026-07-17', event: 'consult_view', domain: 'dui', source: 'naver', count: 8 },
+              { date: '2026-07-17', event: 'consult_submit', domain: 'dui', source: 'naver', count: 3 },
+              // 30일 밖, 90일 안
+              { date: '2026-05-01', event: 'landing_view', domain: 'permit', source: 'google', count: 50 },
+            ],
           },
         }),
       };
@@ -233,6 +236,30 @@ describe('접수 관리 페이지', () => {
       status: 'in_progress',
     });
     expect(await within(item).findByText(/진행 중$/)).toBeInTheDocument();
+  });
+
+  it('퍼널 칸을 누르면 분야·출처·날짜별 내역이 나오고, 기간을 바꾸면 합계가 바뀐다', async () => {
+    const { user } = await login();
+    const section = screen.getByRole('heading', { name: '30일 전환 퍼널' }).closest('section')!;
+
+    expect(within(section).getByText(/진단 시작 → 진단 완료/).textContent).toContain('60%');
+    expect(within(section).getByText(/진단 시작 → 진단 완료/).textContent).toContain('표본이 적어');
+
+    await user.click(within(section).getByRole('button', { name: /진단 시작\s*20/ }));
+    const detail = section.querySelector('#funnel-detail') as HTMLElement;
+    expect(within(detail).getByText('음주운전 면허 구제: 15')).toBeInTheDocument();
+    expect(within(detail).getByText('영업정지·행정심판: 5')).toBeInTheDocument();
+    expect(within(detail).getByText('네이버: 15')).toBeInTheDocument();
+    expect(within(detail).getByText('직접 방문·출처 모름: 5')).toBeInTheDocument();
+    expect(within(detail).getByText('2026-07-18: 20')).toBeInTheDocument();
+
+    const landing = within(section).getByRole('button', { name: /설명 조회/ });
+    expect(landing.textContent).toContain('100');
+    await user.click(within(section).getByRole('button', { name: '최근 90일' }));
+    expect(screen.getByRole('heading', { name: '90일 전환 퍼널' })).toBeInTheDocument();
+    expect(landing.textContent).toContain('150');
+    await user.click(within(section).getByRole('button', { name: '최근 7일' }));
+    expect(landing.textContent).toContain('100');
   });
 
   it('개인정보가 파기된 접수도 상태는 바꿀 수 있고, 메모·회신 칸은 없다', async () => {

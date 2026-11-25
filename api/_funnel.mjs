@@ -99,13 +99,12 @@ async function redisBatch(cfg, suffix, commands, fetchImpl) {
   return data.map((item) => item?.result);
 }
 
-export function emptyFunnelSummary(days) {
-  return {
-    days,
-    totals: Object.fromEntries(FUNNEL_EVENTS.map((event) => [event, 0])),
-    byDomain: Object.create(null),
-    bySource: Object.create(null),
-  };
+/**
+ * 관리 화면용 요약: 날짜(KST)·이벤트·분야·출처별 건수를 그대로 내보낸다.
+ * 기간 선택·합계·분야별 내역은 화면(src/lib/funnelStats.ts)이 이 행들로 계산한다.
+ */
+export function emptyFunnelSummary(days, now = new Date()) {
+  return { days, until: kstDate(now), rows: [] };
 }
 
 export function createFunnelStore(cfg, fetchImpl = fetch) {
@@ -133,19 +132,16 @@ export function createFunnelStore(cfg, fetchImpl = fetch) {
         dates.map((date) => ['HGETALL', `${PREFIX}${date}`]),
         fetchImpl,
       );
-      const summary = emptyFunnelSummary(days);
-      for (const row of rows) {
-        if (!Array.isArray(row)) continue;
+      const summary = emptyFunnelSummary(days, now);
+      rows.forEach((row, dayIndex) => {
+        if (!Array.isArray(row)) return;
         for (let index = 0; index < row.length; index += 2) {
           const [event, domain, source] = String(row[index] ?? '').split('|');
           const count = Number(row[index + 1]);
           if (!FUNNEL_EVENTS.includes(event) || !FUNNEL_DOMAINS.includes(domain) || !Number.isFinite(count)) continue;
-          summary.totals[event] += count;
-          summary.byDomain[domain] ??= Object.fromEntries(FUNNEL_EVENTS.map((name) => [name, 0]));
-          summary.byDomain[domain][event] += count;
-          summary.bySource[source || 'direct'] = (summary.bySource[source || 'direct'] ?? 0) + count;
+          summary.rows.push({ date: dates[dayIndex], event, domain, source: source || 'direct', count });
         }
-      }
+      });
       return summary;
     },
   };

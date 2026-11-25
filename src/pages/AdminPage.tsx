@@ -11,6 +11,7 @@ import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/admi
 import { TOPIC_ROUTES, buildDirectReplyDraft, buildReplyDraft } from '../../api/_reply-draft.mjs';
 import { buildConsultBrief, consultBriefText } from '../../api/_consult-brief.mjs';
 import type { ConsultBriefSection } from '../../api/_consult-brief.mjs';
+import { AdminFunnel } from '../components/AdminFunnel';
 import { FollowUpEditor } from '../components/FollowUpEditor';
 import { findCheck } from '../data/checks';
 import { describeVisaDiagnosisAnswer } from '../data/visaDiagnosisLabels';
@@ -437,39 +438,7 @@ export function AdminPage() {
         </div>
       </section>
 
-      <section aria-labelledby="funnel-stats">
-        <h2 id="funnel-stats">{funnel?.days ?? 30}일 전환 퍼널</h2>
-        <p className="note">이름·연락처·진단 답변을 제외한 단계별 합계입니다. 앞 단계 대비 이탈이 큰 구간을 우선 보완하세요.</p>
-        <div className="admin-funnel-grid">
-          {[
-            ['landing_view', '설명 조회'],
-            ['landing_cta_click', '다음 단계 클릭'],
-            ['diagnosis_start', '진단 시작'],
-            ['diagnosis_complete', '진단 완료'],
-            ['consult_view', '상담 화면'],
-            ['consult_submit', '상담 접수'],
-          ].map(([key, label]) => (
-            <article className="card admin-funnel-step" key={key}>
-              <p>{label}</p>
-              <strong>{funnel?.totals[key] ?? 0}</strong>
-            </article>
-          ))}
-        </div>
-        <p className="note">
-          연락 버튼 누름: 전화 {funnel?.totals.contact_phone_click ?? 0} · 이메일 {funnel?.totals.contact_email_click ?? 0}
-          (홈페이지에서 누른 횟수 — 실제 통화·메일 수와 다를 수 있습니다)
-        </p>
-        {funnel && Object.keys(funnel.bySource).length > 0 && (
-          <details className="card admin-item">
-            <summary>유입 출처별 이벤트 합계</summary>
-            <ul className="admin-stat-list">
-              {Object.entries(funnel.bySource).map(([source, count]) => (
-                <li key={source}>{source}: {count}</li>
-              ))}
-            </ul>
-          </details>
-        )}
-      </section>
+      <AdminFunnel funnel={funnel} />
 
       <section aria-labelledby="direct-inquiry">
         <h2 id="direct-inquiry">전화·카카오톡·이메일 문의 응대 메모</h2>

@@ -89,9 +89,10 @@ export default async function handler(req, res) {
         }
         swept.push(item);
       }
-      let funnel = emptyFunnelSummary(30);
+      // 화면에서 7·30·90일을 고르므로 가장 긴 90일치를 한 번에 보낸다.
+      let funnel = emptyFunnelSummary(90, now);
       try {
-        funnel = await createFunnelStore(cfg).summary(30, now);
+        funnel = await createFunnelStore(cfg).summary(90, now);
       } catch {
         // 전환 통계 장애가 개인정보 접수 목록 조회를 막지 않는다.
       }
