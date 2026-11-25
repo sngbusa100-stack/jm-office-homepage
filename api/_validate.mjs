@@ -135,8 +135,8 @@ export function validateConsultPayload(body) {
  * 텔레그램(국외 사업자) 알림에는 개인정보(이름·연락처·분야·상담 내용)를 싣지 않는다.
  * 상세는 접근이 제한된 /admin 관리자 화면에서만 열람한다.
  * 장애 때는 운영자가 대조할 번호와 장애 상태만 보낸다.
- * 긴급 근거(meta.urgentReasons, _urgency.mjs)는 분야가 드러나지 않게 '고객 답변 기준'과
- * '고객 직접 선택' 두 가지로만 표시한다.
+ * 긴급 건(meta.urgentReasons, _urgency.mjs)은 근거를 나누지 않고 한 줄만 넣는다.
+ * '고객 직접 선택'은 비자 외 분야에만 있어 따로 적으면 분야가 드러나기 때문이다. 근거는 /admin에서 본다.
  */
 export function formatTelegramMessage(value, meta = {}) {
   const urgentLines = urgentNoticeLines(meta.urgentReasons);
@@ -155,9 +155,5 @@ export function formatTelegramMessage(value, meta = {}) {
 }
 
 function urgentNoticeLines(reasons = []) {
-  const list = Array.isArray(reasons) ? reasons : [];
-  const lines = [];
-  if (list.some((reason) => reason !== 'selfReported')) lines.push('⏰ 기한 우선 확인 — 고객 답변 기준');
-  if (list.includes('selfReported')) lines.push("⏰ 기한 우선 확인 — 고객이 '급함·모름'을 직접 선택");
-  return lines;
+  return Array.isArray(reasons) && reasons.length > 0 ? ['⏰ 기한 우선 확인 — 근거는 관리 화면에서'] : [];
 }

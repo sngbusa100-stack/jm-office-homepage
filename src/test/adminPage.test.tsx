@@ -103,7 +103,7 @@ function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
     }
     if (options.method === 'PATCH') {
       const body = JSON.parse(String(options.body));
-      const base = ITEMS.find((item) => item.id === body.id)!;
+      const base = items.find((item) => item.id === body.id) as (typeof ITEMS)[number];
       const item = {
         ...base,
         ...('followUpDate' in body ? { followUpDate: body.followUpDate } : {}),
@@ -360,6 +360,29 @@ describe('접수 관리 페이지', () => {
     expect(screen.getByText(/JM-20260601-UR01/)).toBeInTheDocument();
     expect(screen.queryByText(/JM-20260717-AB12/)).toBeNull();
     expect(screen.queryByText(/JM-20260701-ZZ99/)).toBeNull();
+  });
+
+  it('맨 위 긴급 건의 상태를 바꿔도 다시 불러오기 전까지 그 자리에 둔다', async () => {
+    const { user } = await login(stubAdminFetch([...ITEMS, URGENT_OLD]));
+    const ids = () => [...document.querySelectorAll('details.admin-item[id^="inquiry-"]')].map((el) => el.id);
+    expect(ids()[0]).toBe('inquiry-JM-20260601-UR01');
+    const item = document.getElementById('inquiry-JM-20260601-UR01')!;
+    await user.click(within(item).getByRole('button', { name: '진행 중(으)로 변경' }));
+    await waitFor(() => expect(item.querySelector('summary')).toHaveTextContent('진행 중'));
+    expect(ids()[0]).toBe('inquiry-JM-20260601-UR01');
+  });
+
+  it('기한 우선 수와 필터는 신규·진행 중인 건만 세고, 완료·보류 건은 배지만 단다', async () => {
+    const doneUrgent = { ...URGENT_OLD, id: 'JM-20260602-UR02', status: 'done' };
+    const heldUrgent = { ...URGENT_OLD, id: 'JM-20260603-UR03', status: 'on_hold' };
+    const workingUrgent = { ...URGENT_OLD, id: 'JM-20260604-UR04', status: 'in_progress' };
+    const { user } = await login(stubAdminFetch([...ITEMS, URGENT_OLD, doneUrgent, heldUrgent, workingUrgent]));
+    expect(within(document.getElementById('inquiry-JM-20260602-UR02')!).getByText('⏰ 기한 우선')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '기한 우선 (2)' }));
+    expect(document.getElementById('inquiry-JM-20260601-UR01')).not.toBeNull();
+    expect(document.getElementById('inquiry-JM-20260604-UR04')).not.toBeNull();
+    expect(document.getElementById('inquiry-JM-20260602-UR02')).toBeNull();
+    expect(document.getElementById('inquiry-JM-20260603-UR03')).toBeNull();
   });
 
   it('기한 자가 응답은 고객 자가 응답(증빙 미확인)으로 보여 준다', async () => {

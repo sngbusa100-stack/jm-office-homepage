@@ -144,7 +144,7 @@ describe('상담 API 핸들러', () => {
     expect(backend.values.has(`inquiry:${res.body.id}`)).toBe(true);
   });
 
-  it('기한 자가 응답을 저장하고 알림에 고객 직접 선택 긴급 줄을 넣는다', async () => {
+  it('기한 자가 응답을 저장하고 알림에 기한 우선 줄을 넣는다', async () => {
     const backend = createBackend();
     vi.stubGlobal('fetch', backend.fetch);
     const res = await invoke({ ...validBody, deadlineReport: 'unknown' });
@@ -152,7 +152,8 @@ describe('상담 API 핸들러', () => {
     const saved = JSON.parse(backend.values.get(`inquiry:${res.body.id}`));
     expect(saved.deadlineReport).toBe('unknown');
     expect(saved).not.toHaveProperty('urgentReasons');
-    expect(backend.telegramTexts[0]).toContain('직접 선택');
+    expect(backend.telegramTexts[0]).toContain('⏰ 기한 우선 확인');
+    expect(backend.telegramTexts[0]).not.toContain('직접 선택');
   });
 
   it('저장된 동일 제출은 새 알림 없이 기존 접수번호를 돌려준다', async () => {

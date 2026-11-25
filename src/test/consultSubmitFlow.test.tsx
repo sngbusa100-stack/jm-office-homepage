@@ -189,6 +189,22 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(consultBody(fetchMock).deadlineReport).toBe('unknown');
   });
 
+  it('기한 답을 고른 뒤 답하지 않음으로 되돌리면 기한 답을 보내지 않는다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage();
+    await user.selectOptions(screen.getByLabelText('분야'), '인허가');
+    expect((screen.getByLabelText('답하지 않음') as HTMLInputElement).checked).toBe(true);
+    await user.click(screen.getByLabelText('2주 안이거나 이미 지났습니다'));
+    await user.click(screen.getByLabelText('답하지 않음'));
+    expect((screen.getByLabelText('2주 안이거나 이미 지났습니다') as HTMLInputElement).checked).toBe(false);
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/접수되었습니다/);
+    expect(consultBody(fetchMock)).not.toHaveProperty('deadlineReport');
+  });
+
   it('기한 답을 고른 뒤 분야를 비자로 바꾸면 기한 답을 보내지 않는다', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock);
@@ -208,7 +224,8 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     renderPage('/consult?topic=dui&priority=urgent');
     expect((screen.getByLabelText('분야') as HTMLSelectElement).value).toBe('음주운전 면허 구제');
     expect(screen.getByRole('group', { name: /처분서·통지서에 적힌 기한/ })).toBeInTheDocument();
-    for (const radio of screen.getAllByRole('radio')) expect((radio as HTMLInputElement).checked).toBe(false);
+    const checked = screen.getAllByRole('radio').filter((radio) => (radio as HTMLInputElement).checked);
+    expect(checked).toEqual([screen.getByLabelText('답하지 않음')]);
     const card = screen.getByRole('heading', { name: '기한이 임박했다면 기다리지 마세요' });
     const form = screen.getByRole('button', { name: /상담 신청하기/ }).closest('form')!;
     expect(card.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

@@ -119,6 +119,16 @@ function isUrgentItem(item: InquiryRecord): boolean {
   return (item.urgentReasons?.length ?? 0) > 0;
 }
 
+/** '기한 우선 (N)' 필터는 아직 손대는 중인 건(신규·진행 중)만 센다. 완료·보류·파기 건은 배지만 남는다. */
+function isOpenUrgentItem(item: InquiryRecord): boolean {
+  return isUrgentItem(item) && !item.purged && (item.status === 'new' || item.status === 'in_progress');
+}
+
+/** 맨 위에 올릴 미처리(신규) 긴급 건. */
+function pinnedIds(items: InquiryRecord[]): Set<string> {
+  return new Set(items.filter((item) => item.status === 'new' && isUrgentItem(item)).map((item) => item.id));
+}
+
 function urgentTitle(item: InquiryRecord): string {
   return `근거: ${(item.urgentReasons ?? []).map((reason) => URGENT_REASON_LABELS[reason] ?? reason).join(' · ')}`;
 }
@@ -151,6 +161,8 @@ export function AdminPage() {
   const [directResult, setDirectResult] = useState<{ brief: ConsultBriefSection[]; draft: string; notes: string[] } | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [items, setItems] = useState<InquiryRecord[] | null>(null);
+  // 목록을 불러올 때만 정한다. 상태를 바꿔도 그 자리에 두어 펼친 접수가 튀지 않게 한다.
+  const [pinned, setPinned] = useState<Set<string>>(() => new Set());
   const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'urgent' | InquiryRecord['status']>('all');
@@ -176,6 +188,7 @@ export function AdminPage() {
     }
     // 로그인이 확인된 브라우저는 사무소 점검용이라 퍼널 집계에서 뺀다.
     markInternalBrowser();
+    setPinned(pinnedIds(result.value.items));
     setItems(result.value.items);
     setFunnel(result.value.funnel);
   }, []);
@@ -326,16 +339,16 @@ export function AdminPage() {
       card.scrollIntoView?.({ block: 'start' });
     });
   }
-  const urgentCount = useMemo(() => (items ?? []).filter(isUrgentItem).length, [items]);
-  // 미처리(신규) 긴급 건을 맨 위로 올리고, 나머지는 서버가 준 순서를 그대로 둔다(안정 정렬).
+  const urgentCount = useMemo(() => (items ?? []).filter(isOpenUrgentItem).length, [items]);
+  // 불러올 때 미처리(신규)였던 긴급 건을 맨 위로 올리고, 나머지는 서버가 준 순서를 그대로 둔다(안정 정렬).
   const visible = useMemo(
     () => (items ?? [])
       .filter((item) => filter === 'all'
-        || (filter === 'urgent' ? isUrgentItem(item) : item.status === filter))
-      .map((item, order) => ({ item, order, top: item.status === 'new' && isUrgentItem(item) }))
+        || (filter === 'urgent' ? isOpenUrgentItem(item) : item.status === filter))
+      .map((item, order) => ({ item, order, top: pinned.has(item.id) }))
       .sort((a, b) => Number(b.top) - Number(a.top) || a.order - b.order)
       .map(({ item }) => item),
-    [items, filter],
+    [items, filter, pinned],
   );
 
   if (!token) {

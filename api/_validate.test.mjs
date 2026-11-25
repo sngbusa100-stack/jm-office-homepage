@@ -285,19 +285,14 @@ describe('텔레그램 메시지 포맷', () => {
     expect(text).not.toContain('https://example.com');
   });
 
-  it('긴급 근거는 고객 답변 기준과 고객 직접 선택을 나눠 한 줄씩 넣는다', () => {
-    const answered = formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: ['diagnosis'] });
-    expect(answered).toContain('⏰ 기한 우선 확인 — 고객 답변 기준');
-    expect(answered).not.toContain('직접 선택');
-    for (const reason of ['visaIntake', 'visaDiagnosis']) {
-      expect(formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: [reason] }))
-        .toContain('고객 답변 기준');
+  it('긴급 건은 근거와 상관없이 같은 한 줄만 넣어 비자 여부도 드러나지 않는다', () => {
+    const texts = [['diagnosis'], ['visaIntake'], ['visaDiagnosis'], ['selfReported'], ['diagnosis', 'visaIntake', 'selfReported']]
+      .map((urgentReasons) => formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons }));
+    for (const text of texts) {
+      expect(text).toBe(texts[0]);
+      expect(text.match(/⏰/g)).toHaveLength(1);
+      expect(text).toContain('⏰ 기한 우선 확인 — 근거는 관리 화면에서');
     }
-    const self = formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: ['selfReported'] });
-    expect(self).toContain("⏰ 기한 우선 확인 — 고객이 '급함·모름'을 직접 선택");
-    expect(self).not.toContain('고객 답변 기준');
-    const both = formatTelegramMessage(sample, { inquiryId: 'JM-1', urgentReasons: ['diagnosis', 'visaIntake', 'selfReported'] });
-    expect(both.match(/⏰/g)).toHaveLength(2);
     const normal = formatTelegramMessage(sample, { inquiryId: 'JM-1' });
     expect(normal).not.toContain('⏰');
   });
