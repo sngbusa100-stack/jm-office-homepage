@@ -4,15 +4,15 @@ export interface ServiceArea {
   id: string;
   name: string;
   short: string;
-  /** 이 분야에 속한 업무 상세 페이지(services.ts slug). 비어 있으면 상세 안내가 아직 없다 */
+  /** 이 분야에 속한 업무 상세 페이지(services.ts slug). 2026-11-25부터 5개 분야 모두 하나 이상 있다(시험으로 고정) */
   serviceSlugs: string[];
 }
 
 /**
  * 명함의 업무분야 5개(2026-11-02 주인님 지시: "업무범위 5개로 합쳐").
- * 기존 업무 상세 페이지 7개의 주소(/services/:slug)·상담 분야·유입 통계 코드는 그대로 두고 위에서 묶기만 한다.
+ * 기존 업무 상세 페이지 8개의 주소(/services/:slug)·상담 분야·유입 통계 코드는 그대로 두고 위에서 묶기만 한다.
  * 검색에 이미 등록된 주소와 접수→로컬 연동이 깨지지 않게 하기 위해서다.
- * 공공조달·기업인증은 상세 페이지와 상담 분야가 아직 없다(상담 분야 추가는 접수 계약·로컬 연동을 함께 바꿔야 함).
+ * 공공조달·기업인증은 상세 페이지 1개(procurement)가 있고, 상담 분야는 새로 만들지 않고 기존 인허가(permit)를 쓴다.
  */
 export const serviceAreas: ServiceArea[] = [
   {
@@ -43,7 +43,7 @@ export const serviceAreas: ServiceArea[] = [
     id: 'procurement',
     name: '공공조달 · 기업인증',
     short: '공공조달 참여에 필요한 등록·확인과 기업 인증 신청 서류의 작성·제출을 돕습니다.',
-    serviceSlugs: [],
+    serviceSlugs: ['procurement'],
   },
 ];
 

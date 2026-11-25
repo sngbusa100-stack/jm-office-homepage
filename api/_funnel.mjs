@@ -19,6 +19,7 @@ export const FUNNEL_DOMAINS = [
   'veterans',
   'documents',
   'landdev',
+  'procurement',
   'd2',
   'd10',
   'e7',

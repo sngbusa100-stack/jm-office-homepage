@@ -11,17 +11,19 @@ describe('업무 분야 5개(명함 기준) — 기존 상세 페이지는 그�
     expect(serviceAreas.map((area) => area.name)).toEqual(CARD_AREAS);
   });
 
-  it('업무 상세 페이지 7개가 빠짐없이, 한 분야에만 속한다', () => {
+  it('업무 상세 페이지 8개가 빠짐없이, 한 분야에만 속한다', () => {
     expect(unassignedServices()).toEqual([]);
     const assigned = serviceAreas.flatMap((area) => area.serviceSlugs);
     expect(new Set(assigned).size).toBe(assigned.length);
     expect([...assigned].sort()).toEqual(services.map((s) => s.slug).sort());
+    // 분야 카드는 상세 링크만 보여 준다(빈 분야용 '준비 중' 안내는 2026-11-25에 지웠다).
+    for (const area of serviceAreas) expect(area.serviceSlugs.length, area.id).toBeGreaterThan(0);
   });
 
   it('상세 페이지 주소·상담 분야 코드는 바꾸지 않는다(검색 등록·접수 연동 유지)', () => {
     expect(services.map((s) => [s.slug, s.consultTopic])).toEqual([
       ['license', 'permit'], ['immigration', 'visa'], ['land-development', 'permit'], ['documents', 'land'],
-      ['suspension', 'suspension'], ['dui', 'dui'], ['veterans', 'veterans'],
+      ['suspension', 'suspension'], ['dui', 'dui'], ['veterans', 'veterans'], ['procurement', 'permit'],
     ]);
   });
 
@@ -34,7 +36,8 @@ describe('업무 분야 5개(명함 기준) — 기존 상세 페이지는 그�
     const main = within(screen.getByRole('main'));
     expect(main.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(CARD_AREAS);
     const procurement = main.getByRole('heading', { name: '공공조달 · 기업인증' }).closest('article') as HTMLElement;
-    expect(within(procurement).getByText('분야별 안내 페이지를 준비하고 있습니다.')).toBeInTheDocument();
+    expect(within(procurement).getByRole('link', { name: /직접생산확인|공공조달|입찰/ })).toHaveAttribute('href', '/services/procurement');
+    expect(procurement.textContent).not.toContain('준비하고 있습니다');
     const permit = main.getByRole('heading', { name: '인허가 · 등록 · 변경' }).closest('article') as HTMLElement;
     expect(within(permit).getByRole('link', { name: /인허가 대리/ })).toHaveAttribute('href', '/services/license');
     expect(permit.textContent).toContain('비영리법인 설립 허가');

@@ -35,7 +35,9 @@ function fail(message) {
 }
 
 // 진입 JS 크기 상한: 관리자 화면을 따로 뺀 뒤 2026-11-12 실측 gzip 121,770바이트(분리 전 132,012)의 약 106%를 KB로 올림(126KB = 129,024바이트).
-const ENTRY_JS_GZIP_LIMIT_KB = 126;
+// 2026-11-25 업무 상세 2개(토지개발·공공조달)를 더해 130,963바이트 → 130KB(133,120바이트)로 올림. 공개 화면은 사전 렌더링 HTML이 먼저 보여
+// 이 정도 증가는 첫 화면을 늦추지 않는다. 다음에 넘으면 올리기 전에 업무 상세 본문(services.ts의 faqs 등)을 상세 화면 조각으로 나눌지 먼저 본다.
+const ENTRY_JS_GZIP_LIMIT_KB = 130;
 const entryMatch = index.match(/<script[^>]*\ssrc="(\/assets\/index-[^"]+\.js)"/);
 if (!entryMatch) fail('index.html에서 진입 JS(/assets/index-*.js)를 찾지 못했습니다.');
 const entryGzip = gzipSync(readFileSync(resolve(dist, `.${entryMatch[1]}`))).length;

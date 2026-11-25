@@ -22,7 +22,7 @@ describe('검색 노출 기반', () => {
     expect(paths).toEqual([
       '/', '/about', '/why', '/process', '/services', '/check', '/consult', '/privacy', '/disclaimer', '/location',
       '/services/license', '/services/immigration', '/services/land-development', '/services/documents',
-      '/services/suspension', '/services/dui', '/services/veterans',
+      '/services/suspension', '/services/dui', '/services/veterans', '/services/procurement',
       '/check/permit', '/check/suspension', '/check/dui', '/check/veterans',
     ]);
     for (const path of paths) expect(getPageMeta(path).robots).toBe('index, follow');
@@ -39,17 +39,17 @@ describe('검색 노출 기반', () => {
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/services/immigration</loc>');
     expect(sitemap).toContain('<loc>https://jungmyungoffice.com/check/permit</loc>');
     expect(sitemap).not.toContain('/result</loc>');
-    expect(sitemap.match(/<loc>/g)).toHaveLength(21);
+    expect(sitemap.match(/<loc>/g)).toHaveLength(22);
   });
 
-  it('sitemap 색인 경로 21개 모두에 사람이 적은 lastmod 날짜가 있다', () => {
+  it('sitemap 색인 경로 22개 모두에 사람이 적은 lastmod 날짜가 있다', () => {
     const paths = getIndexablePaths();
-    expect(paths).toHaveLength(21);
+    expect(paths).toHaveLength(22);
     for (const path of paths) {
       expect(PAGE_UPDATED_AT[path], path).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
     const sitemap = buildSitemapXml();
-    expect(sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)).toHaveLength(21);
+    expect(sitemap.match(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g)).toHaveLength(22);
     expect(sitemap).toContain('<url><loc>https://jungmyungoffice.com/about</loc><lastmod>2026-11-12</lastmod></url>');
   });
 
@@ -115,8 +115,8 @@ describe('검색 노출 기반', () => {
     });
   });
 
-  it('업무 7개 모두 검색용 제목·설명이 있고 길이·중복 기준을 지킨다', () => {
-    expect(services).toHaveLength(7);
+  it('업무 8개 모두 검색용 제목·설명이 있고 길이·중복 기준을 지킨다', () => {
+    expect(services).toHaveLength(8);
     const titles: string[] = [];
     const descriptions: string[] = [];
     for (const service of services) {
