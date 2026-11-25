@@ -136,7 +136,8 @@
 - [x] 홈 진행 절차 아래 '자세히 보기' 링크, 바닥글 링크(nav aria-label '안내 및 법적 고지'), FAQ "비용은 어떻게 되나요?" 답 교체, sitemap·사전 렌더링 20개 경로
 - [x] `npm run check` 통과(vitest 768 + 122), 커밋·배포
 - [x] 지도 유입 표시: 구글 비즈니스 프로필 웹사이트 `?utm_source=google&utm_medium=place`(반영 확인), 카카오맵 매장정보 `?utm_source=kakao&utm_medium=place` + 전화 02-899-1849 + 평일 10~17시·주말 휴무(등록 완료, 반영 대기)
-- [ ] 네이버 스마트플레이스 홈페이지 주소 `?utm_source=naver&utm_medium=place` — ego lite가 다른 네이버 계정이라 주인님이 jungmyungoffice로 로그인한 뒤 진행
+- [x] 네이버 스마트플레이스 홈페이지 주소 `?utm_source=naver&utm_medium=place` — 2026-11-25 주인님 "바꿔줘", 관리 계정으로 부가정보 일반 URL 변경·저장, 다시 불러와 저장값 확인. 공개 플레이스 반영은 네이버 쪽 시점
+  - 주의: 집계는 utm_source만 쓰므로(api/_funnel.mjs) 지금은 '네이버'로 묶이고 플레이스와 검색이 나뉘지 않는다(구글·카카오 place도 같음)
   - 2026-11-25 주인님 "바꿨을거야". 같은 날 공개 플레이스 화면(m.place.naver.com/place/3457747262) 홈페이지 링크는 `https://jungmyungoffice.com/`(꼬리표 없음). 검수 대기인지, 네이버가 꼬리표를 떼는지, 아직 안 바뀐 것인지는 스마트플레이스 관리 화면에서 확인 필요
   - 같은 날 ego lite의 네이버 계정(서치어드바이저 등록 계정)으로 스마트플레이스를 열어 보니 "권한을 보유한 업체가 없습니다"·약관 동의 요청. 플레이스는 다른 네이버 계정이 관리한다 → 그 계정으로 로그인해야 확인 가능(약관 동의는 하지 않음)
   - 같은 날 주인님이 관리 계정(jun…)으로 로그인 → 업체정보 > 부가정보 > "운영중인 홈페이지, SNS, 커뮤니티" 일반 URL이 `https://jungmyungoffice.com/`(꼬리표 없음), 블로그 `https://blog.naver.com/jungmyung0909`. 아직 바뀌지 않은 상태(저장하지 않고 닫음)
