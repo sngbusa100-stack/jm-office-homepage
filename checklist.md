@@ -138,6 +138,7 @@
 - [x] 지도 유입 표시: 구글 비즈니스 프로필 웹사이트 `?utm_source=google&utm_medium=place`(반영 확인), 카카오맵 매장정보 `?utm_source=kakao&utm_medium=place` + 전화 02-899-1849 + 평일 10~17시·주말 휴무(등록 완료, 반영 대기)
 - [x] 네이버 스마트플레이스 홈페이지 주소 `?utm_source=naver&utm_medium=place` — 2026-11-25 주인님 "바꿔줘", 관리 계정으로 부가정보 일반 URL 변경·저장, 다시 불러와 저장값 확인. 공개 플레이스 반영은 네이버 쪽 시점
   - 주의: 집계는 utm_source만 쓰므로(api/_funnel.mjs) 지금은 '네이버'로 묶이고 플레이스와 검색이 나뉘지 않는다(구글·카카오 place도 같음)
+  - [x] 같은 날 주인님 "따로 보이게 해줘": naver·google·kakao + utm_medium=place는 `naver_place`·`google_place`·`kakao_place`로 따로 센다(src/lib/funnel.ts funnelSourceOf, api/_funnel.mjs 허용 목록, 관리 화면 이름 '네이버 지도(플레이스)'·'구글 지도'·'카카오맵'). 비자 사이트로 넘기는 UTM은 원래 값 그대로. 새 출처로 다시 들어오면 앞 방문의 medium을 잇지 않음. 진입 JS gzip 129,016바이트 — 상한 129,024까지 8바이트 남음(다음 공개 화면 기능 때 상한 재검토 필요)
   - 2026-11-25 주인님 "바꿨을거야". 같은 날 공개 플레이스 화면(m.place.naver.com/place/3457747262) 홈페이지 링크는 `https://jungmyungoffice.com/`(꼬리표 없음). 검수 대기인지, 네이버가 꼬리표를 떼는지, 아직 안 바뀐 것인지는 스마트플레이스 관리 화면에서 확인 필요
   - 같은 날 ego lite의 네이버 계정(서치어드바이저 등록 계정)으로 스마트플레이스를 열어 보니 "권한을 보유한 업체가 없습니다"·약관 동의 요청. 플레이스는 다른 네이버 계정이 관리한다 → 그 계정으로 로그인해야 확인 가능(약관 동의는 하지 않음)
   - 같은 날 주인님이 관리 계정(jun…)으로 로그인 → 업체정보 > 부가정보 > "운영중인 홈페이지, SNS, 커뮤니티" 일반 URL이 `https://jungmyungoffice.com/`(꼬리표 없음), 블로그 `https://blog.naver.com/jungmyung0909`. 아직 바뀌지 않은 상태(저장하지 않고 닫음)

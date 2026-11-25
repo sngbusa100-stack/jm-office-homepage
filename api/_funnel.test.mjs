@@ -32,6 +32,8 @@ describe('개인정보 없는 퍼널 집계 저장소', () => {
 
   it('개인정보·특수 키·고카디널리티 source는 other 하나로 묶는다', () => {
     expect(normalizeFunnelSource('naver')).toBe('naver');
+    // 지도 장소 링크 묶음(화면 src/lib/funnel.ts funnelSourceOf)도 받는다.
+    for (const place of ['naver_place', 'google_place', 'kakao_place']) expect(normalizeFunnelSource(place)).toBe(place);
     expect(normalizeFunnelSource('person@example.com')).toBe('other');
     expect(normalizeFunnelSource('01012345678')).toBe('other');
     expect(normalizeFunnelSource('__proto__')).toBe('other');

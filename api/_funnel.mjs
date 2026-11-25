@@ -34,6 +34,10 @@ export const FUNNEL_SOURCES = [
   'naver',
   'google',
   'kakao',
+  // 지도 장소 화면의 홈페이지 링크(utm_medium=place). 화면 쪽 src/lib/funnel.ts funnelSourceOf가 정한다.
+  'naver_place',
+  'google_place',
+  'kakao_place',
   'instagram',
   'facebook',
   'youtube',

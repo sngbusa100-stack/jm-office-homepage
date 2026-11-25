@@ -55,6 +55,10 @@ const LINK_SOURCES = new Set([
 const FUNNEL_SOURCE_BUCKETS = new Set([
   'direct',
   ...LINK_SOURCES,
+  // 지도 장소 화면의 홈페이지 링크(utm_medium=place) — 집계 전용이라 다른 사이트로 넘기는 UTM(LINK_SOURCES)에는 넣지 않는다.
+  'naver_place',
+  'google_place',
+  'kakao_place',
   'other',
 ]);
 
@@ -66,6 +70,13 @@ export function normalizeFunnelSource(value: string | undefined): string {
   const source = value?.trim().toLowerCase();
   if (!source) return 'direct';
   return FUNNEL_SOURCE_BUCKETS.has(source) ? source : 'other';
+}
+
+/** 집계에 보낼 출처 묶음. 지도 장소 링크(naver·google·kakao + medium=place)는 검색과 나눠 'naver_place'처럼 센다(2026-11-25). */
+export function funnelSourceOf(attribution: Attribution): string {
+  const source = normalizeFunnelSource(attribution.source);
+  const place = `${source}_place`;
+  return attribution.medium?.toLowerCase() === 'place' && FUNNEL_SOURCE_BUCKETS.has(place) ? place : source;
 }
 
 /** 사이트 사이를 이동할 때 허용된 UTM과 내부 접점만 이어 붙인다. */
@@ -178,6 +189,8 @@ export function captureAttribution(
     if (fromReferrer) incoming.source = fromReferrer;
   }
   const merged = { ...stored, ...incoming };
+  // 새 출처로 다시 들어왔는데 medium이 없으면 앞 방문의 medium(place 등)을 이어 붙이지 않는다.
+  if (incoming.source && !incoming.medium) delete merged.medium;
   if (Object.keys(merged).length > 0) {
     safeSessionSet(ATTRIBUTION_KEY, JSON.stringify(merged));
     if (merged.source) safeSessionSet('consult:utm', merged.source);
@@ -216,7 +229,7 @@ export async function trackFunnelEvent(
       body: JSON.stringify({
         event: input.event,
         domain: input.domain,
-        attribution: { source: normalizeFunnelSource(readAttribution().source) },
+        attribution: { source: funnelSourceOf(readAttribution()) },
       }),
     });
   } catch {

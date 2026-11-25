@@ -1,6 +1,7 @@
 import {
   captureAttribution,
   attributedExternalUrl,
+  funnelSourceOf,
   markInternalBrowser,
   readAttribution,
   referrerSource,
@@ -146,5 +147,31 @@ describe('개인정보 없는 전환 퍼널 규격', () => {
     expect(JSON.stringify(payload)).not.toContain('01012345678');
     expect(JSON.stringify(payload)).not.toContain('홍길동');
     expect(JSON.stringify(payload)).not.toContain('secret');
+  });
+
+  it('지도 장소 화면의 홈페이지 링크(utm_medium=place)는 검색과 나눠 보내고, 다른 사이트로는 원래 출처만 넘긴다', async () => {
+    expect(funnelSourceOf({ source: 'naver', medium: 'place' })).toBe('naver_place');
+    expect(funnelSourceOf({ source: 'Google', medium: 'PLACE' })).toBe('google_place');
+    expect(funnelSourceOf({ source: 'kakao', medium: 'place' })).toBe('kakao_place');
+    expect(funnelSourceOf({ source: 'naver', medium: 'blog' })).toBe('naver');
+    expect(funnelSourceOf({ source: 'blog', medium: 'place' })).toBe('blog');
+
+    captureAttribution('?utm_source=naver&utm_medium=place');
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    await trackFunnelEvent({ event: 'landing_view', domain: 'home', path: '/' });
+    const payload = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(payload.attribution).toEqual({ source: 'naver_place' });
+
+    const visa = new URL(attributedExternalUrl('https://visa.example', 'jm_main'));
+    expect(visa.searchParams.get('utm_source')).toBe('naver');
+    expect(visa.searchParams.get('utm_medium')).toBe('place');
+  });
+
+  it('새 출처로 다시 들어왔는데 medium이 없으면 앞 방문의 place를 이어 붙이지 않는다', () => {
+    captureAttribution('?utm_source=naver&utm_medium=place');
+    captureAttribution('?utm_source=google');
+    expect(readAttribution()).toEqual({ source: 'google' });
+    expect(funnelSourceOf(readAttribution())).toBe('google');
   });
 });
