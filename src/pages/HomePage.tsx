@@ -9,6 +9,7 @@ import { OfficeStructuredData } from '../components/OfficeStructuredData';
 import { ProfileCard } from '../components/ProfileCard';
 import { RepresentativeBadge } from '../components/RepresentativeBadge';
 import { PromiseList } from '../components/PromiseList';
+import { ProcessFeeCard } from '../components/ProcessFeeCard';
 import { ServiceAreaGrid } from '../components/ServiceAreaGrid';
 import { VisaCheckCard } from '../components/VisaCheckCard';
 
@@ -130,7 +131,7 @@ export function HomePage() {
             <li key={step.title}><h3>{step.title}</h3><p>{step.detail}</p></li>
           ))}
         </ol>
-        <p><Link className="text-link" to="/process">의뢰 절차와 보수 자세히 보기 →</Link></p>
+        <ProcessFeeCard />
       </section>
 
       <section className="section page-shell faq-section" aria-labelledby="faq-heading">

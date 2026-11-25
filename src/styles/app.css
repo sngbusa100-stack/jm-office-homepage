@@ -353,6 +353,14 @@ nav#global-nav a.active {
 
 .note { color: var(--text-muted); font-size: var(--fs-sm); }
 
+/* 의뢰 절차와 보수 안내 상자(홈·업무 상세 진행 절차 아래). PC는 글과 버튼을 한 줄, 휴대폰은 위아래. */
+.process-fee-card { margin-top: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px 28px; border-left: 4px solid var(--accent); }
+.process-fee-card p { color: var(--text-muted); }
+.process-fee-card .button { flex-shrink: 0; }
+@media (max-width: 767px) {
+  .process-fee-card { flex-direction: column; align-items: stretch; padding: 22px; }
+}
+
 .check-list li {
   position: relative;
   padding: 6px 0 6px 26px;

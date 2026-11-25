@@ -3,6 +3,9 @@ import { office } from './office';
 export const processGuide = {
   headline: '의뢰 절차와 보수 안내',
   intro: '일을 맡기시기 전에 무엇을 하는지, 보수가 어떻게 정해지는지 먼저 알려 드립니다.',
+  // 홈·업무 상세의 안내 상자(ProcessFeeCard) 한 줄. 홈의 '방법과 비용 안내' 단계·자주 묻는 질문 '비용'과
+  // 같은 말이 되지 않게, 이 화면에서 볼 수 있는 것만 적는다.
+  summary: '보수를 정하는 방법과 지급 시기, 실비 정산 방법을 맡기시기 전에 확인하실 수 있습니다.',
   steps: {
     title: '의뢰는 이렇게 진행됩니다',
     items: [

@@ -220,9 +220,24 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
   it('진행 절차는 비용 안내를 포함한 4단계다', () => {
     renderAt('/');
     const section = screen.getByRole('region', { name: '진행 절차' });
-    expect(within(section).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+    const steps = within(section).getByRole('list');
+    expect(within(steps).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
       '이야기 듣기', '방법과 비용 안내', '서류 준비·작성', '제출과 결과 확인',
     ]);
+  });
+
+  it('의뢰 절차와 보수 화면으로 가는 입구는 진행 절차 아래 안내 상자이고, 푸터에는 없다', () => {
+    renderAt('/');
+    const section = screen.getByRole('region', { name: '진행 절차' });
+    expect(within(section).getByRole('heading', { level: 3, name: '의뢰 절차와 보수 안내' })).toBeInTheDocument();
+    expect(within(section).getByRole('link', { name: '의뢰 절차와 보수 보기 →' })).toHaveAttribute('href', '/process');
+    expect(within(screen.getByRole('contentinfo')).queryByRole('link', { name: /의뢰 절차/ })).toBeNull();
+  });
+
+  it('업무 상세 화면 진행 절차 아래에도 같은 안내 상자가 있다', () => {
+    renderAt('/services/dui');
+    const section = screen.getByRole('region', { name: '진행 절차' });
+    expect(within(section).getByRole('link', { name: '의뢰 절차와 보수 보기 →' })).toHaveAttribute('href', '/process');
   });
 });
 

@@ -5,6 +5,7 @@ import { RepresentativeBadge } from '../components/RepresentativeBadge';
 import { profile } from '../data/profile';
 import { ServiceFlowSteps } from '../components/ServiceFlowSteps';
 import { ServiceNextStepBar } from '../components/ServiceNextStepBar';
+import { ProcessFeeCard } from '../components/ProcessFeeCard';
 import { findService, type Service } from '../data/services';
 import {
   attributedExternalUrl,
@@ -143,6 +144,7 @@ export function ServicePage() {
       <section aria-labelledby="process">
         <h2 id="process">진행 절차</h2>
         <ol className="process-list">{service.process.map((p) => <li key={p}>{p}</li>)}</ol>
+        <ProcessFeeCard />
       </section>
 
       <section aria-labelledby="documents">
