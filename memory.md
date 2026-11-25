@@ -161,3 +161,7 @@
 ## 2026-11-25 사무소 점검 방문 퍼널 제외
 - 11/12 설명 조회 45건 몰림은 운영 점검 순회였다(체크리스트 기록). 그래서 `/admin`에서 로그인이 확인된 브라우저에 `localStorage funnel:internal=1`을 남기고 `trackFunnelEvent()`가 그 표시가 있으면 보내지 않게 했다(`src/lib/funnel.ts` `markInternalBrowser`).
 - localStorage는 주소(출처)별이라 jungmyungoffice.com에서만 적용된다. 표시를 지우려면 그 브라우저의 사이트 데이터를 지우면 된다.
+
+## 2026-11-25 미리보기 배포와 운영 저장소 분리
+- 저장소 접속값 5개가 Production·Preview에 함께 걸려 미리보기 배포가 운영 Redis(접수 개인정보 포함)를 쓰고 있었다. Preview만 해제했다. 앞으로 미리보기에서 저장소가 필요한 시험을 하려면 운영과 다른 저장소를 따로 만들어 Preview에 연결한다(운영 값을 다시 Preview에 걸지 않는다).
+- Vercel 환경변수 변경은 새 배포부터 적용된다. 기존 배포는 만들 때의 값을 유지한다.
