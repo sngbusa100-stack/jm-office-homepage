@@ -12,6 +12,7 @@ export function OfficeLocation() {
       <div className="location-actions">
         <a className="button button--ghost" href={maps.naver} target="_blank" rel="noopener noreferrer">네이버 지도</a>
         <a className="button button--ghost" href={maps.kakao} target="_blank" rel="noopener noreferrer">카카오맵</a>
+        <a className="button button--ghost" href={maps.google} target="_blank" rel="noopener noreferrer">구글 지도</a>
       </div>
     </>
   );

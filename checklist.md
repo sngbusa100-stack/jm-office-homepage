@@ -168,3 +168,8 @@
 - [x] 본 사이트 미리보기 배포 확인(2026-11-25): Vercel 환경변수 중 저장소 접속값(KV_REST_API_URL·KV_REST_API_TOKEN·KV_URL·REDIS_URL·KV_REST_API_READ_ONLY_TOKEN)이 "Production, Preview" 둘 다에 걸려 있어 미리보기 배포도 운영 Redis를 그대로 쓴다. `/api/funnel`은 환경을 가리지 않아 미리보기 화면 방문이 운영 퍼널에 섞인다. 상담 접수·비자 넘김은 CONSULT_OPEN이 운영 전용이라 미리보기에서 503, 관리자 로그인 값도 운영 전용이라 미리보기에서 로그인 불가. 미리보기 배포는 6개 모두 11-12 것(그날 ego lite 실측 방문이 운영 퍼널에 들어갔을 것). 11-12 요청 기록은 Hobby 요금제가 12시간치만 보여 줘 직접 확인은 못 함. 추가로 미리보기 배포 코드가 운영 접수 저장소(개인정보)에 읽기·쓰기 접근이 가능한 상태.
 - [x] 미리보기 배포의 운영 저장소 연결 끊음(2026-11-25, 주인님 "미리보기 연결 끊기"): `vercel env remove <이름> --environment preview`로 KV_URL·REDIS_URL·KV_REST_API_URL·KV_REST_API_TOKEN·KV_REST_API_READ_ONLY_TOKEN의 Preview만 해제, 5개 모두 Production에는 그대로 남음(env ls 확인). 운영 홈 200·/api/admin 401 정상. 새로 만드는 미리보기 배포부터 저장소가 없어 퍼널은 저장 안 함(202 stored:false). 단, 이미 만들어진 11-12 미리보기 배포 6개는 만들 때의 값을 그대로 갖고 있음.
 - [x] 11-12 미리보기 배포 6개 삭제(2026-11-25, 주인님 "6개 삭제해", `vercel rm`): ja022fxc5·jaedfoo7g·6s2kibt61·g471dln1e·qmknd70la·p0pr36ipf. 남은 미리보기 배포 0개. 운영 배포는 건드리지 않음.
+
+## 2026-11-25 구글 지도 버튼 (Claude, 주인님 "구글 지도버튼도 추가해줘")
+
+- [x] `mapLinks()`에 `google`(인증 프로필 cid 주소 `googleMapsUrl`, 없으면 주소 검색) — 오시는 길·상담 안내·바닥글에 "구글 지도". 시험 814 통과, 로컬 빌드 390px(둘째 줄로 내려감, 가로 넘침 없음)·1280px(한 줄) 실측
+- [x] 커밋·푸시(=배포) — 주인님 "커밋·푸시 승인"(2026-11-25)

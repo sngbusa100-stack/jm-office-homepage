@@ -30,6 +30,8 @@ export function Footer() {
                 <a href={maps.naver} target="_blank" rel="noopener noreferrer">네이버 지도</a>
                 {' · '}
                 <a href={maps.kakao} target="_blank" rel="noopener noreferrer">카카오맵</a>
+                {' · '}
+                <a href={maps.google} target="_blank" rel="noopener noreferrer">구글 지도</a>
               </>
             )}
           </p>

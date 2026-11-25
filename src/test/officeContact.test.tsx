@@ -28,17 +28,19 @@ describe('사무소 연락처 데이터', () => {
     expect(toInternationalPhone('010-9480-1849')).toBe('+82-10-9480-1849');
   });
 
-  it('지도 바로가기는 등록된 장소를 열고, 카카오는 로드뷰 상세가 아닌 지도 화면으로 연다(2026-11-24)', () => {
+  it('지도 바로가기는 등록된 장소를 열고, 카카오는 로드뷰 상세가 아닌 지도 화면으로 연다(2026-11-24, 구글 11-25)', () => {
     expect(mapLinks(office)).toEqual({
       naver: 'https://map.naver.com/p/entry/place/3457747262',
       kakao: 'https://map.kakao.com/link/map/577766464',
+      google: 'https://www.google.com/maps?cid=1861953194817191948',
     });
   });
 
   it('장소 주소가 없으면 지도 바로가기를 주소 검색으로 만들고, 주소도 없으면 만들지 않는다', () => {
-    const links = mapLinks({ ...office, naverPlaceUrl: null, kakaoPlaceUrl: undefined, mapQuery: '경기도 광명시 새빛공원로 67' });
+    const links = mapLinks({ ...office, naverPlaceUrl: null, kakaoPlaceUrl: undefined, googleMapsUrl: null, mapQuery: '경기도 광명시 새빛공원로 67' });
     expect(links?.naver).toBe(`https://map.naver.com/p/search/${encodeURIComponent('경기도 광명시 새빛공원로 67')}`);
     expect(links?.kakao).toBe(`https://map.kakao.com/link/search/${encodeURIComponent('경기도 광명시 새빛공원로 67')}`);
+    expect(links?.google).toBe(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('경기도 광명시 새빛공원로 67')}`);
     expect(mapLinks({ ...office, mapQuery: null })).toBeNull();
   });
 
@@ -160,6 +162,7 @@ describe('개업 전 연락처 공개', () => {
     expect(footer.getByRole('link', { name: /티스토리/ })).toHaveAttribute('href', 'https://essay57391.tistory.com');
     expect(footer.getByRole('link', { name: /블로그스팟/ })).toHaveAttribute('href', 'https://jeongmyeonglab.blogspot.com');
     expect(footer.getByRole('link', { name: '네이버 지도' })).toHaveAttribute('href', mapLinks(office)!.naver);
+    expect(footer.getByRole('link', { name: '구글 지도' })).toHaveAttribute('href', mapLinks(office)!.google);
     if (office.isOpen) {
       expect(footer.getByText(/행정사 등록번호 제3900000202611호 \| 사업자등록번호 462-02-03645/)).toBeInTheDocument();
     } else {
@@ -180,7 +183,7 @@ describe('개업 전 연락처 공개', () => {
 
     const location = within(main.getByRole('region', { name: '오시는 길' }));
     expect(location.getByText(/광명KTX역 5번출구 앞/)).toBeInTheDocument();
-    for (const [name, href] of [['네이버 지도', mapLinks(office)!.naver], ['카카오맵', mapLinks(office)!.kakao]]) {
+    for (const [name, href] of [['네이버 지도', mapLinks(office)!.naver], ['카카오맵', mapLinks(office)!.kakao], ['구글 지도', mapLinks(office)!.google]]) {
       const link = location.getByRole('link', { name });
       expect(link).toHaveAttribute('href', href);
       expect(link).toHaveAttribute('target', '_blank');
