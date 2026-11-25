@@ -10,7 +10,7 @@ export interface ServiceArea {
 
 /**
  * 명함의 업무분야 5개(2026-11-02 주인님 지시: "업무범위 5개로 합쳐").
- * 기존 업무 상세 페이지 6개의 주소(/services/:slug)·상담 분야·유입 통계 코드는 그대로 두고 위에서 묶기만 한다.
+ * 기존 업무 상세 페이지 7개의 주소(/services/:slug)·상담 분야·유입 통계 코드는 그대로 두고 위에서 묶기만 한다.
  * 검색에 이미 등록된 주소와 접수→로컬 연동이 깨지지 않게 하기 위해서다.
  * 공공조달·기업인증은 상세 페이지와 상담 분야가 아직 없다(상담 분야 추가는 접수 계약·로컬 연동을 함께 바꿔야 함).
  */
@@ -31,7 +31,7 @@ export const serviceAreas: ServiceArea[] = [
     id: 'land',
     name: '토지개발 · 보상',
     short: '개발행위허가 등 토지개발 인허가와, 토지보상 단계의 의견서·이의신청서 작성·제출을 돕습니다.',
-    serviceSlugs: ['documents'],
+    serviceSlugs: ['land-development', 'documents'],
   },
   {
     id: 'remedy',

@@ -18,6 +18,7 @@
     { "source": "/services/immigration", "destination": "/services/immigration/index.html" },
     { "source": "/services/veterans", "destination": "/services/veterans/index.html" },
     { "source": "/services/documents", "destination": "/services/documents/index.html" },
+    { "source": "/services/land-development", "destination": "/services/land-development/index.html" },
     { "source": "/check/dui", "destination": "/check/dui/index.html" },
     { "source": "/check/suspension", "destination": "/check/suspension/index.html" },
     { "source": "/check/veterans", "destination": "/check/veterans/index.html" },

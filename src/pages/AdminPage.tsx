@@ -325,8 +325,12 @@ export function AdminPage() {
   }
 
   const stats = useMemo(() => summarizeInquiries(items ?? []), [items]);
+  const [upcoming, setUpcoming] = useState(false);
+  const weekEnd = new Date(Date.parse(today + 'T00:00:00Z') + 7 * 86400000).toISOString().slice(0, 10);
   const due = (items ?? []).filter(item =>
-    !item.purged && item.status !== 'done' && item.followUpDate && item.followUpDate <= today
+    !item.purged && item.status !== 'done' && item.followUpDate && (upcoming
+      ? item.followUpDate > today && item.followUpDate <= weekEnd
+      : item.followUpDate <= today)
   ).sort((a, b) => a.followUpDate!.localeCompare(b.followUpDate!));
 
   function showInquiry(id: string) {
@@ -407,114 +411,17 @@ export function AdminPage() {
       )}
 
       {items && <section aria-labelledby="follow-ups">
-        <h2 id="follow-ups">오늘 연락할 고객</h2>
+        <h2 id="follow-ups">{upcoming ? '향후 7일 연락할 고객' : '오늘 연락할 고객'}</h2>
+        <div className="admin-filter" role="group" aria-label="재연락 기간">
+          <button className={upcoming ? 'button' : 'button button--primary'} type="button" aria-pressed={!upcoming} onClick={() => setUpcoming(false)}>오늘·밀린 연락</button>
+          <button className={upcoming ? 'button button--primary' : 'button'} type="button" aria-pressed={upcoming} onClick={() => setUpcoming(true)}>향후 7일</button>
+        </div>
         {due.length ? <ul>{due.map(item => <li key={item.id}>
           <button className="button" type="button" onClick={() => showInquiry(item.id)}>
-            {item.followUpDate === today ? '오늘' : '기한 지남'} · {item.followUpDate} · {item.name} · {item.topic} · {item.id}
+            {upcoming ? '예정' : item.followUpDate === today ? '오늘' : '기한 지남'} · {item.followUpDate} · {item.name} · {item.topic} · {item.id}
           </button>
-        </li>)}</ul> : <p className="note">오늘까지 예정된 재연락이 없습니다.</p>}
+        </li>)}</ul> : <p className="note">{upcoming ? '내일부터 7일간 예정된 재연락이 없습니다.' : '오늘까지 예정된 재연락이 없습니다.'}</p>}
       </section>}
-
-      <section aria-labelledby="stats">
-        <h2 id="stats">접수 통계</h2>
-        <div className="grid-3">
-          <article className="card">
-            <h3>전체</h3>
-            <p className="admin-stat">{stats.total}건</p>
-          </article>
-          <article className="card">
-            <h3>상태별</h3>
-            <ul className="admin-stat-list">
-              {STATUS_KEYS.map((key) => (
-                <li key={key}>
-                  {STATUS_LABEL[key]}: {stats.byStatus[key] ?? 0}건
-                </li>
-              ))}
-            </ul>
-          </article>
-          <article className="card">
-            <h3>분야별</h3>
-            <ul className="admin-stat-list">
-              {Object.entries(stats.byTopic).map(([topic, count]) => (
-                <li key={topic}>
-                  {topic}: {count}건
-                </li>
-              ))}
-              {stats.total === 0 && <li>아직 접수가 없습니다.</li>}
-            </ul>
-          </article>
-          <article className="card">
-            <h3>수임 단계별</h3>
-            <ul className="admin-stat-list">
-              {Object.entries(PIPELINE_LABEL).map(([key, label]) => (
-                <li key={key}>{label}: {stats.byPipelineStage[key] ?? 0}건</li>
-              ))}
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <AdminFunnel funnel={funnel} />
-
-      <section aria-labelledby="direct-inquiry">
-        <h2 id="direct-inquiry">전화·카카오톡·이메일 문의 응대 메모</h2>
-        <details className="card admin-item">
-          <summary>분야를 고르면 상담 준비 메모와 첫 회신 초안을 만듭니다</summary>
-          <p className="note">
-            사이트 상담 신청 밖으로 들어온 문의용입니다. 이 화면에서만 만들고 어디에도 저장하지 않습니다.
-            카카오톡 답장·문자·이메일에 복사해 고쳐 쓰세요. 회신 대기·종결·파기 관리는 사무실 PC 프로그램의
-            &lsquo;카카오톡·이메일·전화·방문 문의 등록&rsquo;에 남기면 됩니다(맡기지 않으면 마지막 연락일부터 3개월에 자동 파기).
-          </p>
-          <form className="consult-form" onSubmit={handleDirectBuild}>
-            <label>
-              분야
-              <select value={directTopic} onChange={(e) => setDirectTopic(e.target.value)}>
-                {DIRECT_TOPICS.map((topic) => (
-                  <option key={topic} value={topic}>{topic}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              성함(선택 — 회신 첫 줄에만 씀)
-              <input type="text" value={directName} onChange={(e) => setDirectName(e.target.value)} autoComplete="off" />
-            </label>
-            <button className="button button--primary" type="submit">메모·회신 초안 만들기</button>
-          </form>
-          {directResult && (
-            <>
-              <h3>상담 준비 메모</h3>
-              <ConsultBriefView
-                sections={directResult.brief}
-                copyKey="direct-brief"
-                copiedKey={copiedKey}
-                onCopy={(key, text) => void handleCopy(key, text)}
-              />
-              {directResult.draft && (
-                <div className="admin-reply">
-                  {directResult.notes.map((note) => (
-                    <p className="note" key={note}>{note}</p>
-                  ))}
-                  <label>
-                    첫 회신 초안
-                    <textarea
-                      rows={12}
-                      value={directResult.draft}
-                      onChange={(e) => setDirectResult((prev) => (prev ? { ...prev, draft: e.target.value } : prev))}
-                    />
-                  </label>
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={() => void handleCopy('direct-draft', directResult.draft)}
-                  >
-                    {copiedKey === 'direct-draft' ? '초안 복사됨' : '초안 복사'}
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </details>
-      </section>
 
       <section aria-labelledby="inquiries">
         <h2 id="inquiries">접수 목록</h2>
@@ -776,6 +683,107 @@ export function AdminPage() {
           </details>
         ))}
       </section>
+
+      <section aria-labelledby="direct-inquiry">
+        <h2 id="direct-inquiry">전화·카카오톡·이메일 문의 응대 메모</h2>
+        <details className="card admin-item">
+          <summary>분야를 고르면 상담 준비 메모와 첫 회신 초안을 만듭니다</summary>
+          <p className="note">
+            사이트 상담 신청 밖으로 들어온 문의용입니다. 이 화면에서만 만들고 어디에도 저장하지 않습니다.
+            카카오톡 답장·문자·이메일에 복사해 고쳐 쓰세요. 회신 대기·종결·파기 관리는 사무실 PC 프로그램의
+            &lsquo;카카오톡·이메일·전화·방문 문의 등록&rsquo;에 남기면 됩니다(맡기지 않으면 마지막 연락일부터 3개월에 자동 파기).
+          </p>
+          <form className="consult-form" onSubmit={handleDirectBuild}>
+            <label>
+              분야
+              <select value={directTopic} onChange={(e) => setDirectTopic(e.target.value)}>
+                {DIRECT_TOPICS.map((topic) => (
+                  <option key={topic} value={topic}>{topic}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              성함(선택 — 회신 첫 줄에만 씀)
+              <input type="text" value={directName} onChange={(e) => setDirectName(e.target.value)} autoComplete="off" />
+            </label>
+            <button className="button button--primary" type="submit">메모·회신 초안 만들기</button>
+          </form>
+          {directResult && (
+            <>
+              <h3>상담 준비 메모</h3>
+              <ConsultBriefView
+                sections={directResult.brief}
+                copyKey="direct-brief"
+                copiedKey={copiedKey}
+                onCopy={(key, text) => void handleCopy(key, text)}
+              />
+              {directResult.draft && (
+                <div className="admin-reply">
+                  {directResult.notes.map((note) => (
+                    <p className="note" key={note}>{note}</p>
+                  ))}
+                  <label>
+                    첫 회신 초안
+                    <textarea
+                      rows={12}
+                      value={directResult.draft}
+                      onChange={(e) => setDirectResult((prev) => (prev ? { ...prev, draft: e.target.value } : prev))}
+                    />
+                  </label>
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => void handleCopy('direct-draft', directResult.draft)}
+                  >
+                    {copiedKey === 'direct-draft' ? '초안 복사됨' : '초안 복사'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </details>
+      </section>
+
+      <section aria-labelledby="stats">
+        <h2 id="stats">접수 통계</h2>
+        <div className="grid-3">
+          <article className="card">
+            <h3>전체</h3>
+            <p className="admin-stat">{stats.total}건</p>
+          </article>
+          <article className="card">
+            <h3>상태별</h3>
+            <ul className="admin-stat-list">
+              {STATUS_KEYS.map((key) => (
+                <li key={key}>
+                  {STATUS_LABEL[key]}: {stats.byStatus[key] ?? 0}건
+                </li>
+              ))}
+            </ul>
+          </article>
+          <article className="card">
+            <h3>분야별</h3>
+            <ul className="admin-stat-list">
+              {Object.entries(stats.byTopic).map(([topic, count]) => (
+                <li key={topic}>
+                  {topic}: {count}건
+                </li>
+              ))}
+              {stats.total === 0 && <li>아직 접수가 없습니다.</li>}
+            </ul>
+          </article>
+          <article className="card">
+            <h3>수임 단계별</h3>
+            <ul className="admin-stat-list">
+              {Object.entries(PIPELINE_LABEL).map(([key, label]) => (
+                <li key={key}>{label}: {stats.byPipelineStage[key] ?? 0}건</li>
+              ))}
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <AdminFunnel funnel={funnel} />
     </div>
   );
 }

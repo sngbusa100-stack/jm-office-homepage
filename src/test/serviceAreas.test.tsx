@@ -11,7 +11,7 @@ describe('업무 분야 5개(명함 기준) — 기존 상세 페이지는 그�
     expect(serviceAreas.map((area) => area.name)).toEqual(CARD_AREAS);
   });
 
-  it('업무 상세 페이지 6개가 빠짐없이, 한 분야에만 속한다', () => {
+  it('업무 상세 페이지 7개가 빠짐없이, 한 분야에만 속한다', () => {
     expect(unassignedServices()).toEqual([]);
     const assigned = serviceAreas.flatMap((area) => area.serviceSlugs);
     expect(new Set(assigned).size).toBe(assigned.length);
@@ -20,7 +20,7 @@ describe('업무 분야 5개(명함 기준) — 기존 상세 페이지는 그�
 
   it('상세 페이지 주소·상담 분야 코드는 바꾸지 않는다(검색 등록·접수 연동 유지)', () => {
     expect(services.map((s) => [s.slug, s.consultTopic])).toEqual([
-      ['license', 'permit'], ['immigration', 'visa'], ['documents', 'land'],
+      ['license', 'permit'], ['immigration', 'visa'], ['land-development', 'permit'], ['documents', 'land'],
       ['suspension', 'suspension'], ['dui', 'dui'], ['veterans', 'veterans'],
     ]);
   });

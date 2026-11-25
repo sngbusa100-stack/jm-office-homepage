@@ -156,12 +156,14 @@ describe('접수 관리 페이지', () => {
     const customers = [
       { name: '오늘고객', followUpDate: '2026-07-20' },
       { name: '연체고객', followUpDate: '2026-07-19' },
+      { name: '마지막날', followUpDate: '2026-07-27' },
+      { name: '다음주밖', followUpDate: '2026-07-28' },
       { name: '내일고객', followUpDate: '2026-07-21' },
       { name: '완료고객', followUpDate: '2026-07-20', status: 'done' },
       { name: '파기고객', followUpDate: '2026-07-20', purged: true },
       { name: '미예약고객', followUpDate: null },
     ].map((fields, i) => ({ ...ITEMS[0], ...fields, id: `JM-20260717-AB0${i}` }));
-    await login(stubAdminFetch(customers));
+    const { user } = await login(stubAdminFetch(customers));
     const queue = screen.getByRole('heading', { name: /오늘 연락할 고객/ }).closest('section')!;
     for (const customer of customers.slice(0, 2)) {
       expect(queue.textContent).toMatch(new RegExp(customer.name + '|' + customer.id));
@@ -169,6 +171,10 @@ describe('접수 관리 페이지', () => {
     for (const customer of customers.slice(2)) {
       expect(queue.textContent).not.toMatch(new RegExp(customer.name + '|' + customer.id));
     }
+    await user.click(within(queue).getByRole('button', { name: '향후 7일' }));
+    expect(queue).toHaveTextContent('내일고객');
+    expect(queue).toHaveTextContent('마지막날');
+    expect(queue).not.toHaveTextContent(/다음주밖|오늘고객|연체고객/);
   });
 
   it('상태 필터에 가려진 접수도 재연락 목록에서 누르면 해당 카드를 펼친다', async () => {

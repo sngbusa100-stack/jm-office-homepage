@@ -35,6 +35,7 @@ export const DOMAIN_LABEL: Record<string, string> = {
   visa: '출입국·비자',
   veterans: '국가보훈 등록',
   documents: '토지보상·내용증명·계약서',
+  landdev: '개발행위허가·농지전용·토지분할',
   d2: '비자 D-2',
   d10: '비자 D-10',
   e7: '비자 E-7',

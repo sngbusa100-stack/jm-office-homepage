@@ -44,7 +44,8 @@ function buildBriefLabels(): ReplyLabels['brief'] {
   const topics: Record<string, BriefTopicLabels> = {};
   for (const service of services) {
     const topic = CONSULT_TOPIC_BY_SLUG[service.consultTopic];
-    if (!topic) continue;
+    // 같은 상담 분야를 쓰는 업무가 둘 이상이면(인허가: license·land-development) 앞에 둔 업무가 그 분야의 안내가 된다.
+    if (!topic || topics[topic]) continue;
     topics[topic] = {
       service: service.name,
       deadlines: service.deadlines ?? [],

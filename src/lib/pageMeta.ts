@@ -80,6 +80,7 @@ export const PAGE_UPDATED_AT: Record<string, string> = {
   '/services/license': '2026-11-02',
   '/services/immigration': '2026-11-12',
   '/services/documents': '2026-11-02',
+  '/services/land-development': '2026-11-25',
   '/services/suspension': '2026-11-02',
   '/services/dui': '2026-11-02',
   '/services/veterans': '2026-11-02',

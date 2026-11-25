@@ -91,7 +91,7 @@ describe('분야 상세의 단계 안내', () => {
     expect(consult.getAttribute('href')).toContain('priority=urgent');
   });
 
-  it.each(['license', 'immigration', 'documents'])('법정 기한이 없는 분야(%s)의 상담 버튼에는 priority가 없다', (slug) => {
+  it.each(['license', 'immigration', 'land-development', 'documents'])('법정 기한이 없는 분야(%s)의 상담 버튼에는 priority가 없다', (slug) => {
     renderPage(slug);
     for (const link of document.querySelectorAll('a[href^="/consult"]')) {
       expect(link.getAttribute('href')).not.toContain('priority');
@@ -138,5 +138,16 @@ describe('분야 상세의 단계 안내', () => {
     }
     const faqHeading = screen.getByRole('heading', { name: /자주 묻는 질문/ });
     expect(faqHeading.closest('details')).toBeNull();
+  });
+});
+
+describe('개발행위허가·농지전용·토지분할 상세(/services/land-development)', () => {
+  it('머리말이 보이고 하단 상담 버튼은 인허가 분야로 가며 기한 우선 진입이 아니다', () => {
+    renderPage('land-development');
+    expect(screen.getByRole('heading', { level: 1, name: '그 땅에 무엇을 할 수 있는지, 허가 기준부터 확인합니다' })).toBeInTheDocument();
+    const bottom = document.querySelector('.service-actions--bottom')!;
+    const consult = [...bottom.querySelectorAll('a')].find((a) => a.getAttribute('href')?.startsWith('/consult'))!;
+    expect(consult.getAttribute('href')).toContain('topic=permit');
+    expect(consult.getAttribute('href')).not.toContain('priority=urgent');
   });
 });
