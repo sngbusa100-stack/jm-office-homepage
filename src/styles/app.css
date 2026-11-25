@@ -468,6 +468,15 @@ th { background: var(--surface-muted); font-weight: 700; }
 /* 숨김 입력: 아래 입력 규칙의 padding·border가 .sr-only를 이기지 못하게 한다. */
 .consult-form .sr-only { padding: 0; border: 0; width: 1px; height: 1px; }
 .location-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+/* 휴대폰에서도 지도 버튼 3개(네이버·카카오·구글)를 한 줄로(2026-11-25 주인님 지시). 누르는 높이 48px는 그대로. */
+@media (max-width: 520px) {
+  .location-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .location-actions .button { padding: 12px 4px; font-size: 15px; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  .location-actions { gap: 6px; }
+  .location-actions .button { font-size: 14px; }
+}
 .location-map { display: block; width: 100%; height: 320px; margin-top: 16px; border: 1px solid var(--border); border-radius: 8px; }
 .consult-form label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
 .consult-form input[type='text'],
