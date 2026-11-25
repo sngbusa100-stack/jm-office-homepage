@@ -2,6 +2,7 @@ import {
   captureAttribution,
   attributedExternalUrl,
   readAttribution,
+  referrerSource,
   sanitizeAttribution,
   trackFunnelEvent,
 } from '../lib/funnel';
@@ -44,6 +45,36 @@ describe('개인정보 없는 전환 퍼널 규격', () => {
       campaign: 'dui',
       content: 'top',
     });
+  });
+
+  it('이전 사이트 주소는 출처 묶음 이름으로만 바꾸고 우리 사이트·이상한 주소는 무시한다', () => {
+    expect(referrerSource('https://m.search.naver.com/search.naver?query=%ED%99%8D%EA%B8%B8%EB%8F%99')).toBe('naver');
+    expect(referrerSource('https://blog.naver.com/someone/123')).toBe('blog');
+    expect(referrerSource('https://example.tistory.com/160')).toBe('blog');
+    expect(referrerSource('https://www.google.co.kr/')).toBe('google');
+    expect(referrerSource('https://search.daum.net/search?q=x')).toBe('kakao');
+    expect(referrerSource('https://l.instagram.com/')).toBe('instagram');
+    expect(referrerSource('https://youtu.be/abc')).toBe('youtube');
+    expect(referrerSource('https://www.bing.com/')).toBe('referral');
+    expect(referrerSource('https://notnaver.com/')).toBe('referral');
+    expect(referrerSource('https://visa.jungmyungoffice.com/visa/e7')).toBeUndefined();
+    expect(referrerSource('https://jungmyungoffice.co.kr/')).toBeUndefined();
+    expect(referrerSource('android-app://com.google.android.gm/')).toBeUndefined();
+    expect(referrerSource('')).toBeUndefined();
+  });
+
+  it('UTM 출처가 없을 때만 이전 사이트 주소의 출처 묶음을 쓰고 주소 자체는 남기지 않는다', () => {
+    captureAttribution('', 'https://m.search.naver.com/search.naver?query=%ED%99%8D%EA%B8%B8%EB%8F%99');
+    expect(readAttribution()).toEqual({ source: 'naver' });
+    expect(JSON.stringify(sessionStorage)).not.toContain('search.naver');
+
+    // 같은 방문 안에서는 처음 정한 출처를 유지한다.
+    captureAttribution('', 'https://www.google.com/');
+    expect(readAttribution()).toEqual({ source: 'naver' });
+
+    sessionStorage.clear();
+    captureAttribution('?utm_source=blog', 'https://www.google.com/');
+    expect(readAttribution()).toEqual({ source: 'blog' });
   });
 
   it('비자 사이트 이동에는 허용된 원 유입과 내부 접점을 함께 전달한다', () => {

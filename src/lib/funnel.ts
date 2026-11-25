@@ -129,8 +129,41 @@ export function readAttribution(): Attribution {
   }
 }
 
-/** 현재 URL의 UTM 값만 기존 세션 값 위에 합친다. */
-export function captureAttribution(search = window.location.search): Attribution {
+const OWN_HOSTS = /(^|\.)(jungmyungoffice\.(com|co\.kr)|localhost)$/;
+
+/**
+ * 이전 사이트 주소(referrer)를 출처 묶음 이름 하나로만 바꾼다(2026-11-25).
+ * 주소·검색어는 어디에도 남기지 않는다. 우리 사이트에서 온 이동은 출처로 보지 않는다.
+ */
+export function referrerSource(referrer: string): string | undefined {
+  let host: string;
+  try {
+    const url = new URL(referrer);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return undefined;
+    host = url.hostname.toLowerCase();
+  } catch {
+    return undefined;
+  }
+  if (!host || OWN_HOSTS.test(host)) return undefined;
+  const is = (domain: string) => host === domain || host.endsWith(`.${domain}`);
+  if (is('blog.naver.com') || is('tistory.com') || is('blogspot.com')) return 'blog';
+  if (is('naver.com')) return 'naver';
+  if (/(^|\.)google\.[a-z.]+$/.test(host)) return 'google';
+  if (is('daum.net') || is('kakao.com')) return 'kakao';
+  if (is('instagram.com')) return 'instagram';
+  if (is('facebook.com')) return 'facebook';
+  if (is('youtube.com') || host === 'youtu.be') return 'youtube';
+  return 'referral';
+}
+
+/**
+ * 현재 URL의 UTM 값만 기존 세션 값 위에 합친다.
+ * 세션에 출처가 아직 없고 UTM에도 없으면 이전 사이트 주소로 출처 묶음만 정한다.
+ */
+export function captureAttribution(
+  search = window.location.search,
+  referrer = typeof document === 'undefined' ? '' : document.referrer,
+): Attribution {
   const params = new URLSearchParams(search);
   const incoming = sanitizeAttribution({
     source: params.get('utm_source'),
@@ -138,7 +171,12 @@ export function captureAttribution(search = window.location.search): Attribution
     campaign: params.get('utm_campaign'),
     content: params.get('utm_content'),
   });
-  const merged = { ...readAttribution(), ...incoming };
+  const stored = readAttribution();
+  if (!incoming.source && !stored.source) {
+    const fromReferrer = referrerSource(referrer);
+    if (fromReferrer) incoming.source = fromReferrer;
+  }
+  const merged = { ...stored, ...incoming };
   if (Object.keys(merged).length > 0) {
     safeSessionSet(ATTRIBUTION_KEY, JSON.stringify(merged));
     if (merged.source) safeSessionSet('consult:utm', merged.source);

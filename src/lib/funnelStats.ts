@@ -47,7 +47,7 @@ export const SOURCE_LABEL: Record<string, string> = {
   direct: '직접 방문·출처 모름',
   naver: '네이버',
   google: '구글',
-  kakao: '카카오',
+  kakao: '카카오·다음',
   instagram: '인스타그램',
   facebook: '페이스북',
   youtube: '유튜브',
