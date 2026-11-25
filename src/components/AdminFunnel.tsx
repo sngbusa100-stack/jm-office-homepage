@@ -158,6 +158,14 @@ export function AdminFunnel({ funnel }: { funnel: FunnelSummary | null }) {
         연락 버튼 누름: 전화 {total('contact_phone_click')} · 이메일 {total('contact_email_click')}
         (홈페이지에서 누른 횟수 — 실제 통화·메일 수와 다를 수 있습니다)
       </p>
+      <p className="note">
+        이 브라우저에서 연 홈페이지 화면은 사무소 점검으로 보고 퍼널에 넣지 않습니다. 비자 사이트는 주소가 달라서
+        {' '}
+        <a href="https://visa.jungmyungoffice.com/?jm_internal=1" target="_blank" rel="noopener noreferrer">
+          비자 사이트도 집계 제외
+        </a>
+        를 한 번 눌러 두셔야 합니다.
+      </p>
     </section>
   );
 }
