@@ -60,7 +60,7 @@ export function WhyPage() {
         <p className="note">{why.diy.note}</p>
       </section>
 
-      <section aria-labelledby="myths">
+      <section aria-labelledby="myths" className="myth-list">
         <h2 id="myths">{why.misconceptions.title}</h2>
         {why.misconceptions.items.map((item) => (
           <details key={item.myth}>
