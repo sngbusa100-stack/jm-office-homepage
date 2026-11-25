@@ -1,3 +1,4 @@
+import { IntakeLinks } from './IntakeLinks';
 import { Link } from 'react-router-dom';
 
 export function ConsultCta({
@@ -10,7 +11,7 @@ export function ConsultCta({
       <p>{message}</p>
       <div className="button-row">
         <Link className="button button--accent" to="/check">셀프 진단 시작 →</Link>
-        <Link className="button button--ghost" to="/consult">상담 안내 보기</Link>
+        <IntakeLinks />
       </div>
     </aside>
   );

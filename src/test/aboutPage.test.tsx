@@ -38,7 +38,7 @@ describe('사무소 소개(/about)', () => {
     expect(letter.queryByLabelText('약력')).toBeNull();
   });
 
-  it('약속 2가지와 찾아오시는 길(상담 시간·주차·전화)을 보여준다', () => {
+  it('약속 2가지와 찾아오시는 길(상담 시간·주차·접수 경로)을 보여준다', () => {
     renderAt('/about');
     const promises = within(screen.getByRole('region', { name: '두 가지 약속' }));
     expect(promises.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['정확하게', '명쾌하게']);
@@ -47,7 +47,9 @@ describe('사무소 소개(/about)', () => {
     expect(visit.getByText('경기도 광명시 새빛공원로 67 광명역자이타워 B동 13층 1305호')).toBeInTheDocument();
     expect(visit.getByText('월~금 10:00~17:00')).toBeInTheDocument();
     expect(visit.getByText('1시간 30분 무료')).toBeInTheDocument();
-    expect(visit.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
+    expect(visit.getByRole('link', { name: '온라인 상담 신청' })).toHaveAttribute('href', '/consult');
+    expect(visit.getByRole('link', { name: '카카오톡으로 문의' })).toHaveAttribute('href', 'https://pf.kakao.com/_KxhlvX/chat');
+    expect(visit.queryByRole('link', { name: '02-899-1849' })).toBeNull();
     expect(visit.getByRole('link', { name: /오시는 길 자세히 보기/ })).toHaveAttribute('href', '/location');
   });
 

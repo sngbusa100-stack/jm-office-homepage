@@ -47,11 +47,11 @@ describe('개업 뒤 화면 문구', () => {
   it('홈 FAQ는 상담 신청 방법을 안내한다', () => {
     const text = visibleText(renderPage('/'));
     expect(text).toContain('상담은 어떻게 신청하나요?');
-    expect(text).toContain('상담 신청 화면에서 신청하시거나 사무실 전화로 문의하실 수 있습니다.');
+    expect(text).toContain('온라인 상담 신청서 또는 카카오톡 채널로 문의해 주세요.');
   });
 
   it('개인정보처리방침은 사이트 상담 신청, 전화·이메일·카카오톡 채널·방문 상담, 위임 업무에 적용된다고 적는다', () => {
-    expect(visibleText(renderPage('/privacy'))).toContain('이 방침은 이 사이트의 상담 신청뿐 아니라 사무소가 전화·이메일·카카오톡 채널·방문으로 받는 상담과, 위임받아 처리하는 행정사 업무에도 적용됩니다.');
+    expect(visibleText(renderPage('/privacy'))).toContain('이 방침은 온라인 신청과 카카오톡 채널을 통한 상담 접수, 접수 후 전화·이메일·방문 등으로 진행하는 상담, 위임받아 처리하는 행정사 업무에 적용됩니다.');
   });
 
   it('진단 결과의 긴급 안내에도 개업 전 문구가 없다', async () => {

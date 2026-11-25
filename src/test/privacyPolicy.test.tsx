@@ -134,6 +134,7 @@ describe('개인정보처리방침 법정 기재사항', () => {
     const consent = screen.getByLabelText(/개인정보 수집·이용에 동의/).closest('label')!;
     expect(consent.textContent).toContain('국외 이전');
     expect(consent.textContent).toContain('Vercel');
-    expect(consent.textContent).toContain('전화');
+    expect(consent).toHaveTextContent('온라인 신청은 접수되지 않습니다');
+    expect(consent).not.toHaveTextContent('전화 문의');
   });
 });

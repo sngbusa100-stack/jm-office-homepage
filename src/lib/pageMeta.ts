@@ -67,16 +67,16 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
  * 초기값: 해당 페이지와 그 내용을 담은 데이터 파일의 마지막 커밋 날짜 중 최근 것(2026-11-12).
  */
 export const PAGE_UPDATED_AT: Record<string, string> = {
-  '/': '2026-11-12',
+  '/': '2026-11-25',
   '/about': '2026-11-12',
   '/why': '2026-10-19',
-  '/process': '2026-11-23',
+  '/process': '2026-11-25',
   '/services': '2026-11-02',
   '/check': '2026-11-02',
-  '/consult': '2026-11-12',
-  '/privacy': '2026-11-20',
+  '/consult': '2026-11-25',
+  '/privacy': '2026-11-25',
   '/disclaimer': '2026-10-19',
-  '/location': '2026-11-12',
+  '/location': '2026-11-25',
   '/services/license': '2026-11-02',
   '/services/immigration': '2026-11-12',
   '/services/documents': '2026-11-02',

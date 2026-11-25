@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
 import { getPageMeta, HOME_TITLE } from '../lib/pageMeta';
 import { profile, SLOGAN } from '../data/profile';
@@ -56,9 +57,31 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     }
     // 첫 화면 주인님 문장("서류 한 장에도…")과 같은 뜻의 인사말 제목("서류보다 사람을 먼저")을 바로 아래 두지 않는다
     expect(container.textContent).not.toContain('서류보다 사람을 먼저');
-    // 버튼은 주인님 결정으로 남긴다(PC·휴대폰 같은 화면)
+  });
+
+  it('첫 화면에는 접수 버튼 두 개와 업무·진단 보조 링크가 있다', () => {
+    const { container } = renderAt('/');
+    const hero = container.querySelector('.hero') as HTMLElement;
+    const buttons = Array.from(hero.querySelectorAll('a.button'));
+    expect(buttons.map(link => link.textContent)).toEqual(['온라인 상담 신청', '카카오톡으로 문의']);
+    expect(buttons.map(link => link.getAttribute('href'))).toEqual(['/consult', 'https://pf.kakao.com/_KxhlvX/chat']);
     expect(within(hero).getByRole('link', { name: /업무 분야 살펴보기/ })).toHaveAttribute('href', '/services');
     expect(within(hero).getByRole('link', { name: /바로 셀프 진단하기/ })).toHaveAttribute('href', '/check');
+  });
+
+  it('온라인 신청 버튼은 현재 앱 안에서 상담 경로로 이동한다', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<AppRouter />} />
+          <Route path="/consult" element={<h1>상담 경로 도착</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    const hero = within(container.querySelector('.hero') as HTMLElement);
+    await user.click(hero.getByRole('link', { name: '온라인 상담 신청' }));
+    expect(screen.getByRole('heading', { name: '상담 경로 도착' })).toBeInTheDocument();
   });
 
   it('모바일용 대표 한 줄(hero__rep)이 첫 제목 위에 있고, 사진 alt는 비어 있다', () => {

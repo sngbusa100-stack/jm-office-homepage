@@ -20,6 +20,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('잠시 후 다시 시도해 주세요.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '새로 고침' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '홈으로' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: '온라인 상담 신청' })).toHaveAttribute('href', '/consult');
+    expect(screen.getByRole('link', { name: '카카오톡으로 문의' })).toHaveAttribute('href', 'https://pf.kakao.com/_KxhlvX/chat');
     expect(screen.queryByText(/비밀 오류 내용/)).toBeNull();
   });
 

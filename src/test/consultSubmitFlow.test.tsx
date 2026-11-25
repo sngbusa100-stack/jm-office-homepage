@@ -308,6 +308,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     const submit = screen.getByRole('button', { name: /상담 신청하기/ });
     await user.click(submit);
     expect(await screen.findByRole('alert')).toHaveTextContent('1분 뒤 다시 신청');
+    expect(screen.getByRole('alert')).toHaveTextContent('카카오톡');
     expect(screen.getByLabelText(/성함/)).toHaveValue('홍길동');
     await user.click(submit);
     await screen.findByText(/JM-RETRY/);

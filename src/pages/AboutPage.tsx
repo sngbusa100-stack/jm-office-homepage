@@ -1,3 +1,4 @@
+import { IntakeLinks } from '../components/IntakeLinks';
 import { Link } from 'react-router-dom';
 import { profile } from '../data/profile';
 import { OfficeLocation } from '../components/OfficeLocation';
@@ -40,6 +41,7 @@ export function AboutPage() {
         <h2 id="about-visit">찾아오시는 길</h2>
         <OfficeLocation />
         <OfficeVisitFacts />
+        <div className="button-row"><IntakeLinks /></div>
         <Link className="text-link" to="/location">오시는 길 자세히 보기 →</Link>
       </section>
     </div>

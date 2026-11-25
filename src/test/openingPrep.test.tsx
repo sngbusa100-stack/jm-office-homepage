@@ -120,13 +120,11 @@ describe('C19 상담 전송 실패를 종류별로 안내(CV-12)', () => {
 
   it('접수 닫힘만 "받지 않고 있습니다", 카카오는 채널이 있을 때만 말한다', () => {
     expect(submitErrorMessage('closed')).toContain('받지 않고 있습니다');
-    expect(submitErrorMessage('closed')).toContain(office.phone!);
     expect(submitErrorMessage('retry')).toContain('다시 눌러');
     expect(submitErrorMessage('outage')).not.toContain('받지 않고');
-    if (office.kakaoChannelUrl) {
-      expect(submitErrorMessage('storage')).toContain('또는 카카오톡으로 문의해 주세요');
-    } else {
-      for (const k of ['closed', 'retry', 'invalid', 'outage'] as const) expect(submitErrorMessage(k)).not.toContain('카카오');
+    for (const kind of ['closed', 'storage', 'outage'] as const) {
+      expect(submitErrorMessage(kind)).not.toMatch(/전화|이메일/);
+      expect(submitErrorMessage(kind).includes('카카오톡')).toBe(office.isOpen && Boolean(office.kakaoChannelUrl));
     }
   });
 });

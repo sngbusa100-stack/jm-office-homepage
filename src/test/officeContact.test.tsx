@@ -172,13 +172,19 @@ describe('개업 전 연락처 공개', () => {
     expect(footer.queryByText(/null/)).toBeNull();
   });
 
-  it('상담 안내에 전화 걸기 버튼과 오시는 길을 보여주고 온라인 접수는 계속 닫아 둔다', () => {
+  it('온라인·카카오톡 접수와 오시는 길을 안내한다', () => {
     renderAt('/consult');
     const main = within(screen.getByRole('main'));
-    expect(main.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
+    const channels = within(main.getByRole('region', { name: '상담 채널' }));
+    expect(channels.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['온라인 신청', '카카오톡 채널']);
+    expect(channels.getAllByRole('link').some(link => /^(tel:|mailto:)/.test(link.getAttribute('href') ?? ''))).toBe(false);
+    expect(main.getByRole('textbox', { name: /통화 가능한 시간대.*선택/ })).toHaveAttribute('name', 'message');
     // 2026-11-19 카카오톡 채널 개설: 채팅 주소로 바로 연결한다.
-    expect(main.getByRole('link', { name: '카카오톡으로 문의' })).toHaveAttribute('href', 'https://pf.kakao.com/_KxhlvX/chat');
-    expect(main.queryByText('준비 중입니다.')).toBeNull();
+    if (office.isOpen) {
+      expect(channels.getByRole('link', { name: '카카오톡으로 문의' })).toHaveAttribute('href', 'https://pf.kakao.com/_KxhlvX/chat');
+    } else {
+      expect(channels.queryByRole('link', { name: '카카오톡으로 문의' })).toBeNull();
+    }
     expect(main.queryByText('개업 후 공개됩니다.')).toBeNull();
 
     const location = within(main.getByRole('region', { name: '오시는 길' }));

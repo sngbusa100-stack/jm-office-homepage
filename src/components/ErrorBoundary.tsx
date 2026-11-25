@@ -1,6 +1,6 @@
+import { IntakeLinks } from './IntakeLinks';
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
-import { office } from '../data/office';
 
 interface Props {
   children: ReactNode;
@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="button-row">
           <button className="button button--primary" type="button" onClick={() => window.location.reload()}>새로 고침</button>
           <a className="button button--ghost" href="/">홈으로</a>
-          {office.phone && <a className="button button--ghost" href={`tel:${office.phone}`}>{office.phone}</a>}
+          <IntakeLinks errorFallback />
         </div>
       </div>
     );

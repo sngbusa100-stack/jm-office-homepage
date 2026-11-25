@@ -1,4 +1,6 @@
+import { IntakeLinks } from '../components/IntakeLinks';
 import { office } from '../data/office';
+import { OfficeVisitFacts } from '../components/OfficeVisitFacts';
 import { OfficeLocation } from '../components/OfficeLocation';
 import { OfficeStructuredData } from '../components/OfficeStructuredData';
 import { trackContactClick } from '../lib/funnel';
@@ -29,27 +31,18 @@ export function LocationPage() {
       {(office.consultHours || office.parking) && (
         <section className="card" aria-labelledby="location-visit">
           <h2 id="location-visit">상담 시간·주차</h2>
-          <dl className="visit-facts">
-            {office.consultHours && <div><dt>상담 시간</dt><dd>{office.consultHours}</dd></div>}
-            {office.parking && <div><dt>주차</dt><dd>{office.parking}</dd></div>}
-          </dl>
+          <OfficeVisitFacts />
         </section>
       )}
 
-      {(office.phone || office.fax || office.email) && (
-        <section className="card" aria-labelledby="location-contact">
-          <h2 id="location-contact">연락처</h2>
-          {office.phone && (
-            <p>
-              <a className="button button--primary" href={`tel:${office.phone}`} onClick={() => trackContactClick('phone')}>{office.phone}</a>
-            </p>
-          )}
-          {office.fax && <p>팩스 {office.fax}</p>}
-          {office.email && (
-            <p>이메일 <a href={`mailto:${office.email}`} onClick={() => trackContactClick('email')}>{office.email}</a></p>
-          )}
-        </section>
-      )}
+      <section className="card" aria-labelledby="location-contact">
+        <h2 id="location-contact">연락처</h2>
+        <div className="button-row"><IntakeLinks /></div>
+        {office.fax && <p>팩스 {office.fax}</p>}
+        {office.email && (
+          <p>이메일 <a href={`mailto:${office.email}`} onClick={() => trackContactClick('email')}>{office.email}</a></p>
+        )}
+      </section>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { IntakeLinks } from '../components/IntakeLinks';
 import { Link } from 'react-router-dom';
 
 export function NotFoundPage() {
@@ -8,7 +9,7 @@ export function NotFoundPage() {
       <div className="button-row">
         <Link className="button button--primary" to="/">홈으로 돌아가기</Link>
         <Link className="button button--ghost" to="/check">셀프 진단</Link>
-        <Link className="button button--ghost" to="/consult">상담 안내</Link>
+        <IntakeLinks />
       </div>
     </div>
   );

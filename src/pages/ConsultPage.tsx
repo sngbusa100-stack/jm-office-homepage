@@ -5,7 +5,7 @@ import { removeStorage, safeSessionGet, safeSessionSet } from '../lib/browserSto
 import { submitConsult } from '../lib/consultSubmit';
 import type { ConsultDiagnosis, SubmitErrorKind, VisaConsultDiagnosis } from '../lib/consultSubmit';
 import type { ResultLevel } from '../types/content';
-import { readAttribution, trackContactClick, trackFunnelEvent } from '../lib/funnel';
+import { readAttribution, trackFunnelEvent } from '../lib/funnel';
 import { OfficeLocation } from '../components/OfficeLocation';
 import { VisaIntakeFields } from '../components/VisaIntakeFields';
 import { DeadlineReportField } from '../components/DeadlineReportField';
@@ -195,6 +195,7 @@ function CopyInquiryId({ id }: { id: string }) {
 
 export function ConsultPage() {
   const accepting = isAcceptingRequests(office);
+  const kakaoUrl = getKakaoIntakeUrl();
   // 사전 렌더링(Node)된 폼은 스크립트가 붙기 전까지 막아 둔다. 그대로 제출되면
   // 브라우저 기본 GET으로 성함·연락처가 주소창·서버 기록에 남고 접수도 되지 않는다.
   const formEnabled = accepting && typeof window !== 'undefined';
@@ -390,24 +391,19 @@ export function ConsultPage() {
 
       <section aria-labelledby="channels">
         <h2 id="channels">상담 채널</h2>
-        <div className="grid-3">
+        <div className="grid-2">
           <article className="card">
-            <h3>전화 상담</h3>
-            {office.phone
-              ? <a className="button button--primary" href={`tel:${office.phone}`} onClick={() => trackContactClick('phone', funnelDomain)}>{office.phone}</a>
-              : <p className="note">개업 후 공개됩니다.</p>}
+            <h3>온라인 신청</h3>
+            <p className="note">{accepting ? '아래 상담 신청서를 작성해 주세요.' : '개업 후 신청하실 수 있습니다.'}</p>
           </article>
           <article className="card">
             <h3>카카오톡 채널</h3>
-            {office.kakaoChannelUrl
-              ? <a className="button button--primary" href={office.kakaoChannelUrl} target="_blank" rel="noopener noreferrer">카카오톡으로 문의</a>
+            {kakaoUrl
+              ? <a className="button button--primary" href={kakaoUrl} target="_blank" rel="noopener noreferrer">카카오톡으로 문의</a>
               : <p className="note">준비 중입니다.</p>}
           </article>
-          <article className="card">
-            <h3>온라인 신청</h3>
-            <p className="note">아래 폼으로 신청하시면 연락드립니다. {!accepting && '(개업 후 활성화)'}</p>
-          </article>
         </div>
+        <p className="note">신청 내용을 확인한 뒤 필요하면 사무소에서 전화드립니다.</p>
       </section>
 
       {urgentEntry && urgentNotice}
@@ -464,6 +460,7 @@ export function ConsultPage() {
           <span className="note">
             지금 가장 걱정되는 점이나 정해진 날짜를 한두 줄로 적어 주세요. 주민등록번호·외국인등록번호·여권번호·운전면허번호,
             계좌번호, 신분증·여권 사진, 병명 같은 진단 내용은 적거나 보내지 마세요. 필요한 자료는 상담 후 따로 안내드립니다.
+            전화 회신을 원하시면 통화 가능한 시간대를 적어 주세요(선택).
           </span>
           <textarea
             name="message"
@@ -506,7 +503,7 @@ export function ConsultPage() {
           <span>개인정보 수집·이용에 동의합니다 — 수집 항목: 이름·전화번호·이메일(선택)·분야·문의 글, 기한 질문의 답(답한 경우),
           함께 보내기를 고른 경우 진단 답변, 출입국·비자 분야는 위 질문의 답(선택 항목은 답한 경우만). 목적: 상담 회신. 보관: 처리 완료 후 120일 뒤 파기.
           국외 이전: 접수 서버·저장소 Vercel·Upstash(미국), 접수 알림 Telegram에 처리를 맡깁니다.
-          동의하지 않으실 수 있으나, 이 경우 온라인 신청은 접수되지 않습니다(전화 문의 가능). 선택 항목은 답하지
+          동의하지 않으실 수 있으나, 이 경우 온라인 신청은 접수되지 않습니다. {kakaoUrl && '카카오톡 채널로도 문의하실 수 있습니다. '}선택 항목은 답하지
           않아도 상담을 받으실 수 있습니다. 자세한 내용은 <a href="/privacy">개인정보처리방침</a>을 확인해 주세요.</span>
         </label>
         <button
@@ -523,8 +520,7 @@ export function ConsultPage() {
         </button>
         {status === 'sent' && (
           <p className="note" role="status">
-            상담 신청이 접수되었습니다.{inquiryId ? ` 접수번호는 ${inquiryId}입니다.` : ''} 확인 후
-            남겨주신 연락처로 연락드리겠습니다.
+            상담 신청이 접수되었습니다.{inquiryId ? ` 접수번호는 ${inquiryId}입니다.` : ''} 신청 내용을 확인한 뒤 필요하면 사무소에서 전화드립니다.
           </p>
         )}
         {status === 'sent' && inquiryId && <CopyInquiryId id={inquiryId} />}
@@ -546,21 +542,24 @@ export function ConsultPage() {
   );
 }
 
-/** 전송 실패 안내(CV-12). 카카오는 채널이 있을 때만 말한다. */
+function getKakaoIntakeUrl() {
+  return office.isOpen ? office.kakaoChannelUrl : null;
+}
+
+/** 전송 실패 안내(CV-12). */
 export function submitErrorMessage(kind: SubmitErrorKind): string {
-  const phone = office.phone ? `전화(${office.phone})` : '전화';
-  const contact = office.kakaoChannelUrl ? `${phone} 또는 카카오톡으로` : `${phone}로`;
+  const alternative = getKakaoIntakeUrl() ? ' 카카오톡 채널로도 문의하실 수 있습니다.' : '';
   switch (kind) {
     case 'closed':
-      return `지금은 홈페이지 접수를 받지 않고 있습니다. ${contact} 문의해 주세요.`;
+      return `지금은 홈페이지 접수를 받지 않고 있습니다.${alternative}`;
     case 'storage':
-      return `접수 저장을 확인하지 못했습니다. 이 화면에서 1분 뒤 다시 신청해 주세요. 급한 경우 ${contact} 문의해 주세요.`;
+      return `접수 저장을 확인하지 못했습니다. 이 화면에서 1분 뒤 다시 신청해 주세요.${alternative}`;
     case 'retry':
       return '요청이 잠시 몰려 접수하지 못했습니다. 1~2분 뒤 다시 눌러 주세요. 같은 내용이 두 번 접수되지는 않습니다.';
     case 'invalid':
       return '입력하신 내용을 확인하지 못했습니다. 이름·연락처·문의 내용을 다시 확인한 뒤 눌러 주세요.';
     default:
-      return `일시적인 문제로 전송하지 못했습니다. 잠시 후 다시 시도하시거나 ${contact} 문의해 주세요.`;
+      return `일시적인 문제로 전송하지 못했습니다. 잠시 후 다시 시도해 주세요.${alternative}`;
   }
 }
 

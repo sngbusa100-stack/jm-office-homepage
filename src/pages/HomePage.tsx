@@ -3,6 +3,7 @@ import { homeFaqs } from '../data/faq';
 import { checks } from '../data/checks';
 import { office } from '../data/office';
 import { profile } from '../data/profile';
+import { IntakeLinks } from '../components/IntakeLinks';
 import { ConsultCta } from '../components/ConsultCta';
 import { OfficeStructuredData } from '../components/OfficeStructuredData';
 import { ProfileCard } from '../components/ProfileCard';
@@ -38,6 +39,7 @@ export function HomePage() {
               복잡한 행정절차를{' '}<br />
               <span className="slogan-mark">정</span>확하고 <span className="slogan-mark">명</span>쾌하게
             </h1>
+            <div className="hero__intake"><IntakeLinks /></div>
             <p className="hero__intro">{profile.intro}</p>
             <ul className="hero__strengths" aria-label="정명 행정사사무소의 특징">
               {profile.strengths.map((strength) => (
@@ -48,8 +50,8 @@ export function HomePage() {
               ))}
             </ul>
             <div className="button-row">
-              <Link className="button button--accent" to="/services">업무 분야 살펴보기 →</Link>
-              <Link className="button button--ghost" to="/check">바로 셀프 진단하기</Link>
+              <Link className="text-link" to="/services">업무 분야 살펴보기 →</Link>
+              <Link className="text-link" to="/check">바로 셀프 진단하기</Link>
             </div>
           </div>
           <ProfileCard profile={profile} />

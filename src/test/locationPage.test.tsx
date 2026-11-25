@@ -16,6 +16,16 @@ function renderAt(path: string) {
 describe('오시는 길', () => {
   beforeEach(() => sessionStorage.clear());
 
+  it.each(['/process', '/missing-page'])('%s 본문에서 두 접수 경로를 제공한다', (path) => {
+    renderAt(path);
+    const main = within(screen.getByRole('main'));
+    expect(main.getByRole('link', { name: '온라인 상담 신청' })).toHaveAttribute('href', '/consult');
+    expect(main.getByRole('link', { name: '카카오톡으로 문의' })).toHaveAttribute('href', office.kakaoChannelUrl);
+    if (path === '/process') {
+      expect(main.getByText(/온라인 상담 신청서 또는 카카오톡 채널로 상황을 알려 주세요/)).toBeInTheDocument();
+    }
+  });
+
   it('상단 주요 메뉴에서 오시는 길 페이지로 갈 수 있다', () => {
     renderAt('/');
     const nav = within(screen.getByRole('navigation', { name: '주요 메뉴' }));
@@ -37,7 +47,9 @@ describe('오시는 길', () => {
     }
     // 지도는 페이지 안에 바로 보인다(2026-11-17 주인님 지시). CSP frame-src와 짝이다.
     expect(main.getByTitle('정명 행정사사무소 위치 지도')).toHaveAttribute('src', mapEmbedUrl(office.mapQuery!));
-    expect(main.getByRole('link', { name: '02-899-1849' })).toHaveAttribute('href', 'tel:02-899-1849');
+    expect(main.getByRole('link', { name: '온라인 상담 신청' })).toHaveAttribute('href', '/consult');
+    expect(main.getByRole('link', { name: '카카오톡으로 문의' })).toHaveAttribute('href', 'https://pf.kakao.com/_KxhlvX/chat');
+    expect(main.queryByRole('link', { name: '02-899-1849' })).toBeNull();
     expect(main.getByText(/02-897-6254/)).toBeInTheDocument();
     expect(main.getByRole('link', { name: 'jungmyungoffice@naver.com' })).toHaveAttribute('href', 'mailto:jungmyungoffice@naver.com');
   });

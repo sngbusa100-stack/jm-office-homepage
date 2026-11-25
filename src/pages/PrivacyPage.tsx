@@ -26,7 +26,7 @@ export function PrivacyPage() {
         도구를 사용하지 않습니다.{' '}
         {/* 개업하면 이 문장이 바뀌므로 개업일에 시행일·동의 버전·변경 이력을 함께 갱신한다(go-live-check). */}
         {office.isOpen
-          ? '이 방침은 이 사이트의 상담 신청뿐 아니라 사무소가 전화·이메일·카카오톡 채널·방문으로 받는 상담과, 위임받아 처리하는 행정사 업무에도 적용됩니다.'
+          ? '이 방침은 온라인 신청과 카카오톡 채널을 통한 상담 접수, 접수 후 전화·이메일·방문 등으로 진행하는 상담, 위임받아 처리하는 행정사 업무에 적용됩니다.'
           : '상담 신청 폼은 개업 준비 중이라 비활성화되어 있어 현재는 상담 개인정보가 접수되지 않으며, 폼을 열면 아래 내용대로 처리합니다.'}
       </p>
 
@@ -147,7 +147,8 @@ export function PrivacyPage() {
         </div>
         <p>
           <strong>국외 이전 거부 방법과 효과:</strong> 상담 신청 화면의 동의를 하지 않으시면 온라인 신청은
-          접수되지 않고 국외 이전도 일어나지 않습니다. 이 경우 사무소 전화나 이메일로 상담을 문의하실 수 있습니다.
+          접수되지 않고 국외 이전도 일어나지 않습니다.
+          {office.isOpen && office.kakaoChannelUrl && <>{' '}이 경우 <a href={office.kakaoChannelUrl} target="_blank" rel="noopener noreferrer">카카오톡으로 문의</a>하실 수 있습니다.</>}
         </p>
         <p className="note">
           이전받는 자의 명칭과 연락처는 각 사의 공개 문서에서 확인했습니다(확인일 {koreanDate(PRIVACY_SOURCES_CHECKED_AT)}):{' '}

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
 import { office } from '../data/office';
+import { submitErrorMessage } from '../pages/ConsultPage';
 
 function renderAt(path: string) {
   return render(
@@ -14,11 +15,20 @@ function renderAt(path: string) {
 describe('상담 페이지 (개업 전)', () => {
   beforeEach(() => sessionStorage.clear());
 
-  it.skipIf(office.isOpen)('개업 전에는 접수 불가 안내와 비활성 폼을 보여준다', () => {
-    renderAt('/consult');
-    expect(screen.getAllByText(/개업 후 시작됩니다/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /상담 신청하기/ })).toBeDisabled();
-    expect(screen.queryByText(/02-1234/)).toBeNull();
+  it('개업 전에는 채널 주소가 있어도 카드·동의·장애 안내에서 카카오 접수를 권하지 않는다', () => {
+    const { isOpen, kakaoChannelUrl } = office;
+    try {
+      Object.assign(office, { isOpen: false, kakaoChannelUrl: 'https://pf.kakao.com/_test/chat' });
+      renderAt('/consult');
+      expect(screen.getByRole('button', { name: /상담 신청하기/ })).toBeDisabled();
+      expect(screen.getByRole('region', { name: '상담 채널' }).querySelector('a')).toBeNull();
+      expect(screen.getByLabelText(/개인정보 수집·이용에 동의/).closest('label')).not.toHaveTextContent('카카오');
+      for (const kind of ['closed', 'storage', 'outage'] as const) {
+        expect(submitErrorMessage(kind)).not.toContain('카카오');
+      }
+    } finally {
+      Object.assign(office, { isOpen, kakaoChannelUrl });
+    }
   });
 
   it.runIf(office.isOpen)('개업 상태에서는 접수 폼이 열려 있다', () => {
