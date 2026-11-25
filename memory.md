@@ -11,7 +11,7 @@
 
 - 운영 주소 `https://jungmyungoffice.com`. GitHub `jm-office-homepage`의 master에 푸시하면 Vercel이 운영에 바로 배포한다.
 - 2026-11-15에 개업 상태로 바꿔 상담 접수를 열었다(`src/data/office.json` `isOpen: true`, `openedOn: 2026-11-15` — 사이트 공개일이며 세무상 개업일과 다를 수 있다). 업무신고 제3900000202611호, 사업자 462-02-03645.
-- 카카오 채널은 아직 없다. 필수값에서 뺐고 상담 화면에는 "준비 중입니다."로 나온다(D12).
+- 카카오톡 채널은 2026-11-19에 공개했다(상담 화면 버튼, 처리방침 반영). 첫인사에서 서류 사진은 메일로 보내 달라고 안내한다(D15).
 - 개인정보처리방침 시행일·`CONSENT_VERSION` 2026-11-15. 위임 업무 문장(분야별 서류·고유식별정보·법정 보존)은 F10 손 시험 뒤에 더해 다시 공개한다.
 - 접수 흐름: `/consult` → `api/consult.js` → Upstash 저장 + 텔레그램 알림 → `/admin`에서 관리 → 로컬 행정심판 시스템이 `api/connector.js`로 가져감 → `api/cron-purge.js`가 매일 파기·아침 요약.
 - 비자 진단은 다른 저장소(`D:\홈페이지\행정사 비자진단 홈페이지`, `visa.jungmyungoffice.com`)이고 `api/visa-handoff.js`로 진단 결과를 넘겨받는다.
