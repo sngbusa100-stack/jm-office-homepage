@@ -127,4 +127,14 @@ describe('비자 진단 일회 전달 API', () => {
     expect(get.statusCode).toBe(405);
     expect(get.headers['Cache-Control']).toBe('no-store, private');
   });
+
+  it('개업 점검이 보내는 빈 토큰 꺼내기는 제한기·저장소를 부르지 않고 400 invalid_token으로 끝난다', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const res = response();
+    await handler({ method: 'POST', headers: {}, body: { action: 'consume', token: '' } }, res);
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ ok: false, error: 'invalid_token' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

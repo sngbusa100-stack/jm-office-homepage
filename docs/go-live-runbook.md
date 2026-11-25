@@ -35,13 +35,13 @@
    - `npm run go-live:check`: 로컬 항목은 ✅여야 한다. 운영 항목(접수 API·운영 화면)은 아직 배포 전이라 ❌가 정상이다.
 ## 3. 접수 열기와 배포 (주인님 승인 뒤, 한 번에)
 1. Vercel Production에 `CONSULT_OPEN=true`를 추가한다. 지금은 이 변수가 아예 없고, 없으면 닫힘으로 동작한다.
-   - `npx --yes vercel env add CONSULT_OPEN production` → 값 `true`
+   - `npx --yes vercel@65.14.0 env add CONSULT_OPEN production` → 값 `true`
    - 환경변수는 다음 배포부터 적용된다. 그래서 개업 커밋을 푸시하기 **직전**에 넣으면 배포 한 번으로 화면과 접수가 함께 열린다.
    - 순서를 거꾸로 하면 문제가 생긴다. 개업 커밋만 먼저 배포되면 폼은 켜지는데 API는 닫혀 있어, 그 사이 신청한 사람은 '전송 실패'를 보게 된다.
 2. master 푸시(운영 배포)
 3. `npm run go-live:check -- --strict` — 실패·건너뜀이 0이어야 한다.
    - 비자 사이트 문구 항목은 별도 과제(5개 언어 개업 후 문구)가 끝날 때까지 ❌로 남는다.
-   - `/api/visa-handoff`도 같은 `CONSULT_OPEN`으로 열린다. 다만 빈 요청을 보내 시험하면 기록이 생길 수 있어 점검 스크립트는 이 API를 부르지 않는다.
+   - `/api/visa-handoff`도 같은 `CONSULT_OPEN`으로 열린다. 점검 스크립트는 빈 토큰 꺼내기를 보내 열림(400)·닫힘(503)만 본다. 토큰 검사에서 거절되므로 기록이 생기지 않는다.
 
 ## 4. 시험 접수 1건 왕복
 1. 운영 상담 화면에서 시험 접수를 1건 넣는다(이름에 "시험" 표기).

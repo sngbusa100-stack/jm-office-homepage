@@ -146,7 +146,8 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
       ...profile.greeting, ...profile.greetingSummary,
       ...profile.promises.map((p) => p.detail), ...profile.strengths.map((s) => `${s.title} ${s.detail}`),
     ].join('\n');
-    for (const risky of ['즉각', '만들었습니다', '원스톱', '소송까지 책임', '함께 수임', '법률 상담을 제공', '보장']) {
+    // '법률 상담을 제공' 같은 표시는 사이트 전체 금지어 검사(scripts/forbidden-phrases.mjs)가 본다.
+    for (const risky of ['즉각', '만들었습니다', '원스톱', '소송까지 책임', '함께 수임', '보장']) {
       expect(texts, risky).not.toContain(risky);
     }
     // 상담하는 사람이 변호사라는 것이 문장에 드러나야 한다

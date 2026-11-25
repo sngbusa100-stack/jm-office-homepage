@@ -29,10 +29,18 @@ export const LAND_PATTERNS = [
   [/증액\s*(?:을|이)?\s*보장(?!\s*(?:은|을|는)?\s*(?:하지|할\s*수|되지|않|없))/, '증액 보장'],
 ];
 
+/**
+ * 사무소가 법률 상담·자문을 해 준다는 표시(변호사법 제112조 제3호). 변호사 협업은 '변호사에게 상담받으실 수 있'처럼
+ * 상담하는 사람을 드러내 쓴다(docs/2026-11-02-home-intro-copy-plan.md 4절).
+ * '법률 자문이 아닙니다', '법률 자문을 제공하지 않습니다' 같은 안내는 통과해야 한다.
+ */
+const LEGAL_ADVICE_PATTERN = /법률\s*(?:상담|자문)\s*(?:을|를)?\s*(?:제공(?!\s*하지|\s*되지|\s*하는\s*것은\s*아니)|해\s*드립니다|해\s*드려요)/;
+
 /** 문자열에서 발견된 금지어 목록. 가상 후기 형식은 '후기 오인 형식'으로 보고한다. */
 export function findForbidden(text) {
   const found = FORBIDDEN_PHRASES.filter((phrase) => text.includes(phrase));
   for (const [pattern, label] of LAND_PATTERNS) if (pattern.test(text)) found.push(label);
+  if (LEGAL_ADVICE_PATTERN.test(text)) found.push('법률 상담 표시');
   if (REVIEW_PATTERN.test(text)) found.push('후기 오인 형식');
   return found;
 }

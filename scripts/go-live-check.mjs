@@ -3,6 +3,7 @@
 //   npm run go-live:check -- --strict     실패·건너뜀이 있으면 종료코드 1(개업 직후 최종 확인)
 //   npm run go-live:check -- --offline    운영 사이트·Vercel·로컬 연동 확인 생략
 // 운영 /api/consult에는 빈 요청을 한 번 보낸다. 검증 단계에서 거절되므로 접수 레코드는 생기지 않는다.
+// 운영 /api/visa-handoff에는 빈 토큰 꺼내기를 한 번 보낸다. 토큰 검사에서 거절되어 제한기·저장소를 건드리지 않는다.
 // 설계: docs/2026-10-19-go-live-check-plan.md
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -18,6 +19,7 @@ import {
   checkPolicy,
   checkProtectedApis,
   checkVercelEnv,
+  checkVisaHandoffApi,
   checkVisaSite,
   checkWording,
   manualItems,
@@ -69,6 +71,14 @@ async function consultProbe() {
   return { status: response.status, body: await response.json().catch(() => ({})) };
 }
 
+async function visaHandoffProbe() {
+  const response = await fetch(`${SITE}/api/visa-handoff`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'consume', token: '' }), ...timeout(),
+  });
+  return { status: response.status, body: await response.json().catch(() => ({})) };
+}
+
 async function protectedStatuses() {
   const statuses = {};
   for (const path of ['/api/connector', '/api/cron-purge', '/api/admin']) {
@@ -89,8 +99,12 @@ async function visaText() {
   return [html, ...bundles].join('\n');
 }
 
+// 판을 고정해 CLI 새 판의 출력 모양이 바뀌어도 이름 읽기가 조용히 깨지지 않게 한다.
+// 올릴 때는 배포된 지 하루 넘은 판으로, docs/go-live-runbook.md·memory.md의 명령도 함께 바꾼다.
+const VERCEL_CLI = 'vercel@65.14.0';
+
 function vercelEnvNames() {
-  const run = spawnSync('npx', ['--yes', 'vercel', 'env', 'ls', 'production'], {
+  const run = spawnSync('npx', ['--yes', VERCEL_CLI, 'env', 'ls', 'production'], {
     cwd: root, encoding: 'utf8', shell: process.platform === 'win32', timeout: 90000,
   });
   if (run.status !== 0) return null;
@@ -136,6 +150,7 @@ const results = [
 if (offline) {
   results.push(
     checkConsultApi({ office, probe: null }),
+    checkVisaHandoffApi({ office, probe: null }),
     checkProtectedApis(null),
     checkLiveSite({ office, text: null }),
     checkVisaSite({ office, text: null }),
@@ -144,6 +159,7 @@ if (offline) {
 } else {
   results.push(
     checkConsultApi({ office, probe: await safe(consultProbe) }),
+    checkVisaHandoffApi({ office, probe: await safe(visaHandoffProbe) }),
     checkProtectedApis(await safe(protectedStatuses)),
     checkLiveSite({ office, text: await safe(liveText) }),
     checkVisaSite({ office, text: await safe(visaText) }),

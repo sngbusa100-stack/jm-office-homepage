@@ -58,19 +58,35 @@ export function checkWording({ office, pages }) {
 }
 
 /** probe: 운영 /api/consult에 빈 POST를 보낸 응답 { status, body } 또는 null(네트워크 생략) */
-export function checkConsultApi({ office, probe }) {
-  const title = '운영 상담 접수 API(/api/consult)';
-  if (!probe) return result('consult-api', title, 'skip', '네트워크 확인 생략');
+/** CONSULT_OPEN으로 열고 닫는 API. 닫히면 503 not_accepting, 열리면 검증 단계에서 거절(isOpenReply)되어 기록이 남지 않는다. */
+function checkGatedApi({ id, title, office, probe, isOpenReply }) {
+  if (!probe) return result(id, title, 'skip', '네트워크 확인 생략');
   const closed = probe.status === 503 && probe.body?.error === 'not_accepting';
-  const open = probe.status === 400;
-  if (!closed && !open) return result('consult-api', title, 'fail', `알 수 없는 응답 ${probe.status}`);
+  const open = isOpenReply(probe);
+  if (!closed && !open) return result(id, title, 'fail', `알 수 없는 응답 ${probe.status}`);
   if (!office.isOpen && open) {
-    return result('consult-api', title, 'fail', '개업 전인데 접수가 열려 있음 — 업무신고 전 접수 위험. Vercel CONSULT_OPEN을 끄세요');
+    return result(id, title, 'fail', '개업 전인데 접수가 열려 있음 — 업무신고 전 접수 위험. Vercel CONSULT_OPEN을 끄세요');
   }
   if (office.isOpen && closed) {
-    return result('consult-api', title, 'fail', '개업 상태인데 접수가 닫혀 있음 — Vercel CONSULT_OPEN=true 설정 후 다시 배포');
+    return result(id, title, 'fail', '개업 상태인데 접수가 닫혀 있음 — Vercel CONSULT_OPEN=true 설정 후 다시 배포');
   }
-  return result('consult-api', title, 'ok', open ? '열림' : '닫힘');
+  return result(id, title, 'ok', open ? '열림' : '닫힘');
+}
+
+/** probe: 빈 요청 {}의 응답 */
+export function checkConsultApi({ office, probe }) {
+  return checkGatedApi({
+    id: 'consult-api', title: '운영 상담 접수 API(/api/consult)', office, probe,
+    isOpenReply: (p) => p.status === 400,
+  });
+}
+
+/** probe: 빈 토큰 꺼내기 {action:'consume', token:''}의 응답 — 제한기·저장소를 건드리지 않고 400으로 끝난다. */
+export function checkVisaHandoffApi({ office, probe }) {
+  return checkGatedApi({
+    id: 'visa-handoff-api', title: '비자 진단 전달 API(/api/visa-handoff)', office, probe,
+    isOpenReply: (p) => p.status === 400 && p.body?.error === 'invalid_token',
+  });
 }
 
 /** statuses: { 경로: 인증 없이 받은 HTTP 상태 } 또는 null */

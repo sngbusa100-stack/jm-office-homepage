@@ -6,6 +6,7 @@ export declare function checkOffice(office: Office): CheckResult;
 export declare function checkPolicy(input: { office: Office; effectiveDate: string; consentVersion: string; historyDates?: string[] }): CheckResult;
 export declare function checkWording(input: { office: Office; pages: { path: string; text: string }[] | null }): CheckResult;
 export declare function checkConsultApi(input: { office: Office; probe: { status: number; body: Record<string, unknown> } | null }): CheckResult;
+export declare function checkVisaHandoffApi(input: { office: Office; probe: { status: number; body: Record<string, unknown> } | null }): CheckResult;
 export declare function checkProtectedApis(statuses: Record<string, number> | null): CheckResult;
 export declare function checkVercelEnv(names: string[] | null, office: Office, options?: { offline?: boolean }): CheckResult;
 export declare function checkLiveSite(input: { office: Office; text: string | null }): CheckResult;

@@ -8,6 +8,7 @@ import {
   checkPolicy,
   checkProtectedApis,
   checkVercelEnv,
+  checkVisaHandoffApi,
   checkVisaSite,
   checkWording,
   manualItems,
@@ -99,6 +100,18 @@ describe('운영 접수 API', () => {
     expect(checkConsultApi({ office: OPEN_OFFICE, probe: { status: 400, body: { ok: false, errors: ['name'] } } }).status).toBe('ok');
     expect(checkConsultApi({ office: OPEN_OFFICE, probe: { status: 500, body: {} } }).status).toBe('fail');
     expect(checkConsultApi({ office: OPEN_OFFICE, probe: null }).status).toBe('skip');
+  });
+
+  it('비자 진단 전달 API도 개업 상태와 열림·닫힘이 맞아야 통과한다', () => {
+    const closed = { status: 503, body: { ok: false, error: 'not_accepting' } };
+    const open = { status: 400, body: { ok: false, error: 'invalid_token' } };
+    expect(checkVisaHandoffApi({ office: CLOSED_OFFICE, probe: closed }).status).toBe('ok');
+    expect(checkVisaHandoffApi({ office: OPEN_OFFICE, probe: open }).status).toBe('ok');
+    expect(checkVisaHandoffApi({ office: CLOSED_OFFICE, probe: open }).detail).toContain('업무신고');
+    expect(checkVisaHandoffApi({ office: OPEN_OFFICE, probe: closed }).detail).toContain('CONSULT_OPEN=true');
+    // 저장소 설정이 빠진 503(handoff_unavailable)은 열림·닫힘 어느 쪽도 아니다.
+    expect(checkVisaHandoffApi({ office: OPEN_OFFICE, probe: { status: 503, body: { error: 'handoff_unavailable' } } }).status).toBe('fail');
+    expect(checkVisaHandoffApi({ office: OPEN_OFFICE, probe: null }).status).toBe('skip');
   });
 });
 
