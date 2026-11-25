@@ -246,7 +246,7 @@
 - [x] 서버 날짜별 행 내보내기, 기간 선택·짝 단계 비율·분야/출처/날짜별 내역 화면, 시험 추가. `npm run check` 통과(vitest 793 + 124, skip 6)
 - [x] 빌드본에 시험 숫자를 넣어 ego lite로 PC·휴대폰 너비 확인(가로 넘침 없음, 기간 전환 합계 바뀜)
 - [x] 커밋·배포(2026-11-25 fec8529, 운영 관리 화면 묶음 AdminPage-6bExC-aT.js가 로컬 빌드와 같음을 확인. 진짜 숫자로 본 화면 확인은 주인님 로그인 뒤)
-- [ ] `npm run dev`에서 /admin 모듈 요청이 프록시에 막히는 문제 고치기(이번 변경 전부터 있던 문제)
+- [x] `npm run dev`에서 /admin이 "화면을 불러오지 못했습니다"로 안 열리던 문제 고침(2026-11-25): vite.config.ts 프록시 키를 '/api' 전체에서 점 없는 API 주소(`^/api/[w-]+(?.*)?$`)로 좁혀, 관리 화면이 가져다 쓰는 api/_reply-draft.mjs 등 소스 모듈은 vite가 내주게 함. ego lite로 localhost:5173/admin 로그인 화면 정상, 모듈 4개 200, /api/admin·/api/funnel?x=1·/api/visa-handoff는 프록시로 넘어감(로컬 API 없어 502). npm run check 통과.
 
 ## 2026-11-25 상담 재연락 관리
 - [x] 접수별 다음 연락일 저장·변경·연락 완료
