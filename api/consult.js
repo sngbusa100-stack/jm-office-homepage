@@ -10,6 +10,7 @@ import {
   redisConfig,
 } from './_store.mjs';
 import { applyCors } from './_cors.mjs';
+import { sendTelegram } from './_telegram.mjs';
 import { urgentReasons } from './_urgency.mjs';
 
 export default async function handler(req, res) {
@@ -117,26 +118,12 @@ export default async function handler(req, res) {
   res.status(200).json({ ok: true, id: record.id });
 }
 
+// 알림 실패는 무시한다. 고객에게 보내는 응답은 대기함에 저장된 상태로 결정한다.
 function notifyInquiry(record) {
-  return notifyOffice(formatTelegramMessage(null, { inquiryId: record.id, urgentReasons: urgentReasons(record) }));
+  return sendTelegram(formatTelegramMessage(null, { inquiryId: record.id, urgentReasons: urgentReasons(record) }));
 }
 
 async function reportStorageFailure(res, inquiryId) {
-  await notifyOffice(formatTelegramMessage(null, { inquiryId, storeError: true }));
+  await sendTelegram(formatTelegramMessage(null, { inquiryId, storeError: true }));
   res.status(503).json({ ok: false, error: 'inquiry_storage_unavailable' });
-}
-
-async function notifyOffice(text) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) return;
-  try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text }),
-    });
-  } catch {
-    // 고객에게 보내는 응답은 대기함에 저장된 상태로 결정한다.
-  }
 }

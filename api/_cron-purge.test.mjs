@@ -203,6 +203,28 @@ describe('매일 아침 운영 요약', () => {
     expect(records.get('JM-OLD').purged).toBe(true);
   });
 
+  it('요약 글을 만들다 오류가 나도 파기는 유지하고 summary_error로 502를 답한다', async () => {
+    vi.resetModules();
+    vi.doMock('./_daily-summary.mjs', async (importOriginal) => ({
+      ...(await importOriginal()),
+      formatDailySummary: () => { throw new Error('format failed'); },
+    }));
+    try {
+      const { default: brokenHandler } = await import('./cron-purge.js');
+      const records = sampleRecords();
+      const { sent } = stubServices(records);
+      const res = responseRecorder();
+      await brokenHandler(CRON_REQ, res);
+      expect(res.statusCode).toBe(502);
+      expect(res.body).toMatchObject({ ok: false, purged: 1, failed: [], summarySent: false, summaryError: 'summary_error' });
+      expect(sent).toHaveLength(0);
+      expect(records.get('JM-OLD').purged).toBe(true);
+    } finally {
+      vi.doUnmock('./_daily-summary.mjs');
+      vi.resetModules();
+    }
+  });
+
   it('Telegram 설정이 없으면 파기만 하고 502로 답한다', async () => {
     vi.stubEnv('TELEGRAM_BOT_TOKEN', '');
     const records = sampleRecords();

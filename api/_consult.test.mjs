@@ -128,6 +128,22 @@ describe('상담 API 핸들러', () => {
     expect(backend.telegramTexts[0]).not.toContain('⏰');
   });
 
+  it('Telegram 요청에는 제한시간을 걸고, 응답 없이 끊겨도 접수는 성공한다', async () => {
+    const backend = createBackend();
+    const signals = [];
+    vi.stubGlobal('fetch', vi.fn(async (url, init = {}) => {
+      if (String(url).startsWith('https://api.telegram.org/')) {
+        signals.push(init.signal);
+        throw new DOMException('The operation timed out.', 'TimeoutError');
+      }
+      return backend.fetch(url, init);
+    }));
+    const res = await invoke();
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
+    expect(res.statusCode).toBe(200);
+    expect(backend.values.has(`inquiry:${res.body.id}`)).toBe(true);
+  });
+
   it('기한 자가 응답을 저장하고 알림에 고객 직접 선택 긴급 줄을 넣는다', async () => {
     const backend = createBackend();
     vi.stubGlobal('fetch', backend.fetch);
