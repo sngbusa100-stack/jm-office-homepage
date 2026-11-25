@@ -70,7 +70,8 @@ const URGENT_OLD = {
   urgentReasons: ['diagnosis', 'selfReported'],
 };
 
-function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
+function stubAdminFetch(records: Record<string, unknown>[] = ITEMS) {
+  const items = records.map(item => ({ ...item }));
   const fetchMock = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
     if (options.method === 'POST') {
       return { ok: true, status: 200, json: async () => ({ ok: true, sessionToken: 'test-token' }) };
@@ -112,6 +113,7 @@ function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
           ? { memos: [...(base.memos ?? []), { at: '2026-07-17T04:00:00.000Z', text: body.memo }] }
           : {}),
       };
+      Object.assign(base, item);
       return { ok: true, status: 200, json: async () => ({ ok: true, item }) };
     }
     return { ok: false, status: 405, json: async () => ({ ok: false }) };
@@ -198,8 +200,11 @@ describe('접수 관리 페이지', () => {
     await user.click(within(item).getByRole('button', { name: '일정 저장' }));
     const saved = { id: ITEMS[0].id, followUpDate: '2026-07-20' };
     expect(patches()).toEqual([saved]);
-    await user.click(screen.getByRole('button', { name: '연락 완료' }));
-    expect(patches()).toEqual([saved, { id: ITEMS[0].id, followUpDate: null }]);
+    await user.click(within(item).getByRole('button', { name: '부재중' }));
+    await user.click(within(item).getByRole('button', { name: '통화함' }));
+    await user.click(within(item).getByRole('button', { name: '연락 완료' }));
+    expect(patches()).toEqual([saved, { id: ITEMS[0].id, memo: '부재중' },
+      { id: ITEMS[0].id, memo: '통화함' }, { id: ITEMS[0].id, followUpDate: null }]);
   });
 
   it('비밀번호 입력 전에는 목록을 요청하지 않는다', () => {

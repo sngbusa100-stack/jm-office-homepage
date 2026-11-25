@@ -490,8 +490,8 @@ export function AdminPage() {
                   )}
                 </p>
                 {item.status !== 'done' && <FollowUpEditor date={item.followUpDate}
-                  save={async (followUpDate) => {
-                    const result = await patchInquiry(token, item.id, { followUpDate });
+                  save={async (patch) => {
+                    const result = await patchInquiry(token, item.id, patch);
                     if (result.ok) replaceItem(result.value);
                     if (!result.ok && result.error === 'conflict') {
                       return '접수가 변경됐습니다. 새로고침 후 일정을 확인해 주세요.';
