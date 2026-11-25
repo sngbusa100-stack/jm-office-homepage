@@ -157,3 +157,7 @@
 - 원인: 출처를 `utm_source`로만 판정해서 운영 30일 설명 조회 94건이 전부 direct였다.
 - 변경: `src/lib/funnel.ts` `referrerSource()`가 referrer 호스트를 출처 묶음으로만 바꾼다. `captureAttribution()`은 UTM 출처도 세션 출처도 없을 때만 쓴다(UTM 우선, 한 방문 안에서는 처음 출처 유지). 접수 기록의 attribution.source와 비자 사이트로 넘기는 utm_source에도 같은 묶음 이름이 들어간다.
 - 다음·카카오는 같은 묶음(kakao)이라 관리 화면 표시를 "카카오·다음"으로 바꿨다.
+
+## 2026-11-25 사무소 점검 방문 퍼널 제외
+- 11/12 설명 조회 45건 몰림은 운영 점검 순회였다(체크리스트 기록). 그래서 `/admin`에서 로그인이 확인된 브라우저에 `localStorage funnel:internal=1`을 남기고 `trackFunnelEvent()`가 그 표시가 있으면 보내지 않게 했다(`src/lib/funnel.ts` `markInternalBrowser`).
+- localStorage는 주소(출처)별이라 jungmyungoffice.com에서만 적용된다. 표시를 지우려면 그 브라우저의 사이트 데이터를 지우면 된다.

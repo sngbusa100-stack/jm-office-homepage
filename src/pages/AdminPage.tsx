@@ -8,6 +8,7 @@ import {
   summarizeInquiries,
 } from '../lib/adminApi';
 import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/adminApi';
+import { markInternalBrowser } from '../lib/funnel';
 import { TOPIC_ROUTES, buildDirectReplyDraft, buildReplyDraft } from '../../api/_reply-draft.mjs';
 import { buildConsultBrief, consultBriefText } from '../../api/_consult-brief.mjs';
 import type { ConsultBriefSection } from '../../api/_consult-brief.mjs';
@@ -173,6 +174,8 @@ export function AdminPage() {
       setFunnel(null);
       return;
     }
+    // 로그인이 확인된 브라우저는 사무소 점검용이라 퍼널 집계에서 뺀다.
+    markInternalBrowser();
     setItems(result.value.items);
     setFunnel(result.value.funnel);
   }, []);

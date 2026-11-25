@@ -1,4 +1,4 @@
-import { safeSessionGet, safeSessionSet } from './browserStorage';
+import { readStorage, safeSessionGet, safeSessionSet, writeStorage } from './browserStorage';
 
 export const FUNNEL_EVENTS = [
   'landing_view',
@@ -184,6 +184,16 @@ export function captureAttribution(
   return merged;
 }
 
+const INTERNAL_KEY = 'funnel:internal';
+
+/**
+ * 관리 화면에 로그인한 브라우저는 사무소 점검용으로 보고 이후 퍼널을 보내지 않는다(2026-11-25).
+ * 운영 점검 순회가 손님 방문처럼 집계되던 문제(11/12 설명 조회 45건) 때문. 로그아웃해도 표시는 남긴다.
+ */
+export function markInternalBrowser(): void {
+  writeStorage('localStorage', INTERNAL_KEY, '1');
+}
+
 /**
  * 전환 이벤트는 업무분야·단계·유입 출처만 전송한다.
  * 개별 이동 경로와 익명 식별자도 중앙 서버에는 전송하지 않는다.
@@ -194,6 +204,7 @@ export async function trackFunnelEvent(
   endpoint = '/api/funnel',
 ): Promise<void> {
   if (!FUNNEL_EVENTS.includes(input.event) || !FUNNEL_DOMAINS.includes(input.domain)) return;
+  if (readStorage('localStorage', INTERNAL_KEY) === '1') return;
   const path = typeof input.path === 'string' ? input.path.slice(0, 160) : '';
   if (!path.startsWith('/')) return;
   try {

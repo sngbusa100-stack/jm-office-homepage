@@ -1,6 +1,7 @@
 import {
   captureAttribution,
   attributedExternalUrl,
+  markInternalBrowser,
   readAttribution,
   referrerSource,
   sanitizeAttribution,
@@ -10,6 +11,7 @@ import {
 describe('개인정보 없는 전환 퍼널 규격', () => {
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -120,6 +122,14 @@ describe('개인정보 없는 전환 퍼널 규격', () => {
       'domain',
       'event',
     ]);
+  });
+
+  it('관리 화면에 로그인한 브라우저는 퍼널을 보내지 않는다', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+    markInternalBrowser();
+    await trackFunnelEvent({ event: 'landing_view', domain: 'dui', path: '/services/dui' });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('통계 요청에는 원본 UTM 대신 정규화된 source 하나만 전송한다', async () => {

@@ -319,6 +319,8 @@ describe('접수 관리 페이지', () => {
     await screen.findByText(/접수 통계/);
     expect(fetchMock.mock.calls[0][1].method).toBe('GET');
     expect((fetchMock.mock.calls[0][1].headers as Record<string, string>).Authorization).toBe('Bearer saved-token');
+    // 로그인이 확인된 브라우저는 사무소 점검용으로 표시해 퍼널 집계에서 뺀다.
+    expect(localStorage.getItem('funnel:internal')).toBe('1');
   });
 
   it('잘못된 비밀번호이면 오류를 보여주고 다시 입력을 받는다', async () => {
