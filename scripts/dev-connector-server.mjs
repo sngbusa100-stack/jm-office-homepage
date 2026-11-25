@@ -14,6 +14,12 @@ const index = new Map(); // id → score
 function apply(cmd) {
   const [name, ...args] = cmd;
   switch (name) {
+    case 'EVAL': {
+      const [, , key, expected, next] = args;
+      if (data.get(key) !== expected) return 0;
+      data.set(key, next);
+      return 1;
+    }
     case 'GET': return data.get(args[0]) ?? null;
     case 'SET': data.set(args[0], args[1]); return 'OK';
     case 'MGET': return args.map((key) => data.get(key) ?? null);

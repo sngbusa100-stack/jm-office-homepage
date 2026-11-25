@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -103,6 +103,7 @@ function stubAdminFetch(items: Record<string, unknown>[] = ITEMS) {
       const base = ITEMS.find((item) => item.id === body.id)!;
       const item = {
         ...base,
+        ...('followUpDate' in body ? { followUpDate: body.followUpDate } : {}),
         ...(body.status ? { status: body.status } : {}),
         ...(body.memo
           ? { memos: [...(base.memos ?? []), { at: '2026-07-17T04:00:00.000Z', text: body.memo }] }
@@ -142,7 +143,54 @@ describe('접수 관리 페이지', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
+  });
+
+  it('한국 자정에는 오늘과 연체 일정만 표시하고 완료·파기·미예약 접수는 제외한다', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-19T15:00:00Z'));
+    const customers = [
+      { name: '오늘고객', followUpDate: '2026-07-20' },
+      { name: '연체고객', followUpDate: '2026-07-19' },
+      { name: '내일고객', followUpDate: '2026-07-21' },
+      { name: '완료고객', followUpDate: '2026-07-20', status: 'done' },
+      { name: '파기고객', followUpDate: '2026-07-20', purged: true },
+      { name: '미예약고객', followUpDate: null },
+    ].map((fields, i) => ({ ...ITEMS[0], ...fields, id: `JM-20260717-AB0${i}` }));
+    await login(stubAdminFetch(customers));
+    const queue = screen.getByRole('heading', { name: /오늘 연락할 고객/ }).closest('section')!;
+    for (const customer of customers.slice(0, 2)) {
+      expect(queue.textContent).toMatch(new RegExp(customer.name + '|' + customer.id));
+    }
+    for (const customer of customers.slice(2)) {
+      expect(queue.textContent).not.toMatch(new RegExp(customer.name + '|' + customer.id));
+    }
+  });
+
+  it('상태 필터에 가려진 접수도 재연락 목록에서 누르면 해당 카드를 펼친다', async () => {
+    const record = { ...ITEMS[0], followUpDate: '2020-01-01' };
+    const { user } = await login(stubAdminFetch([record]));
+    await user.click(screen.getByRole('button', { name: '완료 (0)' }));
+    const queue = screen.getByRole('region', { name: '오늘 연락할 고객' });
+    await user.click(within(queue).getByRole('button', { name: new RegExp(record.id) }));
+    await waitFor(() => expect(document.getElementById(`inquiry-${record.id}`)).toHaveAttribute('open'));
+  });
+
+  it('일정 저장은 날짜를, 연락 완료는 null을 해당 접수에 PATCH한다', async () => {
+    const { user, fetchMock } = await login(stubAdminFetch([ITEMS[0]]));
+    const item = screen.getByText(/JM-20260717-AB12/).closest('details')!;
+    await user.click(item.querySelector('summary')!);
+    const date = within(item).getByLabelText(/다음 연락일/);
+    fireEvent.change(date, { target: { value: '2026-07-20' } });
+    const patches = () => fetchMock.mock.calls
+      .filter(([, options]) => options.method === 'PATCH')
+      .map(([, options]) => JSON.parse(String(options.body)));
+    await user.click(within(item).getByRole('button', { name: '일정 저장' }));
+    const saved = { id: ITEMS[0].id, followUpDate: '2026-07-20' };
+    expect(patches()).toEqual([saved]);
+    await user.click(screen.getByRole('button', { name: '연락 완료' }));
+    expect(patches()).toEqual([saved, { id: ITEMS[0].id, followUpDate: null }]);
   });
 
   it('비밀번호 입력 전에는 목록을 요청하지 않는다', () => {

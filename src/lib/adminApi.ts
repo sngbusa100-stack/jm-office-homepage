@@ -31,6 +31,7 @@ export interface InquiryRecord {
   id: string;
   schemaVersion?: number;
   receivedAt: string;
+  followUpDate?: string;
   topic: string;
   status: 'new' | 'in_progress' | 'done' | 'on_hold';
   pipelineStage?: 'inquiry' | 'qualified' | 'retained' | 'work_completed';
@@ -122,6 +123,7 @@ async function callAdmin<T>(
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     if (response.status === 401) return { ok: false, error: 'unauthorized' };
+    if (response.status === 409) return { ok: false, error: 'conflict' };
     if (!response.ok) return { ok: false, error: 'server' };
     const data = await response.json();
     return { ok: true, value: data as T };
@@ -173,6 +175,7 @@ export async function patchInquiry(
   patch: {
     status?: InquiryRecord['status'];
     memo?: string;
+    followUpDate?: string | null;
     pipelineStage?: InquiryRecord['pipelineStage'];
   },
 ): Promise<AdminResult<InquiryRecord>> {

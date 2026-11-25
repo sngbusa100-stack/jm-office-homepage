@@ -1,5 +1,6 @@
 import { scryptSync } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import connector from './connector.js';
 import handler, { isAuthorized } from './admin.js';
 import { buildInquiryRecord } from './_store.mjs';
 
@@ -43,6 +44,12 @@ function mockRes() {
 /** Redis REST 흉내: 명령을 해석해 메모리 Map에 반영한다. */
 function stubRedis(data = new Map(), index = []) {
   function apply(cmd) {
+    if (cmd[0] === 'EVAL') {
+      const [, , , key, expected, next] = cmd;
+      if (data.get(key) !== expected) return 0;
+      data.set(key, next);
+      return 1;
+    }
     let result = null;
     if (cmd[0] === 'GET') result = data.get(cmd[1]) ?? null;
     if (cmd[0] === 'SET') {
@@ -227,6 +234,65 @@ describe('관리자 API 핸들러', () => {
     expect(JSON.parse(data.get(`inquiry:${urgent.id}`)).urgentReasons).toBeUndefined();
   });
 
+  it.each([
+    ['purge', 'schedule'], ['ack', 'schedule'], ['schedule', 'ack'],
+    ['schedule', 'memo'], ['schedule', 'schedule'],
+  ])('concurrent %s then %s preserves the winning write', async (first, second) => {
+    const { data } = stubRedis();
+    const id = 'JM-RACE';
+    const key = 'inquiry:' + id;
+    data.set(key, JSON.stringify({ id, name: 'private', status: 'new', memos: [] }));
+    vi.stubEnv('CONNECTOR_TOKEN', 'connector-secret');
+    const send = async (action, date) => {
+      const res = mockRes();
+      if (action === 'ack') {
+        await connector({ method: 'PATCH', headers: { authorization: 'Bearer connector-secret' },
+          body: { id, localCaseId: 'CASE-1' } }, res);
+      } else {
+        const body = action === 'schedule' ? { id, followUpDate: date } : { id, memo: 'memo' };
+        await handler({ method: action === 'purge' ? 'DELETE' : 'PATCH', headers: AUTH, body }, res);
+      }
+      return res.statusCode;
+    };
+    expect(await Promise.all([send(first, '2028-02-28'), send(second, '2028-02-29')])).toEqual([200, 409]);
+    const saved = JSON.parse(data.get(key));
+    if (first === 'purge') {
+      expect(saved.purged).toBe(true);
+      expect(saved.name).toBeUndefined();
+      expect(saved.followUpDate).toBeUndefined();
+    } else if (first === 'ack') {
+      expect(saved.localCaseId).toBe('CASE-1');
+      expect(saved.pulledAt).toBeTruthy();
+    } else {
+      expect(saved.followUpDate).toBe('2028-02-28');
+    }
+  });
+
+  it('rejects a date on a completed inquiry without saving any part of the patch', async () => {
+    const { data } = stubRedis();
+    const record = { id: 'JM-D', status: 'done', memos: [] };
+    data.set('inquiry:JM-D', JSON.stringify(record));
+    const res = mockRes();
+    await handler({ method: 'PATCH', headers: AUTH,
+      body: { id: record.id, memo: 'memo', followUpDate: '2028-02-29' } }, res);
+    expect(res.statusCode).toBe(409);
+    expect(JSON.parse(data.get('inquiry:JM-D'))).toEqual(record);
+  });
+
+  it('followUpDate PATCH sets and clears the stored date independently of status', async () => {
+    const { data } = stubRedis();
+    const id = 'JM-F';
+    data.set('inquiry:' + id, JSON.stringify({ id, status: 'on_hold' }));
+    for (const followUpDate of ['2028-02-29', null]) {
+      const res = mockRes();
+      await handler({ method: 'PATCH', headers: AUTH, body: { id, followUpDate } }, res);
+      expect(res.statusCode).toBe(200);
+      const saved = JSON.parse(data.get('inquiry:' + id));
+      expect(saved.status).toBe('on_hold');
+      expect(saved.followUpDate ?? null).toBe(followUpDate);
+    }
+  });
+
   it('PATCH는 상태·메모를 반영해 저장한다', async () => {
     const record = buildInquiryRecord(
       { name: '홍길동', phone: '010-1234-5678', topic: '인허가', message: '' },
@@ -335,6 +401,7 @@ describe('관리자 API 핸들러', () => {
     };
     data.set('inquiry:JM-P', JSON.stringify(purged));
     const cases = [
+      [{ method: 'PATCH', body: { id: 'JM-P', status: 'done', followUpDate: null } }, 409],
       [{ method: 'PATCH', body: { id: 'JM-P', memo: '메모' } }, 409],
       [{ method: 'PATCH', body: { id: 'JM-P', status: 'done', memo: '메모' } }, 409],
       [{ method: 'PATCH', body: { id: 'JM-P', pipelineStage: 'retained' } }, 409],

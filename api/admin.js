@@ -115,7 +115,8 @@ export default async function handler(req, res) {
       if (record.purged) {
         // 파기된 접수는 통계용 상태만 바꿀 수 있다(메모·수임 단계·재파기는 거절).
         const statusOnly =
-          req.method === 'PATCH' && body.memo === undefined && body.pipelineStage === undefined;
+          req.method === 'PATCH' && body.memo === undefined && body.pipelineStage === undefined
+          && body.followUpDate === undefined;
         if (!statusOnly || body.status === undefined) {
           res.status(409).json({ ok: false, error: 'already_purged' });
           return;
@@ -125,7 +126,10 @@ export default async function handler(req, res) {
           res.status(400).json({ ok: false, errors: result.errors });
           return;
         }
-        await store.save(result.value);
+        if (!await store.replaceIfCurrent(record, result.value)) {
+          res.status(409).json({ ok: false, error: 'write_conflict' });
+          return;
+        }
         res.status(200).json({ ok: true, item: withUrgency(result.value) });
         return;
       }
@@ -135,12 +139,16 @@ export default async function handler(req, res) {
           status: body.status,
           memo: body.memo,
           pipelineStage: body.pipelineStage,
+          followUpDate: body.followUpDate,
         });
         if (!result.ok) {
-          res.status(400).json({ ok: false, errors: result.errors });
+          res.status(result.errors.includes('inquiry_done') ? 409 : 400).json({ ok: false, errors: result.errors });
           return;
         }
-        await store.save(result.value);
+        if (!await store.replaceIfCurrent(record, result.value)) {
+          res.status(409).json({ ok: false, error: 'write_conflict' });
+          return;
+        }
         res.status(200).json({ ok: true, item: withUrgency(result.value) });
         return;
       }

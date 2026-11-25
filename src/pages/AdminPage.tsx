@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { readStorage, removeStorage, safeSessionGet, safeSessionSet, writeStorage } from '../lib/browserStorage';
 import {
   fetchAdminDashboard,
@@ -11,6 +11,7 @@ import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/admi
 import { TOPIC_ROUTES, buildDirectReplyDraft, buildReplyDraft } from '../../api/_reply-draft.mjs';
 import { buildConsultBrief, consultBriefText } from '../../api/_consult-brief.mjs';
 import type { ConsultBriefSection } from '../../api/_consult-brief.mjs';
+import { FollowUpEditor } from '../components/FollowUpEditor';
 import { findCheck } from '../data/checks';
 import { describeVisaDiagnosisAnswer } from '../data/visaDiagnosisLabels';
 import { describeVisaIntake } from '../data/visaIntake';
@@ -129,11 +130,20 @@ function formatDateTime(iso: string): string {
 }
 
 export function AdminPage() {
+  const koreaDate = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  const [today, setToday] = useState(koreaDate);
+  useEffect(() => {
+    const refreshDay = () => setToday(koreaDate());
+    const timer = window.setInterval(refreshDay, 60000);
+    window.addEventListener('focus', refreshDay);
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', refreshDay); };
+  }, []);
   const [token, setToken] = useState<string | null>(readSavedToken);
   const [password, setPassword] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(false);
   const [focusId] = useState<string | null>(() => INQUIRY_HASH.exec(window.location.hash)?.[1] ?? null);
+  const linkOpened = useRef(false);
   const [directTopic, setDirectTopic] = useState(DIRECT_TOPICS[0] ?? '');
   const [directName, setDirectName] = useState('');
   const [directResult, setDirectResult] = useState<{ brief: ConsultBriefSection[]; draft: string; notes: string[] } | null>(null);
@@ -172,8 +182,12 @@ export function AdminPage() {
 
   // 텔레그램 알림 링크(#접수번호)로 들어오면 목록을 불러온 뒤 그 접수로 내려간다.
   useEffect(() => {
-    if (!focusId || !items) return;
-    document.getElementById(`inquiry-${focusId}`)?.scrollIntoView?.({ block: 'start' });
+    if (!focusId || !items || linkOpened.current) return;
+    const target = document.getElementById(`inquiry-${focusId}`);
+    if (target) {
+      target.scrollIntoView?.({ block: 'start' });
+      linkOpened.current = true;
+    }
   }, [focusId, items]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
@@ -294,6 +308,20 @@ export function AdminPage() {
   }
 
   const stats = useMemo(() => summarizeInquiries(items ?? []), [items]);
+  const due = (items ?? []).filter(item =>
+    !item.purged && item.status !== 'done' && item.followUpDate && item.followUpDate <= today
+  ).sort((a, b) => a.followUpDate!.localeCompare(b.followUpDate!));
+
+  function showInquiry(id: string) {
+    setFilter('all');
+    window.requestAnimationFrame(() => {
+      const card = document.getElementById(`inquiry-${id}`) as HTMLDetailsElement | null;
+      if (!card) return;
+      card.open = true;
+      card.querySelector('summary')?.focus();
+      card.scrollIntoView?.({ block: 'start' });
+    });
+  }
   const urgentCount = useMemo(() => (items ?? []).filter(isUrgentItem).length, [items]);
   // 미처리(신규) 긴급 건을 맨 위로 올리고, 나머지는 서버가 준 순서를 그대로 둔다(안정 정렬).
   const visible = useMemo(
@@ -360,6 +388,15 @@ export function AdminPage() {
           {error}
         </p>
       )}
+
+      {items && <section aria-labelledby="follow-ups">
+        <h2 id="follow-ups">오늘 연락할 고객</h2>
+        {due.length ? <ul>{due.map(item => <li key={item.id}>
+          <button className="button" type="button" onClick={() => showInquiry(item.id)}>
+            {item.followUpDate === today ? '오늘' : '기한 지남'} · {item.followUpDate} · {item.name} · {item.topic} · {item.id}
+          </button>
+        </li>)}</ul> : <p className="note">오늘까지 예정된 재연락이 없습니다.</p>}
+      </section>}
 
       <section aria-labelledby="stats">
         <h2 id="stats">접수 통계</h2>
@@ -560,6 +597,15 @@ export function AdminPage() {
                     </>
                   )}
                 </p>
+                {item.status !== 'done' && <FollowUpEditor date={item.followUpDate}
+                  save={async (followUpDate) => {
+                    const result = await patchInquiry(token, item.id, { followUpDate });
+                    if (result.ok) replaceItem(result.value);
+                    if (!result.ok && result.error === 'conflict') {
+                      return '접수가 변경됐습니다. 새로고침 후 일정을 확인해 주세요.';
+                    }
+                    return result.ok ? '' : '재연락 일정을 저장하지 못했습니다. 다시 시도해 주세요.';
+                  }} />}
                 {(() => {
                   const brief = buildConsultBrief(item);
                   return brief && brief.length > 0 ? (

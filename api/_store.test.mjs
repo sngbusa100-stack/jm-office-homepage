@@ -6,6 +6,7 @@ import {
   PIPELINE_STAGES,
   STATUSES,
   acquireSubmissionProcessing,
+  applyConnectorStatus,
   applyInquiryPatch,
   buildInquiryRecord,
   checkRateLimit,
@@ -420,5 +421,24 @@ describe('Redis REST 저장소', () => {
       .fn()
       .mockResolvedValue({ ok: true, json: async () => ({ error: 'WRONGTYPE' }) });
     await expect(createInquiryStore(cfg, redisFail).get('X')).rejects.toThrow('redis_WRONGTYPE');
+  });
+});
+
+describe('follow-up dates', () => {
+  const scheduled = { status: 'new', pulledAt: '2026-01-01', followUpDate: '2026-12-01' };
+
+  it.each(['2026-02-29', '2026-04-31', '2026-1-01', '', 20260101, {}])('rejects invalid date %j', date => {
+    expect(applyInquiryPatch(scheduled, { followUpDate: date }).ok).toBe(false);
+  });
+
+  it('clears dates on admin completion, connector completion and purge', () => {
+    const done = applyInquiryPatch(scheduled, { status: 'done' }).value;
+    expect(done.followUpDate).toBeUndefined();
+    expect(purgeInquiryRecord(scheduled).followUpDate).toBeUndefined();
+    const closed = applyConnectorStatus(scheduled, { status: 'done', localStatus: 'closed', closeReason: 'manual' }).value;
+    expect(closed.followUpDate).toBeUndefined();
+    const replay = applyConnectorStatus(closed, { status: 'in_progress', localStatus: 'replied', followUpDate: scheduled.followUpDate });
+    expect(replay.value.status).toBe('done');
+    expect(replay.value.followUpDate).toBeUndefined();
   });
 });

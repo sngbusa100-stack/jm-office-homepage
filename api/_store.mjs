@@ -100,7 +100,22 @@ export function applyInquiryPatch(record, patch = {}, now = new Date()) {
       errors.push('pipeline_stage');
     }
   }
-  if (patch.status === undefined && patch.memo === undefined && patch.pipelineStage === undefined) {
+  if (patch.followUpDate !== undefined) {
+    if (record.purged) return { ok: false, errors: ['purged'] };
+    const date = patch.followUpDate;
+    if (date === null) {
+      delete next.followUpDate;
+    } else if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+      && new Date(date + 'T00:00:00Z').toJSON()?.slice(0, 10) === date) {
+      if (next.status === 'done') return { ok: false, errors: ['inquiry_done'] };
+      next.followUpDate = date;
+    } else {
+      errors.push('follow_up_date');
+    }
+  }
+  if (next.status === 'done') delete next.followUpDate;
+  if (patch.status === undefined && patch.memo === undefined && patch.pipelineStage === undefined
+    && patch.followUpDate === undefined) {
     errors.push('empty_patch');
   }
 
@@ -192,6 +207,7 @@ export function applyConnectorStatus(record, input = {}, now = new Date()) {
   const next = { ...record, status: nextStatus };
   // 자동 파기 기산점: applyInquiryPatch와 같은 규칙(처음 완료될 때만 기록, 완료가 풀리면 지움).
   if (nextStatus === 'done') {
+    delete next.followUpDate;
     if (record.status !== 'done') next.doneAt = now.toISOString();
     else if (!record.doneAt) next.doneAt = record.updatedAt ?? record.receivedAt ?? now.toISOString();
   } else {
@@ -210,7 +226,7 @@ export function applyConnectorStatus(record, input = {}, now = new Date()) {
     else delete next.localCloseReason;
   }
 
-  const changed = ['status', 'doneAt', 'pipelineStage', 'localStatus', 'localCloseReason']
+  const changed = ['followUpDate', 'status', 'doneAt', 'pipelineStage', 'localStatus', 'localCloseReason']
     .some((key) => next[key] !== record[key]);
   if (!changed) return { ok: true, value: record, already: true };
   next.updatedAt = now.toISOString();
@@ -374,6 +390,8 @@ export async function checkRateLimit(cfg, key, { limit = 5, windowSec = 60 } = {
 
 /** Upstash Redis REST 기반 접수 저장소. fetchImpl 주입으로 테스트한다. */
 export function createInquiryStore(cfg, fetchImpl = fetch) {
+  // Redis에 저장된 원문 그대로 비교한다. 과거 JSON의 공백과 키 순서도 보존한다.
+  const snapshots = new WeakMap();
   const key = (id) => `${KEY_PREFIX}${id}`;
   return {
     async save(record) {
@@ -388,7 +406,22 @@ export function createInquiryStore(cfg, fetchImpl = fetch) {
     },
     async get(id) {
       const raw = await command(cfg, ['GET', key(id)], fetchImpl);
-      return raw ? JSON.parse(raw) : null;
+      if (!raw) return null;
+      const record = JSON.parse(raw);
+      snapshots.set(record, raw);
+      return record;
+    },
+    async replaceIfCurrent(previous, next) {
+      if (!snapshots.has(previous) || previous.id !== next.id) throw new Error('invalid_snapshot');
+      // 기존 접수의 접수일과 인덱스는 그대로 두고 본문만 원자적으로 교체한다.
+      const script = `if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
+        redis.call('SET', KEYS[1], ARGV[2])
+        return 1`;
+      const result = await command(cfg, [
+        'EVAL', script, 1, key(previous.id), snapshots.get(previous), JSON.stringify(next),
+      ], fetchImpl);
+      if (result !== 0 && result !== 1) throw new Error('invalid_cas_response');
+      return result === 1;
     },
     /** 본문 저장 후 목록 인덱스가 빠진 경우 재등록한다(멱등). */
     async ensureIndexed(record) {

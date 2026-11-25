@@ -22,6 +22,12 @@ function mockRes() {
 /** Redis REST 흉내 — 단일 명령과 multi-exec 트랜잭션 모두 처리. */
 function stubRedis(data = new Map(), index = []) {
   function apply(cmd) {
+    if (cmd[0] === 'EVAL') {
+      const [, , , key, expected, next] = cmd;
+      if (data.get(key) !== expected) return 0;
+      data.set(key, next);
+      return 1;
+    }
     let result = null;
     if (cmd[0] === 'GET') result = data.get(cmd[1]) ?? null;
     if (cmd[0] === 'SET') {

@@ -89,7 +89,10 @@ export default async function handler(req, res) {
             .json({ ok: false, errors: result.errors });
           return;
         }
-        if (!result.already) await store.save(result.value);
+        if (!result.already && !await store.replaceIfCurrent(record, result.value)) {
+          res.status(409).json({ ok: false, error: 'write_conflict' });
+          return;
+        }
         res.status(200).json({ ok: true, item: result.value, already: Boolean(result.already) });
         return;
       }
