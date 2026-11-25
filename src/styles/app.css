@@ -8,7 +8,9 @@ a { color: inherit; }
 h1, h2, h3 { line-height: var(--lh-tight); letter-spacing: -0.025em; word-break: keep-all; overflow-wrap: break-word; }
 /* 한국어 본문이 단어 중간에서 끊기지 않게(예: "이의신청·행 / 정심판"). 긴 영문·주소는 overflow-wrap이 받아 준다. */
 p, li, dt, dd, th, td, summary, label { word-break: keep-all; overflow-wrap: break-word; }
-h2 { font-size: clamp(1.55rem, 2.4vw, 2rem); }
+/* 제목 아래 기본 간격은 여기 한 곳에서 정한다(2026-11-26, 전에는 목록마다 제각각이라 '진행 절차' 등 50여 곳이 0px).
+   다른 값이 필요한 곳(.section-heading h2, 접는 제목 등)은 그 클래스 규칙이 덮어쓴다. */
+h2 { font-size: clamp(1.55rem, 2.4vw, 2rem); margin-bottom: 16px; }
 h3 { font-size: var(--fs-lg); }
 
 :where(a, button, input, select, textarea, summary):focus-visible {
@@ -296,7 +298,7 @@ nav#global-nav a.active {
 /* --- 진단 선택 화면의 통지서 준비 안내 --- */
 .prep-guide { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr); gap: 32px; align-items: center; background: var(--primary-dark); color: #fff; border-radius: var(--radius-lg); padding: 28px 30px; margin-bottom: 32px; box-shadow: var(--shadow-md); }
 .prep-guide .eyebrow { color: #f1d597; }
-.prep-guide h2 { font-size: var(--fs-xl); }
+.prep-guide h2 { font-size: var(--fs-xl); margin-bottom: 0; } /* 제목이 칸의 마지막 줄이라 기본 16px를 주면 띠만 높아진다 */
 .prep-guide .guide-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .prep-guide .guide-list li { border-top: 0; border-left: 1px solid rgb(255 255 255 / 14%); padding: 4px 0 4px 18px; }
 
@@ -323,6 +325,7 @@ nav#global-nav a.active {
 .trust-list li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: 700; }
 
 .button-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.card > .button-row:not(:last-child) { margin-bottom: 16px; } /* 버튼 아래 글줄이 붙지 않게(오시는 길 연락처: 카카오톡 버튼 ↔ 팩스) */
 
 .consult-cta {
   border-left: 4px solid var(--accent);
