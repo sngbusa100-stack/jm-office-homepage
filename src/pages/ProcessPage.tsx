@@ -11,7 +11,7 @@ export function ProcessPage() {
 
       <section aria-labelledby="steps">
         <h2 id="steps">{processGuide.steps.title}</h2>
-        <ol className="process-grid">
+        <ol className="process-grid process-grid--three-columns">
           {processGuide.steps.items.map((step) => (
             <li key={step.title}><h3>{step.title}</h3><p>{step.detail}</p></li>
           ))}

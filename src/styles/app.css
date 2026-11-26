@@ -380,6 +380,9 @@ nav#global-nav a.active {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   counter-reset: process;
 }
+@media (min-width: 769px) {
+  .process-grid--three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .process-grid > *, .process-list > * {
   counter-increment: process;
   position: relative;
