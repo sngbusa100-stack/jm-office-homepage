@@ -4,6 +4,8 @@ import type { DeadlineReport } from '../data/deadlineReport';
 /** 진단 결과에서 상담으로 이동할 때 함께 전달되는 셀프 진단 상세. */
 export interface ConsultDiagnosis {
   domain: string;
+  /** 문항 판 표시(api/_diagnosis-routing.mjs diagnosisForm). 서버는 지금 판과 다르면 진단을 받지 않는다. */
+  form: string;
   /** questionId → optionId */
   answers: Record<string, string>;
   counts: Record<string, number>;

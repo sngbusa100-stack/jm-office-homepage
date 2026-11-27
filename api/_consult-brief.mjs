@@ -5,7 +5,7 @@
 // 기한 날짜를 계산하지 않는다. 화면 번들에도 들어가므로 서버 전용 모듈을 가져오지 않는다.
 
 import LABELS from './_reply-labels.mjs';
-import { TOPIC_ROUTES, planReply } from './_reply-draft.mjs';
+import { TOPIC_ROUTES, isPreviousForm, planReply } from './_reply-draft.mjs';
 import { urgentReasons } from './_urgency.mjs';
 import { matchesAnswers } from './_diagnosis-routing.mjs';
 
@@ -56,7 +56,7 @@ export function classifyDiagnosis(diagnosis) {
       questionId: question.id,
       questionText: labels[question.id]?.text ?? question.id,
       answerLabel: labels[question.id]?.options[optionId] ?? optionId,
-      level: option.level,
+      level: override?.level ?? option.level,
       note: override ? override.note : option.note,
       lawRef: override ? override.lawRef : option.lawRef,
     });
@@ -99,7 +99,7 @@ export function buildConsultBrief(record) {
     summary.push(`처분서·통지서 기한(고객 답, 증빙 전): ${LABELS.brief.deadlineReport[record.deadlineReport]}`);
   }
   const savedAnswers = describeDiagnosis(record.diagnosis);
-  const previousForm = savedAnswers.some((entry) => entry.legacy);
+  const previousForm = isPreviousForm(record.diagnosis) || savedAnswers.some((entry) => entry.legacy);
   const diagnosisItems = record.diagnosis && !previousForm ? classifyDiagnosis(record.diagnosis) : [];
   if (diagnosisItems.length > 0) {
     const counts = LEVEL_ORDER.map((level) => [level, diagnosisItems.filter((i) => i.level === level).length])
@@ -125,7 +125,10 @@ export function buildConsultBrief(record) {
       ),
     });
   } else if (previousForm) {
-    sections.push({ title: '이전 셀프 진단에 남긴 답변', lines: savedAnswers.map((e) => `${e.question} → ${e.answer}`) });
+    sections.push({
+      title: '이전 셀프 진단에 남긴 답변(문항이 바뀌기 전 답 — 문구가 당시와 다를 수 있어 등급·안내는 붙이지 않음)',
+      lines: savedAnswers.map((e) => `${e.question} → ${e.answer}`),
+    });
   } else if (plan && plan.recap.length > 0) {
     sections.push({ title: '고객이 이미 알려 준 것(증빙 전)', lines: plan.recap });
   }

@@ -46,7 +46,7 @@ describe('진단 흐름', () => {
 
   it('조사 중이고 측정을 거부했다면 통지서 날짜와 측정 수치를 묻거나 저장하지 않는다', async () => {
     const visited = await finishDui({ 'dui-disposition': 'investigation', 'dui-refusal': 'yes' });
-    const stored = JSON.parse(sessionStorage.getItem('check:dui')!);
+    const stored = JSON.parse(sessionStorage.getItem('check:dui')!).answers;
     for (const id of ['dui-elapsed', 'dui-procedure', 'dui-bac']) {
       expect(visited).not.toContain(id);
       expect(stored).not.toHaveProperty(id);

@@ -1,3 +1,5 @@
+import { diagnosisForm } from '../../api/_diagnosis-routing.mjs';
+import { checks } from '../data/checks';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
@@ -40,6 +42,7 @@ async function answerVisaIntake(user: ReturnType<typeof userEvent.setup>) {
 /** 진단 결과 화면이 세션에 남기는 음주운전 진단(답변 3개). */
 const DUI_DIAGNOSIS = {
   domain: 'dui',
+  form: diagnosisForm(checks.dui),
   answers: { 'dui-disposition': 'revoke', 'dui-history': 'none', 'dui-elapsed': 'd61to90' },
   counts: { urgent: 1, documents: 0, official: 1, ready: 1 },
 };

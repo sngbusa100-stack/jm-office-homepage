@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildConsultBrief, classifyDiagnosis, consultBriefText } from './_consult-brief.mjs';
 import { TOPICS } from './_validate.mjs';
+import LABELS from './_reply-labels.mjs';
 
 const titles = (sections) => sections.map((s) => s.title);
 const section = (sections, title) => sections.find((s) => s.title === title);
@@ -58,5 +59,24 @@ describe('상담 준비 메모', () => {
   it('선택지 목록에 없는 옛 답은 버린다', () => {
     expect(classifyDiagnosis({ domain: 'dui', answers: { 'dui-bac': 'high' } })).toEqual([]);
     expect(classifyDiagnosis({ domain: 'nope', answers: {} })).toEqual([]);
+  });
+});
+
+describe('문항 판이 다른 옛 접수 기록(2026-11-27)', () => {
+  const answers = { 'dui-disposition': 'revoke', 'dui-elapsed': 'd61to90', 'dui-history': 'none' };
+  const record = (form) => ({ id: 'JM-OLD', name: '홍길동', topic: '음주운전 면허 구제', diagnosis: { domain: 'dui', form, answers, counts: { urgent: 1 } } });
+
+  it('판이 다르면 지금 문항의 등급·안내를 붙이지 않고 남긴 답만 보여 준다', () => {
+    const text = consultBriefText(buildConsultBrief(record('old-form')));
+    expect(text).toContain('이전 셀프 진단에 남긴 답변');
+    expect(text).not.toContain('[먼저 확인할 일정]');
+    expect(text).not.toMatch(/셀프 진단\(.+\): /);
+  });
+
+  it('판 표시가 없는 기록(판 표시 전 시험 접수)과 지금 판은 지금 문항으로 본다', () => {
+    for (const form of [undefined, LABELS.brief.checks.dui.form]) {
+      const text = consultBriefText(buildConsultBrief(record(form)));
+      expect(text).toContain('[먼저 확인할 일정]');
+    }
   });
 });

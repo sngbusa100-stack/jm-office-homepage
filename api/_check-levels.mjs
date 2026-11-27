@@ -183,6 +183,52 @@ export const visibility = {
     }
   }
 };
+// 문항 판 표시(api/_diagnosis-routing.mjs diagnosisForm). 문항을 고치면 바뀐다.
+export const forms = {
+  "permit": "yx5fls",
+  "suspension": "1uq53z6",
+  "dui": "dg6woy",
+  "veterans": "ope175",
+  "land": "1djwkg9",
+  "appeal": "1rc6yr2",
+  "procurement": "1kkx35b"
+};
+// 다른 답에 따라 등급을 바꾸는 덮어쓰기(src/types/content.ts AnswerOverride.level)
+export const overrides = {
+  "permit": [],
+  "suspension": [],
+  "dui": [
+    {
+      "questionId": "dui-elapsed",
+      "when": {
+        "dui-elapsed": [
+          "d31to60",
+          "d61to90",
+          "over90",
+          "unknown"
+        ],
+        "dui-procedure": [
+          "objection"
+        ]
+      },
+      "level": "ready"
+    },
+    {
+      "questionId": "dui-elapsed",
+      "when": {
+        "dui-procedure": [
+          "appeal",
+          "appeal-done"
+        ]
+      },
+      "level": "documents"
+    }
+  ],
+  "veterans": [],
+  "land": [],
+  "appeal": [],
+  "procurement": []
+};
 export default {
   "permit": {
     "permit-type": {

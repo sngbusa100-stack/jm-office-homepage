@@ -9,6 +9,7 @@ import { services } from '../data/services';
 import { VISA_INTAKE_LABELS } from '../data/visaIntake';
 import { LEVEL_LABEL } from '../domain/diagnosis';
 import type { ResultLevel } from '../types/content';
+import { diagnosisForm } from '../../api/_diagnosis-routing.mjs';
 
 /** 상담 준비 메모(api/_consult-brief.mjs)가 쓰는 분야별 업무 안내 — 업무 상세 페이지(services.ts)와 같은 내용. */
 export interface BriefTopicLabels {
@@ -23,9 +24,11 @@ export interface BriefTopicLabels {
 /** 셀프 진단 결과 화면이 고객에게 보여 준 안내(src/domain/diagnosis.ts classifyAnswers와 같은 규칙). */
 export interface BriefCheckLabels {
   title: string;
+  /** 문항 판 표시(api/_diagnosis-routing.mjs diagnosisForm). 접수 기록의 diagnosis.form과 다르면 옛 문항으로 받은 답이다. */
+  form: string;
   /** 문항 순서대로. 선택지별 등급·안내문·근거 */
   questions: { id: string; showWhen?: Record<string, string[]>; options: Record<string, { level: ResultLevel; note: string; lawRef?: string }> }[];
-  overrides: { questionId: string; when: Record<string, string[]>; note: string; lawRef?: string }[];
+  overrides: { questionId: string; when: Record<string, string[]>; note: string; lawRef?: string; level?: string }[];
 }
 
 export interface ReplyLabels {
@@ -72,6 +75,7 @@ function buildBriefLabels(): ReplyLabels['brief'] {
         domain,
         {
           title: definition.title,
+          form: diagnosisForm(definition),
           questions: definition.questions.map((q) => ({
             id: q.id,
             ...(q.showWhen ? { showWhen: q.showWhen } : {}),
@@ -87,6 +91,7 @@ function buildBriefLabels(): ReplyLabels['brief'] {
             when: o.when,
             note: o.note,
             ...(o.lawRef ? { lawRef: o.lawRef } : {}),
+            ...(o.level ? { level: o.level } : {}),
           })),
         },
       ]),

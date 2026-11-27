@@ -1,6 +1,6 @@
 // 상담 접수 검증·포맷 (api/consult.js에서 사용, _접두사라 엔드포인트로 노출되지 않음)
 import { diagnosisTopicSlug, matchesAnswers } from './_diagnosis-routing.mjs';
-import CHECK_LEVELS, { visibility } from './_check-levels.mjs';
+import CHECK_LEVELS, { forms, overrides, visibility } from './_check-levels.mjs';
 import { sanitizeVisaHandoff } from './_visa-handoff.mjs';
 import { sanitizeVisaIntake } from './_visa-intake.mjs';
 import { DEADLINE_REPORTS } from './_urgency.mjs';
@@ -31,6 +31,7 @@ const DIAGNOSIS_TOPIC = {
 /**
  * 셀프 진단 첨부 데이터를 실제 진단 정의와 대조해 정리한다.
  * - 존재하지 않는 도메인이면 진단 전체를 제외(null) — 접수는 막지 않는다.
+ * - 문항 판 표시(form)가 지금 문항과 다르면 진단 전체를 제외한다.
  * - 존재하지 않는 문항·선택지는 버린다.
  * - counts는 클라이언트 값을 믿지 않고 검증된 답변의 등급으로 서버가 재계산한다
  *   (긴급 표시 위조 방지).
@@ -40,21 +41,29 @@ export function sanitizeDiagnosis(input) {
   const domain = typeof input.domain === 'string' ? input.domain.trim() : '';
   const questions = CHECK_LEVELS[domain];
   if (!Object.hasOwn(CHECK_LEVELS, domain)) return null;
+  // 지금 문항과 판이 다른 답(문항을 고치기 전에 열어 둔 화면에서 보낸 답)은 같은 ID라도 뜻이 다를 수 있어 받지 않는다.
+  if (input.form !== forms[domain]) return null;
 
   const answersIn = typeof input.answers === 'object' && input.answers !== null ? input.answers : {};
   const answers = {};
-  const counts = {};
   for (const [questionId, options] of Object.entries(questions)) {
     if (!matchesAnswers(visibility[domain]?.[questionId], answers)) continue;
     const optionId = answersIn[questionId];
     if (typeof optionId !== 'string') continue;
     if (!Object.hasOwn(options, optionId)) continue;
-    const level = options[optionId];
     answers[questionId] = optionId;
+  }
+  // 등급은 화면(src/domain/diagnosis.ts classifyAnswers)과 같이 덮어쓰기 규칙을 먼저 본다.
+  const counts = {};
+  for (const [questionId, optionId] of Object.entries(answers)) {
+    const override = overrides[domain]?.find(
+      (o) => o.questionId === questionId && Object.entries(o.when).every(([id, ids]) => ids.includes(answers[id])),
+    );
+    const level = override?.level ?? questions[questionId][optionId];
     counts[level] = (counts[level] ?? 0) + 1;
   }
 
-  return { domain, answers, counts };
+  return { domain, form: forms[domain], answers, counts };
 }
 
 /** 상담과 함께 저장되는 유입 식별자. 허용 키 4종 외 값은 버린다. */

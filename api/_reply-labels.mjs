@@ -1216,6 +1216,7 @@ export default {
     "checks": {
       "permit": {
         "title": "인허가 신청·변경 사전 점검",
+        "form": "yx5fls",
         "questions": [
           {
             "id": "permit-type",
@@ -1535,6 +1536,7 @@ export default {
       },
       "suspension": {
         "title": "영업정지 처분 대응 사전 점검",
+        "form": "1uq53z6",
         "questions": [
           {
             "id": "susp-business",
@@ -1802,6 +1804,7 @@ export default {
       },
       "dui": {
         "title": "음주운전 면허 처분 사전 점검",
+        "form": "dg6woy",
         "questions": [
           {
             "id": "dui-disposition",
@@ -2101,7 +2104,8 @@ export default {
               ]
             },
             "note": "경찰의 이의신청 결과를 통보받은 날부터 90일 안에 행정심판을 청구할 수 있습니다. 결과 전에 먼저 행정심판을 청구하면 이 특례는 적용되지 않습니다.",
-            "lawRef": "도로교통법 제94조"
+            "lawRef": "도로교통법 제94조",
+            "level": "ready"
           },
           {
             "questionId": "dui-elapsed",
@@ -2142,12 +2146,14 @@ export default {
               ]
             },
             "note": "기한 안에 냈는지는 행정심판을 청구한 날을 기준으로 봅니다. 접수증과 위원회가 보낸 최근 문서를 확인하세요.",
-            "lawRef": "행정심판법 제27조"
+            "lawRef": "행정심판법 제27조",
+            "level": "documents"
           }
         ]
       },
       "veterans": {
         "title": "국가유공자 등록 사전 점검",
+        "form": "ope175",
         "questions": [
           {
             "id": "vet-applicant",
@@ -2367,6 +2373,7 @@ export default {
       },
       "land": {
         "title": "토지개발·보상·문서 사전 점검",
+        "form": "1djwkg9",
         "questions": [
           {
             "id": "land-topic",
@@ -2571,6 +2578,7 @@ export default {
       },
       "appeal": {
         "title": "일반 행정심판 사전 점검",
+        "form": "1rc6yr2",
         "questions": [
           {
             "id": "appeal-stage",
@@ -2761,6 +2769,7 @@ export default {
       },
       "procurement": {
         "title": "공공조달·기업인증 사전 점검",
+        "form": "1kkx35b",
         "questions": [
           {
             "id": "procurement-topic",

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { checkPath } from '../domain/diagnosis';
+import { diagnosisForm } from '../../api/_diagnosis-routing.mjs';
 import type { CheckDefinition } from '../types/content';
 import { findCheck } from '../data/checks';
 import { safeSessionSet } from '../lib/browserStorage';
@@ -47,7 +48,7 @@ function Questionnaire({ definition }: { definition: CheckDefinition }) {
   function goNext() {
     if (!selected) return;
     if (isLast) {
-      safeSessionSet(`check:${definition.domain}`, JSON.stringify(path.answers));
+      safeSessionSet(`check:${definition.domain}`, JSON.stringify({ form: diagnosisForm(definition), answers: path.answers }));
       void trackFunnelEvent({
         event: 'diagnosis_complete',
         domain: definition.domain,

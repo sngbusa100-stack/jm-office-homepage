@@ -373,3 +373,20 @@ describe('되짚기 문구는 사무소 말투다(2026-11-27)', () => {
     expect(text).not.toContain('받았어요');
   });
 });
+
+describe('문항 판이 다른 옛 접수 기록(2026-11-27)', () => {
+  it('같은 ID라도 뜻이 바뀌었을 수 있어 되짚지 않고 다시 묻는다', () => {
+    const diagnosis = { domain: 'dui', answers: { 'dui-history': 'none' } };
+    const current = buildReplyDraft(record('음주운전 면허 구제', { diagnosis })).text;
+    expect(current).toContain('- 최근 5년 음주운전 이력: 없음');
+    const old = buildReplyDraft(record('음주운전 면허 구제', { diagnosis: { ...diagnosis, form: 'old-form' } })).text;
+    expect(old).not.toContain('최근 5년 음주운전 이력:');
+    expect(questions(old).some((q) => q.includes('최근 5년 안의 음주운전 이력'))).toBe(true);
+  });
+
+  it('지금 판 표시가 붙은 기록은 되짚는다', () => {
+    const form = LABELS.brief.checks.dui.form;
+    const text = buildReplyDraft(record('음주운전 면허 구제', { diagnosis: { domain: 'dui', form, answers: { 'dui-history': 'none' } } })).text;
+    expect(text).toContain('- 최근 5년 음주운전 이력: 없음');
+  });
+});

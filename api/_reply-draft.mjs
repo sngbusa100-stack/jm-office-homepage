@@ -355,6 +355,15 @@ function answered(value) {
   return typeof value === 'string' && !UNANSWERED.includes(value);
 }
 
+/**
+ * 지금과 다른 판의 문항으로 받은 진단인지. 같은 ID라도 뜻·등급이 바뀌었을 수 있어 되짚거나 등급을 붙이지 않는다.
+ * 판 표시가 없는 기록(판 표시를 붙이기 전, 개업 전 시험 접수뿐)은 지금 판으로 본다.
+ */
+export function isPreviousForm(diagnosis) {
+  const form = diagnosis?.form;
+  return typeof form === 'string' && form !== LABELS.brief.checks[diagnosis.domain]?.form;
+}
+
 function diagnosisLabel(domain, questionId, value) {
   return LABELS.diagnosis[domain]?.[questionId]?.options[value]
     ?? LABELS.previousDiagnosis[domain]?.[questionId]?.options[value];
@@ -366,7 +375,8 @@ const SPECIAL_WORDING = { none: '마감일 없음', undecided: '아직 정하지
 
 /** 진단 분야 템플릿 → 질문·되짚기 목록 */
 function planDiagnosis(template, record) {
-  const diag = record.diagnosis?.domain === template.domain ? record.diagnosis : null;
+  // 옛 판 문항으로 받은 답은 되짚지 않고 모두 다시 묻는다.
+  const diag = record.diagnosis?.domain === template.domain && !isPreviousForm(record.diagnosis) ? record.diagnosis : null;
   const answers = diag?.answers && typeof diag.answers === 'object' ? diag.answers : {};
   // 선택지 목록에 없는 옛 값은 답하지 않은 것으로 본다(되짚을 라벨이 없으므로 다시 묻는다).
   const known = (id) => answered(answers[id]) && Boolean(diagnosisLabel(template.domain, id, answers[id]));

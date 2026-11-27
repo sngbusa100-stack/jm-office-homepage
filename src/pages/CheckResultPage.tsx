@@ -1,7 +1,7 @@
 import { office } from '../data/office';
 import { Link, useParams } from 'react-router-dom';
 import { findCheck } from '../data/checks';
-import { diagnosisTopicSlug } from '../../api/_diagnosis-routing.mjs';
+import { diagnosisForm, diagnosisTopicSlug } from '../../api/_diagnosis-routing.mjs';
 import { classifyAnswers, summarize, checkPath, LEVEL_LABEL, LEVEL_ORDER } from '../domain/diagnosis';
 import { safeSessionGet, safeSessionSet } from '../lib/browserStorage';
 import { NotFoundPage } from './NotFoundPage';
@@ -12,10 +12,13 @@ export function CheckResultPage() {
   if (!definition) return <NotFoundPage />;
 
   const raw = safeSessionGet(`check:${definition.domain}`);
+  const form = diagnosisForm(definition);
   let answers: Record<string, string> | null = null;
   if (raw) {
     try {
-      answers = JSON.parse(raw) as Record<string, string>;
+      // 문항을 고치기 전에 남긴 답(판 표시가 없거나 다름)은 뜻이 다를 수 있어 다시 진단받게 한다.
+      const saved = JSON.parse(raw) as { form?: unknown; answers?: Record<string, string> };
+      answers = saved?.form === form ? saved.answers ?? null : null;
     } catch {
       answers = null;
     }
@@ -41,6 +44,7 @@ export function CheckResultPage() {
   // 상담 접수에 함께 전달할 진단 상세 (도메인·답변·등급별 개수)
   const diagnosisPayload = JSON.stringify({
     domain: definition.domain,
+    form,
     answers,
     counts: summary.counts,
   });

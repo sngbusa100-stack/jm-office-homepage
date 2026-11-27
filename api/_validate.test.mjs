@@ -6,6 +6,9 @@ import {
   sanitizeDiagnosis,
   validateConsultPayload,
 } from './_validate.mjs';
+import { forms } from './_check-levels.mjs';
+
+const DUI_FORM = forms.dui;
 
 const valid = {
   name: '홍길동',
@@ -64,7 +67,7 @@ describe('상담 접수 검증', () => {
   it('진단·유입경로가 있으면 정리해 담고, 없으면 필드를 만들지 않는다', () => {
     const withExtras = validateConsultPayload({
       ...valid,
-      diagnosis: { domain: 'dui', answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, counts: { ready: 1, urgent: 1 } },
+      diagnosis: { domain: 'dui', form: DUI_FORM, answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, counts: { ready: 1, urgent: 1 } },
       sourcePath: '/check/dui/result',
       utmSource: 'naver_blog',
       attribution: {
@@ -78,6 +81,7 @@ describe('상담 접수 검증', () => {
     expect(withExtras.ok).toBe(true);
     expect(withExtras.value.diagnosis).toEqual({
       domain: 'dui',
+      form: DUI_FORM,
       answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' },
       counts: { ready: 1, urgent: 1 },
     });
@@ -149,7 +153,7 @@ describe('상담 접수 검증', () => {
   });
 
   it('셀프 진단은 상담 분야와 진단 분야가 같을 때만 담고, 다르면 진단과 진단 경로를 버린다', () => {
-    const diagnosis = { domain: 'dui', answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, counts: { ready: 1, urgent: 1 } };
+    const diagnosis = { domain: 'dui', form: DUI_FORM, answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, counts: { ready: 1, urgent: 1 } };
     const matched = validateConsultPayload({ ...valid, topic: '음주운전 면허 구제', diagnosis, sourcePath: '/check/dui/result' });
     expect(matched.value.diagnosis).toMatchObject({ domain: 'dui' });
 
@@ -163,7 +167,7 @@ describe('상담 접수 검증', () => {
     const result = validateConsultPayload({
       ...valid,
       topic: '출입국 · 비자',
-      diagnosis: { domain: 'dui', answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, counts: { ready: 1, urgent: 1 } },
+      diagnosis: { domain: 'dui', form: DUI_FORM, answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, counts: { ready: 1, urgent: 1 } },
       visaDiagnosis: {
         schemaVersion: 1,
         visaSlug: 'e7',
@@ -237,6 +241,7 @@ describe('진단 데이터 정리 (진단 정의 대조·등급 재계산)', () 
   it('없는 문항·선택지는 버리고 실제 정의만 남긴다', () => {
     const result = sanitizeDiagnosis({
       domain: 'dui',
+      form: DUI_FORM,
       answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90', '가짜문항': 'x', 'dui-bac': '가짜선택지' },
     });
     expect(result.answers).toEqual({ 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' });
@@ -245,6 +250,7 @@ describe('진단 데이터 정리 (진단 정의 대조·등급 재계산)', () 
   it('counts는 클라이언트 값을 무시하고 서버가 재계산한다 (긴급 위조 차단)', () => {
     const forged = sanitizeDiagnosis({
       domain: 'dui',
+      form: DUI_FORM,
       answers: { 'dui-disposition': 'suspend' }, // ready 등급 1개
       counts: { urgent: 99 },
     });
@@ -252,14 +258,42 @@ describe('진단 데이터 정리 (진단 정의 대조·등급 재계산)', () 
 
     const realUrgent = sanitizeDiagnosis({
       domain: 'dui',
+      form: DUI_FORM,
       answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, // urgent 등급
     });
     expect(realUrgent.counts).toEqual({ ready: 1, urgent: 1 });
   });
 
+  it('문항 판 표시가 없거나 지금 문항과 다르면 진단 전체를 제외한다(문항을 고치기 전에 열어 둔 화면)', () => {
+    const answers = { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' };
+    expect(sanitizeDiagnosis({ domain: 'dui', answers })).toBeNull();
+    expect(sanitizeDiagnosis({ domain: 'dui', form: 'old', answers })).toBeNull();
+    expect(sanitizeDiagnosis({ domain: 'dui', form: DUI_FORM, answers })).toMatchObject({ form: DUI_FORM, answers });
+    // 접수는 막지 않고 진단만 뺀다
+    const result = validateConsultPayload({ ...valid, topic: '음주운전 면허 구제', diagnosis: { domain: 'dui', answers } });
+    expect(result.ok).toBe(true);
+    expect(result.value).not.toHaveProperty('diagnosis');
+  });
+
+  it('덮어쓰기 규칙의 등급으로 긴급 개수를 센다(화면 결과와 같게)', () => {
+    // 처분 통지 61~90일이지만 이미 행정심판을 청구함 → 기한은 지난 일이라 긴급이 아님
+    const filed = sanitizeDiagnosis({
+      domain: 'dui', form: DUI_FORM,
+      answers: { 'dui-disposition': 'revoke', 'dui-elapsed': 'd61to90', 'dui-procedure': 'appeal' },
+    });
+    expect(filed.counts.urgent).toBeUndefined();
+    // 이의신청을 하지 않았으면 그대로 긴급
+    const none = sanitizeDiagnosis({
+      domain: 'dui', form: DUI_FORM,
+      answers: { 'dui-disposition': 'revoke', 'dui-elapsed': 'd61to90', 'dui-procedure': 'no' },
+    });
+    expect(none.counts.urgent).toBe(1);
+  });
+
   it('문자열이 아닌 답변 값은 건너뛴다', () => {
     const result = sanitizeDiagnosis({
       domain: 'dui',
+      form: DUI_FORM,
       answers: { 'dui-elapsed': 7, 'dui-disposition': 'suspend' },
     });
     expect(result.answers).toEqual({ 'dui-disposition': 'suspend' });

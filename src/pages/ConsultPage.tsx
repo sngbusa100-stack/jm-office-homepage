@@ -10,7 +10,7 @@ import { OfficeLocation } from '../components/OfficeLocation';
 import { VisaIntakeFields } from '../components/VisaIntakeFields';
 import { DeadlineReportField } from '../components/DeadlineReportField';
 import type { DeadlineReport } from '../data/deadlineReport';
-import { diagnosisTopicSlug } from '../../api/_diagnosis-routing.mjs';
+import { diagnosisForm, diagnosisTopicSlug } from '../../api/_diagnosis-routing.mjs';
 import { checkPath, classifyAnswers, summarize, LEVEL_LABEL } from '../domain/diagnosis';
 import { findCheck } from '../data/checks';
 import { CONSULT_TOPIC_BY_SLUG } from '../data/consultTopics';
@@ -137,7 +137,8 @@ function readDiagnosis(): ConsultDiagnosis | undefined {
     const parsed = JSON.parse(raw) as ConsultDiagnosis;
     if (typeof parsed.domain === 'string' && parsed.answers && typeof parsed.answers === 'object') {
       const definition = findCheck(parsed.domain);
-      if (!definition) return undefined;
+      // 문항을 고치기 전에 남긴 답(같은 탭에 남은 옛 진단)은 뜻이 다를 수 있어 쓰지 않는다.
+      if (!definition || parsed.form !== diagnosisForm(definition)) return undefined;
       const { answers } = checkPath(definition, parsed.answers);
       const { counts } = summarize(definition, classifyAnswers(definition, answers));
       return { ...parsed, answers, counts };
@@ -160,7 +161,8 @@ function describeDiagnosis(diagnosis: ConsultDiagnosis): { question: string; ans
 
 function buildPrefill(): string {
   const raw = safeSessionGet('consult:summary');
-  if (!raw) return '';
+  // 요약은 함께 남긴 진단이 지금 문항 판일 때만 쓴다.
+  if (!raw || !readDiagnosis()) return '';
   try {
     const summary = JSON.parse(raw) as { title: string; counts: Record<ResultLevel, number> };
     const parts = LEVEL_KEYS

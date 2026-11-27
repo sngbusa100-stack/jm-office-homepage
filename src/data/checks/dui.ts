@@ -134,6 +134,8 @@ export const dui: CheckDefinition = {
       when: { 'dui-elapsed': ['d31to60', 'd61to90', 'over90', 'unknown'], 'dui-procedure': ['objection'] },
       note: '경찰의 이의신청 결과를 통보받은 날부터 90일 안에 행정심판을 청구할 수 있습니다. 결과 전에 먼저 행정심판을 청구하면 이 특례는 적용되지 않습니다.',
       lawRef: '도로교통법 제94조',
+      // 결과를 기다리는 중이면 처분 통지일로 센 날짜는 급하지 않다(기한은 결과 통보일부터).
+      level: 'ready',
     },
     {
       questionId: 'dui-elapsed',
@@ -152,6 +154,8 @@ export const dui: CheckDefinition = {
       when: { 'dui-procedure': ['appeal', 'appeal-done'] },
       note: '기한 안에 냈는지는 행정심판을 청구한 날을 기준으로 봅니다. 접수증과 위원회가 보낸 최근 문서를 확인하세요.',
       lawRef: '행정심판법 제27조',
+      // 이미 청구했으면 청구 기한은 지나간 일이다 — 챙길 것은 접수증과 위원회 문서다.
+      level: 'documents',
     },
   ],
 };

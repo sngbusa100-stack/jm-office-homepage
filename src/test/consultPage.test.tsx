@@ -1,3 +1,5 @@
+import { diagnosisForm } from '../../api/_diagnosis-routing.mjs';
+import { checks } from '../data/checks';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AppRouter } from '../app/AppRouter';
@@ -42,10 +44,27 @@ describe('상담 페이지 (개업 전)', () => {
       domain: 'dui', title: '음주운전 면허 구제 사전 점검',
       counts: { urgent: 1, documents: 2, official: 0, ready: 3 },
     }));
+    sessionStorage.setItem('consult:diagnosis', JSON.stringify({
+      domain: 'dui', form: diagnosisForm(checks.dui), answers: { 'dui-disposition': 'revoke' }, counts: { ready: 1 },
+    }));
     renderAt('/consult');
     const textarea = screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement;
     expect(textarea.value).toContain('음주운전');
     expect(textarea.value).toContain('먼저 확인할 일정 1');
+  });
+
+  it('함께 남긴 진단이 문항을 고치기 전 판이면 요약도 채우지 않는다', () => {
+    sessionStorage.setItem('consult:summary', JSON.stringify({
+      domain: 'dui', title: '음주운전 면허 구제 사전 점검',
+      counts: { urgent: 1, documents: 0, official: 0, ready: 0 },
+    }));
+    sessionStorage.setItem('consult:diagnosis', JSON.stringify({
+      domain: 'dui', form: 'old', answers: { 'dui-disposition': 'revoke' }, counts: { ready: 1 },
+    }));
+    renderAt('/consult');
+    const textarea = screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement;
+    expect(textarea.value).not.toContain('셀프 진단 요약');
+    sessionStorage.clear();
   });
 
   it('긴급 대안 채널(110)을 안내한다', () => {

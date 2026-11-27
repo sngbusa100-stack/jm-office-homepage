@@ -31,7 +31,7 @@ describe('진단 분류', () => {
     expect(result.items).toHaveLength(0);
   });
 
-  it('이의신청·행정심판 진행 여부에 따라 처분 통지 후 기한 안내가 바뀌고 등급은 그대로다', () => {
+  it('이의신청·행정심판 진행 여부에 따라 처분 통지 후 기한 안내와 등급이 바뀐다', () => {
     const elapsedOf = (procedure: string, elapsed = 'over90') =>
       classifyAnswers(checks.dui, { 'dui-disposition': 'revoke', 'dui-elapsed': elapsed, 'dui-procedure': procedure }).items.find((i) => i.questionId === 'dui-elapsed')!;
 
@@ -41,8 +41,14 @@ describe('진단 분류', () => {
       expect(item.note).toContain('결과를 통보받은 날부터 90일');
       expect(item.note).not.toContain('기한이 지났습니다');
       expect(item.lawRef).toBe('도로교통법 제94조');
-      expect(item.level).toBe('urgent');
     }
+    // 결과를 기다리는 중이면 처분 통지일로 센 날짜는 급하지 않고, 결과를 받았으면 결과 수령일부터 확인해야 한다.
+    expect(elapsedOf('objection').level).toBe('ready');
+    expect(elapsedOf('objection-result').level).toBe('urgent');
+    expect(elapsedOf('no').level).toBe('urgent');
+    // 이미 행정심판을 청구했으면 청구 기한은 지난 일이다 — 접수증·위원회 문서를 챙긴다.
+    expect(elapsedOf('appeal').level).toBe('documents');
+    expect(elapsedOf('appeal-done').level).toBe('documents');
     expect(elapsedOf('appeal').note).toContain('청구한 날을 기준');
     expect(elapsedOf('objection', 'd31to60').note).not.toContain('이의신청 기한(60일)이 임박');
     // 이의신청 결과를 받은 사람은 처분 통지일을 몰라도·받지 않았다고 해도 결과 통보일 기준으로 안내한다.

@@ -1,3 +1,4 @@
+import { diagnosisForm } from '../../api/_diagnosis-routing.mjs';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -57,7 +58,7 @@ describe('개업 뒤 화면 문구', () => {
     sessionStorage.clear();
     const answers = Object.fromEntries(checks.dui.questions.map((q) => [q.id, q.options[0].id]));
     answers['dui-elapsed'] = 'over90';
-    sessionStorage.setItem('check:dui', JSON.stringify(answers));
+    sessionStorage.setItem('check:dui', JSON.stringify({ form: diagnosisForm(checks.dui), answers }));
     render(
       <MemoryRouter initialEntries={['/check/dui/result']}>
         <AppRouter />

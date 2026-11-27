@@ -59,7 +59,7 @@ export function classifyAnswers(definition: CheckDefinition, input: Answers): Di
       questionId: question.id,
       questionText: question.text,
       answerLabel: option.label,
-      level: option.level,
+      level: override?.level ?? option.level,
       note: override ? override.note : option.note,
       lawRef: override ? override.lawRef : option.lawRef,
     });
