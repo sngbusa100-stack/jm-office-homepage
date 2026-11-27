@@ -67,8 +67,8 @@ describe('출입국·비자 상담 접수 질문', () => {
     const user = userEvent.setup();
     renderPage('/consult?topic=visa');
     await fillContact(user);
-    await user.click(screen.getByLabelText('제 비자 문제입니다'));
-    await user.click(screen.getByLabelText(/만료가 임박함/));
+    await user.click(screen.getByLabelText('제 비자를 상담하고 싶어요'));
+    await user.click(screen.getByLabelText(/두 달 안에 만료/));
     expect(screen.getByLabelText(/체류기간 만료일/)).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText(/지금 가지고 있는 체류자격/), 'study');
     await user.click(screen.getByLabelText('지금 체류기간 늘리기(연장)'));
@@ -91,11 +91,11 @@ describe('출입국·비자 상담 접수 질문', () => {
     const user = userEvent.setup();
     renderPage('/consult?topic=visa');
     await fillContact(user);
-    await user.click(screen.getByLabelText('회사에서 외국인 직원을 채용하거나 관리합니다'));
+    await user.click(screen.getByLabelText('회사에서 외국인 직원의 비자를 문의해요'));
     expect(screen.getByText(/대표적인 한 명 기준으로 답하고, 나머지는 상담 내용 칸에/)).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /직원은 지금 어디에 있나요/ })).toBeInTheDocument();
     await user.click(screen.getByLabelText('2~5명'));
-    await user.click(screen.getByLabelText('현재 해외에 있음'));
+    await user.click(screen.getByLabelText('지금 한국 밖에 있어요'));
     expect(screen.queryByLabelText(/체류자격\(비자 종류\)/)).not.toBeInTheDocument();
     await user.click(screen.getByLabelText('처음 한국에 오기(비자 받기·초청)'));
     expect(screen.getByLabelText(/언제부터 근무해야 하나요/)).toBeInTheDocument();
@@ -132,7 +132,7 @@ describe('출입국·비자 상담 접수 질문', () => {
     mockFetch();
     const user = userEvent.setup();
     renderPage('/consult?topic=visa');
-    await user.click(screen.getByLabelText('한국에 있음 · 이미 만료됨'));
+    await user.click(screen.getByLabelText('한국에 있고, 만료일이 지났어요'));
     expect(screen.getByText(/외국인종합안내센터 1345\(해외 \+82-2-1345\)/)).toBeInTheDocument();
   });
 
@@ -148,7 +148,7 @@ describe('출입국·비자 상담 접수 질문', () => {
     });
     renderPage('/consult?topic=visa&visa=e7&handoff=abcdefghijklmnopqrstuvwx');
     expect(await screen.findByText(/체류 상태는 비자 진단에서 답하신 내용을 사용합니다/)).toBeInTheDocument();
-    expect(screen.queryByLabelText('현재 해외에 있음')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('지금 한국 밖에 있어요')).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: /출국명령·과태료·범칙금/ })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('영주(F-5) 또는 귀화')).not.toBeInTheDocument();
     await waitFor(() => expect((screen.getByLabelText(/어떤 언어로 연락받기/) as HTMLSelectElement).value).toBe('vi'));
@@ -159,7 +159,7 @@ describe('출입국·비자 상담 접수 질문', () => {
     const user = userEvent.setup();
     renderPage('/consult?topic=visa');
     expect(screen.getByText(/주민등록번호·외국인등록번호·여권번호·운전면허번호,\s*계좌번호,\s*신분증·여권 사진,\s*병명 같은 진단 내용은\s*적거나 보내지 마세요/)).toBeInTheDocument();
-    await user.click(screen.getByLabelText('한국에 사는 가족(배우자 등)을 초청하거나 함께 살려고 합니다'));
+    await user.click(screen.getByLabelText('배우자나 가족의 비자를 문의해요'));
     expect(screen.getByLabelText(/상담 내용/)).toHaveAttribute('placeholder', expect.stringContaining('F-6'));
   });
 });

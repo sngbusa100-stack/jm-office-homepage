@@ -23,6 +23,9 @@
     { "source": "/check/dui", "destination": "/check/dui/index.html" },
     { "source": "/check/suspension", "destination": "/check/suspension/index.html" },
     { "source": "/check/veterans", "destination": "/check/veterans/index.html" },
+    { "source": "/check/land", "destination": "/check/land/index.html" },
+    { "source": "/check/appeal", "destination": "/check/appeal/index.html" },
+    { "source": "/check/procurement", "destination": "/check/procurement/index.html" },
     { "source": "/check/permit", "destination": "/check/permit/index.html" },
     { "source": "/((?!api/|assets/|images/|.*\\.[A-Za-z0-9]+$).*)", "destination": "/spa-fallback.html" }
   ],

@@ -41,9 +41,9 @@ describe('비자 접수 질문 — 화면과 서버 값 동기화', () => {
     expect(DATED_STAGES).toEqual(SERVER_DATED);
   });
 
-  it('체류 상태 라벨은 비자 진단 사이트와 같은 말을 쓰고 임박 기준이 사무소 기준임을 밝힌다', () => {
-    expect(STAY_STATUS_OPTIONS.find((o) => o.value === 'near-expiry')?.label).toContain('약 2개월 이내, 사무소 안내 기준');
-    expect(STAY_STATUS_OPTIONS.find((o) => o.value === 'overseas')?.label).toBe('현재 해외에 있음');
+  it('체류 상태 라벨은 비자 진단 사이트와 같은 말을 쓰고 임박 기준을 알아보기 쉽게 표시한다', () => {
+    expect(STAY_STATUS_OPTIONS.find((o) => o.value === 'near-expiry')?.label).toContain('두 달 안에 만료');
+    expect(STAY_STATUS_OPTIONS.find((o) => o.value === 'overseas')?.label).toBe('지금 한국 밖에 있어요');
   });
 
   it('동의 문구 버전과 개인정보처리방침 시행일이 같다', () => {
@@ -54,7 +54,7 @@ describe('비자 접수 질문 — 화면과 서버 값 동기화', () => {
 describe('비자 접수 질문 — 문구와 전송값', () => {
   it('회사·가족 문의는 비자를 받을 사람을 주어로 묻는다', () => {
     expect(intakeWording('company').stay).toContain('직원은');
-    expect(intakeWording('family-sponsor').currentStatus).toContain('초청하려는 가족의');
+    expect(intakeWording('family-sponsor').currentStatus).toContain('가족의');
     expect(intakeWording('self').stay).not.toContain('직원');
   });
 
@@ -73,7 +73,7 @@ describe('비자 접수 질문 — 문구와 전송값', () => {
   it('관리자 화면은 값을 우리말 라벨로 보여 준다', () => {
     const rows = describeVisaIntake({ requester: 'company', stage: 'denied', deadlineDate: 'unsure', deadlineFirst: true });
     expect(rows.map((r) => r.answer)).toEqual([
-      '회사에서 외국인 직원을 채용하거나 관리합니다',
+      '회사에서 외국인 직원의 비자를 문의해요',
       '허가되지 않았다(불허)는 결과를 받음',
       '잘 모르겠음',
     ]);

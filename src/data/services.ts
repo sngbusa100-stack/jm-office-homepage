@@ -168,6 +168,7 @@ export const services: Service[] = [
     ],
     funnelDomain: 'landdev',
     consultTopic: 'permit',
+    checkDomain: 'land',
   },
   {
     slug: 'documents',
@@ -201,6 +202,7 @@ export const services: Service[] = [
     professionalReview: ['보상 단계와 이의신청 기한(재결서 받은 날부터 30일) 구분, 고객 명의 의견서·이의신청서 작성·제출 대행', '내용증명의 사실·요구·기한 표현과 증거 연결', '계약 조항의 책임·해지·대금·분쟁 위험 검토'],
     funnelDomain: 'documents',
     consultTopic: 'land',
+    checkDomain: 'land',
   },
   {
     slug: 'suspension',
@@ -363,6 +365,7 @@ export const services: Service[] = [
     ],
     funnelDomain: 'procurement',
     consultTopic: 'permit',
+    checkDomain: 'procurement',
   },
 ];
 

@@ -81,7 +81,7 @@ export const REPLY_TEMPLATES = [
       {
         ask: '사전통지서에 적힌 의견제출 기한',
         deadline: true,
-        when: (a) => a['susp-stage'] === 'prenotice',
+        when: (a) => ['prenotice', 'prior-notice'].includes(a['susp-stage']),
         recapOnly: [['susp-opinion-deadline', '의견제출 기한']],
       },
       {
@@ -179,6 +179,48 @@ export const REPLY_TEMPLATES = [
   },
 ];
 
+// 상담 접수 분야를 공유해도 고객에게 묻는 내용은 실제로 마친 진단에 맞춘다.
+const SPECIFIC_TEMPLATES = {
+  development: {
+    topic: '인허가', domain: 'land', serviceSlug: 'land-development',
+    intro: '토지 이용 계획에 관해 문의 주셨습니다.',
+    items: [
+      { ask: '그 땅에서 하려는 일', from: [['land-use', '토지 이용 계획']] },
+      { ask: '후보지의 위치와 현재 사용 모습' },
+      { ask: '받은 안내가 있다면 문서 제목과 기재된 기한', deadline: true },
+    ],
+  },
+  land: {
+    topic: '토지보상 · 내용증명 · 계약서', domain: 'land',
+    intro: '토지보상이나 문서 준비에 관해 문의 주셨습니다.',
+    items: [
+      { ask: '가장 먼저 준비하려는 일', from: [['land-topic', '준비할 일']] },
+      { ask: '가장 최근 보상 안내에 적힌 문서 제목', when: (a) => a['land-topic'] === 'compensation', from: [['land-compensation-paper', '보상 관련 문서']] },
+      { ask: '내용증명으로 상대방에게 요청하려는 일', when: (a) => a['land-topic'] === 'notice' },
+      { ask: '계약서에서 확인하고 싶은 부분', when: (a) => a['land-topic'] === 'contract' },
+      { ask: '받은 안내가 있다면 제출·회신 날짜', deadline: true },
+    ],
+  },
+  procurement: {
+    topic: '인허가', domain: 'procurement', serviceSlug: 'procurement',
+    intro: '공공조달 참여에 필요한 확인·등록을 문의 주셨습니다.',
+    items: [
+      { ask: '준비하는 확인이나 등록의 이름', from: [['procurement-topic', '준비할 업무']] },
+      { ask: '참여할 공고가 있다면 공고 제목이나 번호' },
+      { ask: '공고나 보완 요청에 적힌 마감 날짜와 시각', deadline: true },
+    ],
+  },
+  appeal: {
+    topic: '영업정지 · 행정심판', domain: 'appeal',
+    intro: '기관의 결정이나 신청 처리에 관해 문의 주셨습니다.',
+    items: [
+      { ask: '최근 받은 안내나 신청 후 진행 상황', from: [['appeal-stage', '현재 상황']] },
+      { ask: '신청을 받거나 안내를 보낸 기관과 문서 제목' },
+      { ask: '신청일이나 통지를 받은 날짜, 문서에 적힌 기한', deadline: true },
+    ],
+  },
+};
+
 const URGENT_LINE = '기한이 지나면 진행할 수 있는 절차가 줄어들 수 있어, 날짜부터 먼저 여쭙습니다.';
 const SELF_REPORTED_DEADLINE_ASK = '처분서·통지서에 적힌 기한 날짜';
 const CLOSING =
@@ -193,7 +235,8 @@ function answered(value) {
 }
 
 function diagnosisLabel(domain, questionId, value) {
-  return LABELS.diagnosis[domain]?.[questionId]?.options[value];
+  return LABELS.diagnosis[domain]?.[questionId]?.options[value]
+    ?? LABELS.previousDiagnosis[domain]?.[questionId]?.options[value];
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -317,7 +360,10 @@ function planVisa(record) {
  */
 export function planReply(record) {
   if (!record) return null;
-  const template = REPLY_TEMPLATES.find((t) => t.topic === record.topic);
+  const domain = record.diagnosis?.domain;
+  const variant = domain === 'land' && record.diagnosis.answers?.['land-topic'] === 'development' ? 'development' : domain;
+  const specific = SPECIFIC_TEMPLATES[variant];
+  const template = specific?.topic === record.topic ? specific : REPLY_TEMPLATES.find((t) => t.topic === record.topic);
   if (!template) return null;
   const plan = template.visa ? planVisa(record) : planDiagnosis(template, record);
   // 고객이 기한 '급함·모름'을 골랐는데 이 분야 질문에 기한 질문이 없으면 기한 날짜부터 묻는다.

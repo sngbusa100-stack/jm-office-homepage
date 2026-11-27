@@ -1,5 +1,6 @@
 // 상담 접수 검증·포맷 (api/consult.js에서 사용, _접두사라 엔드포인트로 노출되지 않음)
-import CHECK_LEVELS from './_check-levels.mjs';
+import { diagnosisTopicSlug, matchesAnswers } from './_diagnosis-routing.mjs';
+import CHECK_LEVELS, { visibility } from './_check-levels.mjs';
 import { sanitizeVisaHandoff } from './_visa-handoff.mjs';
 import { sanitizeVisaIntake } from './_visa-intake.mjs';
 import { DEADLINE_REPORTS } from './_urgency.mjs';
@@ -21,6 +22,7 @@ const DIAGNOSIS_TOPIC = {
   dui: '음주운전 면허 구제',
   suspension: '영업정지 · 행정심판',
   permit: '인허가',
+  land: '토지보상 · 내용증명 · 계약서',
   veterans: '국가보훈',
 };
 
@@ -37,15 +39,17 @@ export function sanitizeDiagnosis(input) {
   if (typeof input !== 'object' || input === null) return null;
   const domain = typeof input.domain === 'string' ? input.domain.trim() : '';
   const questions = CHECK_LEVELS[domain];
-  if (!questions) return null;
+  if (!Object.hasOwn(CHECK_LEVELS, domain)) return null;
 
   const answersIn = typeof input.answers === 'object' && input.answers !== null ? input.answers : {};
   const answers = {};
   const counts = {};
-  for (const [questionId, optionId] of Object.entries(answersIn)) {
+  for (const [questionId, options] of Object.entries(questions)) {
+    if (!matchesAnswers(visibility[domain]?.[questionId], answers)) continue;
+    const optionId = answersIn[questionId];
     if (typeof optionId !== 'string') continue;
-    const level = questions[questionId]?.[optionId];
-    if (!level) continue;
+    if (!Object.hasOwn(options, optionId)) continue;
+    const level = options[optionId];
     answers[questionId] = optionId;
     counts[level] = (counts[level] ?? 0) + 1;
   }
@@ -77,7 +81,7 @@ export function validateConsultPayload(body) {
   // 셀프 진단은 상담 분야와 같은 분야일 때만 담는다. 다른 분야의 예전 진단이나
   // 비자 진단과 함께 온 메인 진단은 긴급 판정을 바꾸므로 버린다(접수는 막지 않음).
   const rawDiagnosis = sanitizeDiagnosis(data.diagnosis);
-  const diagnosis = rawDiagnosis && !visaDiagnosis && DIAGNOSIS_TOPIC[rawDiagnosis.domain] === topic
+  const diagnosis = rawDiagnosis && !visaDiagnosis && DIAGNOSIS_TOPIC[diagnosisTopicSlug(rawDiagnosis.domain, rawDiagnosis.answers)] === topic
     ? rawDiagnosis
     : null;
   const rawSourcePath = typeof data.sourcePath === 'string' ? data.sourcePath.trim().slice(0, 120) : '';

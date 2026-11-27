@@ -186,6 +186,10 @@ export function ServicePage() {
         </section>
       )}
 
+      {service.slug === 'suspension' && (
+        <p><Link to="/check/appeal">영업정지 외의 행정기관 결정이나 통지를 받으셨나요?</Link></p>
+      )}
+
       {/* FAQ는 바깥으로 한 번 더 감싸지 않는다. 질문 목록을 훑어 내 상황을 찾는 것이
           FAQ의 핵심인데, 감싸면 질문까지 숨겨지고 답을 보기까지 클릭이 두 번 필요하다.
           항목별 details로 이미 가벼우므로 제목 무게만 참고 섹션 수준으로 낮춘다. */}

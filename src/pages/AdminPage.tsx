@@ -7,10 +7,10 @@ import {
   purgeInquiry,
   summarizeInquiries,
 } from '../lib/adminApi';
-import type { FunnelSummary, InquiryDiagnosis, InquiryRecord } from '../lib/adminApi';
+import type { FunnelSummary, InquiryRecord } from '../lib/adminApi';
 import { markInternalBrowser } from '../lib/funnel';
 import { TOPIC_ROUTES, buildDirectReplyDraft, buildReplyDraft } from '../../api/_reply-draft.mjs';
-import { buildConsultBrief, consultBriefText } from '../../api/_consult-brief.mjs';
+import { buildConsultBrief, consultBriefText, describeDiagnosis } from '../../api/_consult-brief.mjs';
 import type { ConsultBriefSection } from '../../api/_consult-brief.mjs';
 import { AdminFunnel } from '../components/AdminFunnel';
 import { FollowUpEditor } from '../components/FollowUpEditor';
@@ -85,20 +85,6 @@ const PIPELINE_LABEL: Record<NonNullable<InquiryRecord['pipelineStage']>, string
   retained: '수임 확정',
   work_completed: '업무 완료',
 };
-
-/** 진단 답변(questionId→optionId)을 진단 정의와 대조해 사람이 읽을 문항·답변으로 변환한다. */
-function describeDiagnosis(diagnosis: InquiryDiagnosis): { key: string; question: string; answer: string }[] {
-  const definition = findCheck(diagnosis.domain);
-  return Object.entries(diagnosis.answers ?? {}).map(([questionId, optionId]) => {
-    const question = definition?.questions.find((q) => q.id === questionId);
-    const option = question?.options.find((o) => o.id === optionId);
-    return {
-      key: questionId,
-      question: question?.text ?? questionId,
-      answer: option?.label ?? optionId,
-    };
-  });
-}
 
 /** 로컬 처리 상태 표시(연동기가 PATCH action=status로 돌려준 값). */
 const LOCAL_STATUS_LABEL: Record<NonNullable<InquiryRecord['localStatus']>, string> = {

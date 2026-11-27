@@ -93,7 +93,7 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
     }));
     expect(text).toContain('접수 때 알려 주신 내용(서류로 확인하기 전입니다)');
     expect(text).toContain('- 혈중알코올농도 구간: 0.08% 이상 ~ 0.1% 이하');
-    expect(text).toContain('- 최근 5년 음주운전 이력: 최근 5년 안에는 없음 (그 전 전력은 있을 수 있음)');
+    expect(text).toContain('- 최근 5년 음주운전 이력: 그 5년 동안에는 없었어요');
     const qs = questions(text);
     expect(qs.some((q) => q.includes('혈중알코올농도'))).toBe(false);
     expect(qs.some((q) => q.includes('음주운전 이력'))).toBe(false);
@@ -150,7 +150,7 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
       diagnosis: { domain: 'dui', answers: { 'dui-procedure': 'objection-result' }, counts: {} },
     })).text;
     expect(questions(result).some((q) => q.includes(ask) && q.includes('행정심판을 이미 청구하셨는지'))).toBe(true);
-    expect(result).toContain('- 이의신청·행정심판 진행 여부: 이의신청 결과를 통보받음');
+    expect(result).toContain('- 이의신청·행정심판 진행 여부: 경찰에서 이의신청 결과를 받았어요');
     const pending = buildReplyDraft(record('음주운전 면허 구제', {
       diagnosis: { domain: 'dui', answers: { 'dui-procedure': 'objection' }, counts: {} },
     })).text;

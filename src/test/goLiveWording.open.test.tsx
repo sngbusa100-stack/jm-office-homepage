@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { findPreOpenPhrases } from '../../scripts/pre-open-phrases.mjs';
@@ -56,20 +55,14 @@ describe('개업 뒤 화면 문구', () => {
 
   it('진단 결과의 긴급 안내에도 개업 전 문구가 없다', async () => {
     sessionStorage.clear();
-    const user = userEvent.setup();
+    const answers = Object.fromEntries(checks.dui.questions.map((q) => [q.id, q.options[0].id]));
+    answers['dui-elapsed'] = 'over90';
+    sessionStorage.setItem('check:dui', JSON.stringify(answers));
     render(
-      <MemoryRouter initialEntries={['/check/dui']}>
+      <MemoryRouter initialEntries={['/check/dui/result']}>
         <AppRouter />
       </MemoryRouter>,
     );
-    for (const question of checks.dui.questions) {
-      if (question.id === 'dui-elapsed') {
-        await user.click(await screen.findByRole('radio', { name: /90일이 지남/ }));
-      } else {
-        await user.click((await screen.findAllByRole('radio'))[0]);
-      }
-      await user.click(screen.getByRole('button', { name: /다음|결과 보기/ }));
-    }
     expect(await screen.findByText(/지금 바로 확인이 필요합니다/)).toBeInTheDocument();
     expect(findPreOpenPhrases(document.body.textContent ?? '')).toEqual([]);
     expect((document.body.textContent ?? '').replace(/\s+/g, ' ')).toContain('상담 회신을 기다리지 마시고 국민권익위원회 상담전화');

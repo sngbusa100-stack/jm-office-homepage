@@ -47,10 +47,10 @@ export const EMPTY_VISA_INTAKE: VisaIntakeAnswers = {
 };
 
 export const REQUESTER_OPTIONS: IntakeOption[] = [
-  { value: 'self', label: '제 비자 문제입니다' },
-  { value: 'family-sponsor', label: '한국에 사는 가족(배우자 등)을 초청하거나 함께 살려고 합니다' },
-  { value: 'company', label: '회사에서 외국인 직원을 채용하거나 관리합니다' },
-  { value: 'other', label: '그 밖의 사람(지인 등)입니다' },
+  { value: 'self', label: '제 비자를 상담하고 싶어요' },
+  { value: 'family-sponsor', label: '배우자나 가족의 비자를 문의해요' },
+  { value: 'company', label: '회사에서 외국인 직원의 비자를 문의해요' },
+  { value: 'other', label: '지인 등 다른 분의 비자를 문의해요' },
 ];
 
 export const REQUESTER_HEADLINE: Record<Requester, string> = {
@@ -68,15 +68,15 @@ export const STAFF_COUNT_OPTIONS: IntakeOption[] = [
 
 // 비자 진단 사이트(src/data/questions.ts stayStatus)와 같은 말을 쓴다.
 export const STAY_STATUS_OPTIONS: IntakeOption[] = [
-  { value: 'overseas', label: '현재 해외에 있음' },
-  { value: 'valid', label: '한국에 있음 · 체류기간이 유효함' },
-  { value: 'near-expiry', label: '한국에 있음 · 만료가 임박함(약 2개월 이내, 사무소 안내 기준)' },
-  { value: 'expired', label: '한국에 있음 · 이미 만료됨' },
+  { value: 'overseas', label: '지금 한국 밖에 있어요' },
+  { value: 'valid', label: '한국에 있고, 만료일까지 두 달 넘게 남았어요' },
+  { value: 'near-expiry', label: '한국에 있고, 오늘부터 두 달 안에 만료돼요' },
+  { value: 'expired', label: '한국에 있고, 만료일이 지났어요' },
   { value: 'unsure', label: '잘 모르겠음' },
 ];
 
 export const CURRENT_STATUS_OPTIONS: IntakeOption[] = [
-  { value: 'visa-free-short', label: '비자 없이 입국(무비자) 또는 짧은 방문(C-3·C-4)' },
+  { value: 'visa-free-short', label: '비자 없이 입국했거나 짧게 방문 중이에요 (C-3·C-4 등)' },
   { value: 'study', label: '유학·어학연수(D-2·D-4)' },
   { value: 'job-seeking', label: '구직(D-10)' },
   { value: 'work', label: '취업(E-7·E-9·H-2 등)' },
@@ -100,7 +100,7 @@ export const GOALS_WITH_VISA_DIAGNOSIS = ['first-entry', 'extend', 'change', 'un
 
 export const STAGE_OPTIONS: IntakeOption[] = [
   { value: 'not-applied', label: '아직 신청 전' },
-  { value: 'waiting', label: '신청하고 결과를 기다리는 중' },
+  { value: 'waiting', label: '신청했고 결과를 기다려요' },
   { value: 'supplement', label: '서류를 더 내라는 요청(보완)이나 출석 요청을 받음' },
   { value: 'denied', label: '허가되지 않았다(불허)는 결과를 받음' },
   { value: 'departure-notice', label: '출국하라는 안내(출국기한·출국명령)를 받음' },
@@ -133,13 +133,13 @@ export function intakeWording(requester: string) {
   const company = requester === 'company';
   const family = requester === 'family-sponsor';
   const proxy = requester !== '' && requester !== 'self';
-  const who = company ? '직원' : family ? '초청하려는 가족' : proxy ? '비자를 받을 분' : '';
+  const who = company ? '직원' : family ? '가족' : proxy ? '비자를 받을 분' : '';
   return {
     stay: who
       ? `${who}은 지금 어디에 있나요? 한국에 있다면 체류기간은 어떤가요?`
       : '지금 어디에 계신가요? 체류기간(한국에 머물 수 있는 기간)은 어떤가요?',
     currentStatus: who ? `${who}의 지금 체류자격(비자 종류)은 무엇인가요?` : '지금 가지고 있는 체류자격(비자 종류)은 무엇인가요?',
-    goal: company ? '직원에게 어떤 절차가 필요하신가요?' : family ? '가족에게 어떤 절차가 필요하신가요?' : '무엇을 하려고 하시나요?',
+    goal: company ? '직원이 한국에서 무엇을 하려고 하나요?' : family ? '가족이 한국에서 무엇을 하려고 하나요?' : '무엇을 하려고 하시나요?',
     target: company ? '언제부터 근무해야 하나요?' : family ? '언제부터 함께 지내려고 하시나요?' : '언제까지 한국에 와야 하나요?',
     stage: `${proxy ? '(비자를 받을 분이) ' : ''}이미 신청했거나 출입국 기관에서 받은 연락·문서가 있나요?`,
     violation: `${proxy ? '(비자를 받을 분이) ' : ''}체류기간을 넘긴 적이 있거나, 출입국 기관에서 출국명령·과태료·범칙금 통지를 받은 적이 있나요?`,

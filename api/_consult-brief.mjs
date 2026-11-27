@@ -7,10 +7,26 @@
 import LABELS from './_reply-labels.mjs';
 import { TOPIC_ROUTES, planReply } from './_reply-draft.mjs';
 import { urgentReasons } from './_urgency.mjs';
+import { matchesAnswers } from './_diagnosis-routing.mjs';
 
 const LEVEL_ORDER = ['urgent', 'documents', 'official', 'ready'];
-export const LEVEL_LABEL = { urgent: '긴급 확인', documents: '서류 보완', official: '공식 확인', ready: '확인됨' };
+export const LEVEL_LABEL = LABELS.brief.levels;
 const CASE_TYPE_LABEL = { driver_license: '운전면허 행정심판', business_suspension: '영업정지 행정심판' };
+
+/** 저장 당시의 문항·선택지 이름을 쓴다. 이전 선택지에 현재 문항의 판단이나 등급을 붙이지 않는다. */
+export function describeDiagnosis(diagnosis) {
+  const domain = diagnosis?.domain;
+  return Object.entries(diagnosis?.answers ?? {}).map(([key, value]) => {
+    const current = LABELS.diagnosis[domain]?.[key];
+    const previous = LABELS.previousDiagnosis[domain]?.[key];
+    const legacy = Boolean(previous && Object.hasOwn(previous.options, value));
+    const question = legacy ? previous : current;
+    return {
+      key, legacy, question: question?.text ?? '이전 점검 문항',
+      answer: question && Object.hasOwn(question.options, value) ? question.options[value] : '선택 내용 확인 필요',
+    };
+  });
+}
 
 /**
  * 진단 답을 고객이 결과 화면에서 본 순서·문구로 되살린다(src/domain/diagnosis.ts classifyAnswers와 같은 규칙,
@@ -20,7 +36,13 @@ export function classifyDiagnosis(diagnosis) {
   const def = LABELS.brief.checks[diagnosis?.domain];
   const labels = LABELS.diagnosis[diagnosis?.domain];
   if (!def || !labels) return [];
-  const answers = diagnosis.answers && typeof diagnosis.answers === 'object' ? diagnosis.answers : {};
+  const input = diagnosis.answers && typeof diagnosis.answers === 'object' ? diagnosis.answers : {};
+  const answers = {};
+  for (const question of def.questions) {
+    if (matchesAnswers(question.showWhen, answers) && Object.hasOwn(question.options, input[question.id])) {
+      answers[question.id] = input[question.id];
+    }
+  }
   const items = [];
   for (const question of def.questions) {
     const optionId = answers[question.id];
@@ -59,13 +81,16 @@ function routeLine(topic) {
 export function buildConsultBrief(record) {
   if (!record || typeof record !== 'object' || record.purged) return null;
   const topic = typeof record.topic === 'string' ? record.topic : '';
-  const info = LABELS.brief.topics[topic];
   const plan = planReply(record);
+  const generalAppeal = plan?.template.domain === 'appeal';
+  const info = plan?.template.serviceSlug ? LABELS.brief.specificServices[plan.template.serviceSlug]
+    : generalAppeal ? undefined : LABELS.brief.topics[topic];
   const sections = [];
 
   // 1. 한눈에
   const serviceName = info && info.service !== topic ? ` (업무 안내: ${info.service})` : '';
-  const summary = [`분야: ${topic || '미지정'}${serviceName}`, routeLine(topic)];
+  const summary = [`분야: ${generalAppeal ? '일반 행정심판' : topic || '미지정'}${serviceName}`,
+    generalAppeal ? '처리 경로: 받은 통지와 신청 내용을 보고 사건 유형 확인' : routeLine(topic)];
   const reasons = urgentReasons(record);
   if (reasons.length > 0) {
     summary.push(`⏰ 기한 우선 — 근거: ${reasons.map((r) => LABELS.brief.urgentReasons[r] ?? r).join(' · ')}`);
@@ -73,7 +98,9 @@ export function buildConsultBrief(record) {
   if (record.deadlineReport && LABELS.brief.deadlineReport[record.deadlineReport]) {
     summary.push(`처분서·통지서 기한(고객 답, 증빙 전): ${LABELS.brief.deadlineReport[record.deadlineReport]}`);
   }
-  const diagnosisItems = record.diagnosis ? classifyDiagnosis(record.diagnosis) : [];
+  const savedAnswers = describeDiagnosis(record.diagnosis);
+  const previousForm = savedAnswers.some((entry) => entry.legacy);
+  const diagnosisItems = record.diagnosis && !previousForm ? classifyDiagnosis(record.diagnosis) : [];
   if (diagnosisItems.length > 0) {
     const counts = LEVEL_ORDER.map((level) => [level, diagnosisItems.filter((i) => i.level === level).length])
       .filter(([, n]) => n > 0)
@@ -97,6 +124,8 @@ export function buildConsultBrief(record) {
         (i) => `[${LEVEL_LABEL[i.level]}] ${i.questionText} → ${i.answerLabel}: ${i.note}${i.lawRef ? ` (${i.lawRef})` : ''}`,
       ),
     });
+  } else if (previousForm) {
+    sections.push({ title: '이전 셀프 진단에 남긴 답변', lines: savedAnswers.map((e) => `${e.question} → ${e.answer}`) });
   } else if (plan && plan.recap.length > 0) {
     sections.push({ title: '고객이 이미 알려 준 것(증빙 전)', lines: plan.recap });
   }

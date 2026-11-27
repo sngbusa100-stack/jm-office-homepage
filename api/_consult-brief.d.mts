@@ -3,6 +3,9 @@ export interface ConsultBriefSection {
   lines: string[];
 }
 export declare const LEVEL_LABEL: Record<'urgent' | 'documents' | 'official' | 'ready', string>;
+export declare function describeDiagnosis(diagnosis: unknown): {
+  key: string; legacy: boolean; question: string; answer: string;
+}[];
 export declare function classifyDiagnosis(diagnosis: unknown): {
   questionId: string;
   questionText: string;

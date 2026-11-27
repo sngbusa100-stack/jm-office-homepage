@@ -113,10 +113,10 @@
     "requester": {
       "question": "누구의 일",
       "options": {
-        "self": "제 비자 문제입니다",
-        "family-sponsor": "한국에 사는 가족(배우자 등)을 초청하거나 함께 살려고 합니다",
-        "company": "회사에서 외국인 직원을 채용하거나 관리합니다",
-        "other": "그 밖의 사람(지인 등)입니다"
+        "self": "제 비자를 상담하고 싶어요",
+        "family-sponsor": "배우자나 가족의 비자를 문의해요",
+        "company": "회사에서 외국인 직원의 비자를 문의해요",
+        "other": "지인 등 다른 분의 비자를 문의해요"
       }
     },
     "staffCount": {
@@ -130,10 +130,10 @@
     "stayStatus": {
       "question": "체류 상태",
       "options": {
-        "overseas": "현재 해외에 있음",
-        "valid": "한국에 있음 · 체류기간이 유효함",
-        "near-expiry": "한국에 있음 · 만료가 임박함(약 2개월 이내, 사무소 안내 기준)",
-        "expired": "한국에 있음 · 이미 만료됨",
+        "overseas": "지금 한국 밖에 있어요",
+        "valid": "한국에 있고, 만료일까지 두 달 넘게 남았어요",
+        "near-expiry": "한국에 있고, 오늘부터 두 달 안에 만료돼요",
+        "expired": "한국에 있고, 만료일이 지났어요",
         "unsure": "잘 모르겠음"
       }
     },
@@ -143,7 +143,7 @@
     "currentStatus": {
       "question": "현재 체류자격",
       "options": {
-        "visa-free-short": "비자 없이 입국(무비자) 또는 짧은 방문(C-3·C-4)",
+        "visa-free-short": "비자 없이 입국했거나 짧게 방문 중이에요 (C-3·C-4 등)",
         "study": "유학·어학연수(D-2·D-4)",
         "job-seeking": "구직(D-10)",
         "work": "취업(E-7·E-9·H-2 등)",
@@ -177,7 +177,7 @@
       "question": "진행 단계",
       "options": {
         "not-applied": "아직 신청 전",
-        "waiting": "신청하고 결과를 기다리는 중",
+        "waiting": "신청했고 결과를 기다려요",
         "supplement": "서류를 더 내라는 요청(보완)이나 출석 요청을 받음",
         "denied": "허가되지 않았다(불허)는 결과를 받음",
         "departure-notice": "출국하라는 안내(출국기한·출국명령)를 받음",
@@ -219,12 +219,12 @@
     }
   },
   "deadlineReportLabels": {
-    "question": "받으신 처분서·통지서에 적힌 기한이 있나요?",
+    "question": "기관에서 받은 문서에 언제까지 답하거나 제출하라고 적혀 있나요?",
     "options": {
       "soon": "2주 안이거나 이미 지났습니다",
       "later": "있지만 2주 넘게 남았습니다",
       "unknown": "기한이 있는지, 언제인지 모릅니다",
-      "none": "받은 통지서가 없습니다"
+      "none": "문서를 받지 않았거나 문서에 기한이 없습니다"
     }
   },
   "urgentReasonLabels": {

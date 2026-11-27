@@ -1,183 +1,207 @@
 // scripts/gen-check-levels.ts가 생성한 파일 — 직접 편집하지 마세요.
-export default {
-  "dui": {
-    "dui-disposition": {
-      "suspend": "ready",
-      "revoke": "official",
-      "pending": "official",
-      "unknown": "official"
+export const visibility = {
+  "permit": {
+    "permit-site-advice": {
+      "permit-address": [
+        "candidate",
+        "contracted",
+        "owned"
+      ]
     },
-    "dui-bac": {
-      "low": "ready",
-      "mid": "official",
-      "over01": "official",
-      "unknown": "documents"
+    "permit-building": {
+      "permit-address": [
+        "candidate",
+        "contracted",
+        "owned"
+      ]
     },
-    "dui-elapsed": {
-      "none": "ready",
-      "within30": "ready",
-      "d30to60": "official",
-      "d60to90": "urgent",
-      "over90": "urgent",
-      "unknown": "urgent"
-    },
-    "dui-procedure": {
-      "no": "ready",
-      "objection": "official",
-      "objection-result": "official",
-      "appeal": "official"
-    },
-    "dui-livelihood": {
-      "job": "documents",
-      "work": "documents",
-      "commute": "ready",
-      "no": "ready"
-    },
-    "dui-history": {
-      "none": "ready",
-      "once": "official",
-      "multi": "official"
-    },
-    "dui-accident": {
-      "none": "ready",
-      "property": "official",
-      "injury": "official"
-    },
-    "dui-refusal": {
-      "no": "ready",
-      "yes": "official"
-    },
-    "dui-evidence": {
-      "ready": "ready",
-      "partial": "documents",
-      "none": "documents"
-    },
-    "dui-criminal": {
-      "none": "ready",
-      "investigating": "official",
-      "trial": "official",
-      "done": "ready"
+    "permit-supplement-deadline": {
+      "permit-stage": [
+        "supplement"
+      ]
     }
   },
   "suspension": {
-    "susp-business": {
-      "restaurant": "ready",
-      "karaoke": "ready",
-      "academy": "ready",
-      "other": "official"
-    },
-    "susp-stage": {
-      "prenotice": "urgent",
-      "confirmed": "official",
-      "investigating": "ready"
-    },
     "susp-opinion-deadline": {
-      "remaining": "documents",
-      "soon": "urgent",
-      "passed": "official",
-      "na": "ready"
+      "susp-stage": [
+        "prior-notice"
+      ]
     },
     "susp-elapsed": {
-      "within30": "ready",
-      "d30to60": "official",
-      "d60to90": "urgent",
-      "over90": "urgent",
-      "na": "ready"
-    },
-    "susp-reason": {
-      "youth": "official",
-      "hygiene": "documents",
-      "unlicensed": "official",
-      "other": "official"
-    },
-    "susp-count": {
-      "first": "ready",
-      "second": "official",
-      "third": "official"
-    },
-    "susp-livelihood": {
-      "only": "documents",
-      "main": "documents",
-      "side": "ready"
+      "susp-stage": [
+        "confirmed"
+      ]
     },
     "susp-execution": {
-      "imminent": "urgent",
-      "notyet": "ready",
-      "ongoing": "official"
+      "susp-stage": [
+        "confirmed"
+      ]
     },
-    "susp-evidence": {
-      "ready": "ready",
-      "partial": "documents",
-      "none": "documents"
+    "susp-fine-advice": {
+      "susp-stage": [
+        "prior-notice",
+        "confirmed"
+      ]
+    }
+  },
+  "dui": {
+    "dui-elapsed": {
+      "dui-disposition": [
+        "suspend",
+        "revoke",
+        "unknown"
+      ]
     },
-    "susp-fine": {
-      "known": "official",
-      "unknown": "official"
+    "dui-procedure": {
+      "dui-disposition": [
+        "suspend",
+        "revoke",
+        "unknown"
+      ]
+    },
+    "dui-bac": {
+      "dui-refusal": [
+        "measured",
+        "unknown"
+      ]
+    },
+    "dui-evidence": {
+      "dui-livelihood": [
+        "job",
+        "work",
+        "commute",
+        "other"
+      ]
     }
   },
   "veterans": {
-    "vet-applicant": {
-      "self": "ready",
-      "family": "ready"
-    },
-    "vet-type": {
-      "combat": "ready",
-      "died": "ready",
-      "compensation": "ready",
-      "unknown": "official"
-    },
-    "vet-stage": {
-      "before": "ready",
-      "reviewing": "official",
-      "rejected": "official",
-      "appealing": "official"
-    },
     "vet-elapsed": {
-      "na": "ready",
-      "within30": "ready",
-      "d30to90": "urgent",
-      "over90": "urgent"
-    },
-    "vet-connection": {
-      "yes": "ready",
-      "partial": "documents",
-      "none": "documents",
-      "unsure": "official"
+      "vet-stage": [
+        "rejected"
+      ]
     },
     "vet-records": {
-      "yes": "ready",
-      "partial": "documents",
-      "none": "documents"
+      "vet-event": [
+        "injury",
+        "death"
+      ]
     },
     "vet-current": {
-      "yes": "ready",
-      "none": "documents"
-    },
-    "vet-history": {
-      "first": "ready",
-      "once": "official",
-      "multi": "official"
-    },
-    "vet-consult": {
-      "yes": "ready",
-      "none": "official"
+      "vet-event": [
+        "injury"
+      ]
     }
   },
+  "land": {
+    "land-use": {
+      "land-topic": [
+        "development"
+      ]
+    },
+    "land-location": {
+      "land-topic": [
+        "development"
+      ]
+    },
+    "land-compensation-paper": {
+      "land-topic": [
+        "compensation"
+      ]
+    },
+    "land-compensation-list": {
+      "land-topic": [
+        "compensation"
+      ],
+      "land-compensation-paper": [
+        "inventory",
+        "offer"
+      ]
+    },
+    "land-notice": {
+      "land-topic": [
+        "notice"
+      ]
+    },
+    "land-contract": {
+      "land-topic": [
+        "contract"
+      ]
+    }
+  },
+  "appeal": {
+    "appeal-delivery": {
+      "appeal-stage": [
+        "decision",
+        "before"
+      ]
+    },
+    "appeal-reasons": {
+      "appeal-stage": [
+        "decision",
+        "before"
+      ]
+    },
+    "appeal-receipt": {
+      "appeal-stage": [
+        "waiting"
+      ]
+    },
+    "appeal-impact": {
+      "appeal-stage": [
+        "decision"
+      ]
+    },
+    "appeal-date": {
+      "appeal-stage": [
+        "decision",
+        "before"
+      ]
+    }
+  },
+  "procurement": {
+    "procurement-production": {
+      "procurement-topic": [
+        "production"
+      ]
+    },
+    "procurement-business": {
+      "procurement-topic": [
+        "women"
+      ]
+    },
+    "procurement-supply": {
+      "procurement-topic": [
+        "registration"
+      ]
+    },
+    "procurement-changes": {
+      "procurement-stage": [
+        "filed",
+        "requested",
+        "existing"
+      ]
+    }
+  }
+};
+export default {
   "permit": {
     "permit-type": {
       "corporation": "ready",
       "factory": "official",
       "warehouse": "official",
       "business": "ready",
+      "other": "official",
       "unknown": "official"
     },
-    "permit-kind": {
-      "withlaw": "ready",
-      "nameonly": "official",
-      "never": "official"
+    "permit-purpose": {
+      "new": "ready",
+      "change": "official",
+      "takeover": "official",
+      "other": "official"
     },
     "permit-authority": {
       "contacted": "ready",
+      "department": "official",
       "agencyonly": "official",
       "none": "official"
     },
@@ -186,57 +210,400 @@ export default {
       "contracted": "documents",
       "owned": "ready",
       "notyet": "ready",
-      "na": "ready"
+      "no-location-change": "ready",
+      "no-site-advised": "ready",
+      "unknown": "official"
     },
-    "permit-zoning": {
-      "ok": "ready",
-      "unsure": "official",
-      "notchecked": "official",
-      "na": "ready"
+    "permit-site-advice": {
+      "allowed": "ready",
+      "conditions": "official",
+      "waiting": "official",
+      "none": "official",
+      "unknown": "official"
     },
     "permit-building": {
       "clean": "ready",
-      "flagged": "documents",
+      "flagged": "official",
       "notchecked": "official",
-      "na": "ready"
-    },
-    "permit-facility": {
-      "matched": "ready",
-      "gap": "documents",
-      "seenonly": "documents",
-      "nowhere": "official",
-      "na": "ready"
-    },
-    "permit-staff": {
-      "ready": "ready",
-      "pending": "documents",
-      "noneneeded": "ready",
+      "na": "ready",
       "unknown": "official"
     },
-    "permit-disqualification": {
-      "clear": "ready",
-      "maybe": "official",
-      "notchecked": "official"
+    "permit-facility-advice": {
+      "pending": "documents",
+      "done": "ready",
+      "not-needed": "ready",
+      "none": "official",
+      "na": "ready",
+      "unknown": "official"
+    },
+    "permit-personnel-advice": {
+      "collected": "ready",
+      "pending": "documents",
+      "not-needed": "ready",
+      "none": "official",
+      "unknown": "official"
     },
     "permit-stage": {
       "reviewing": "ready",
       "preparing": "documents",
-      "submitted": "official",
-      "supplement": "urgent",
-      "rejectedwithdoc": "documents",
-      "rejectednodoc": "official"
+      "submitted": "ready",
+      "supplement": "documents",
+      "rejectedwithdoc": "official",
+      "rejectednodoc": "official",
+      "finished": "ready",
+      "unknown": "official"
     },
     "permit-supplement-deadline": {
-      "remaining": "documents",
+      "four-plus": "documents",
       "soon": "urgent",
       "passed": "urgent",
-      "na": "ready"
+      "unknown": "urgent"
     },
     "permit-opening": {
-      "over3m": "ready",
-      "m1to3": "official",
-      "within1m": "urgent",
+      "already": "official",
+      "month": "official",
+      "later": "ready",
       "undecided": "ready"
+    }
+  },
+  "suspension": {
+    "susp-business": {
+      "restaurant": "ready",
+      "karaoke": "ready",
+      "academy": "ready",
+      "other": "official",
+      "unknown": "ready"
+    },
+    "susp-stage": {
+      "prior-notice": "documents",
+      "confirmed": "official",
+      "investigating": "ready",
+      "none": "ready",
+      "unknown": "official"
+    },
+    "susp-opinion-deadline": {
+      "four-plus": "documents",
+      "soon": "urgent",
+      "passed": "urgent",
+      "unknown": "urgent"
+    },
+    "susp-elapsed": {
+      "within30": "official",
+      "d31to60": "official",
+      "d61to90": "urgent",
+      "over90": "urgent",
+      "unknown": "urgent"
+    },
+    "susp-reason": {
+      "youth": "official",
+      "hygiene": "documents",
+      "unlicensed": "official",
+      "other": "official",
+      "unknown": "official"
+    },
+    "susp-count": {
+      "first": "ready",
+      "second": "official",
+      "third": "official",
+      "unknown": "official"
+    },
+    "susp-livelihood": {
+      "only": "documents",
+      "main": "documents",
+      "side": "ready",
+      "other": "ready"
+    },
+    "susp-execution": {
+      "scheduled": "urgent",
+      "ongoing": "urgent",
+      "finished": "official",
+      "no-date": "official",
+      "unknown": "official"
+    },
+    "susp-evidence": {
+      "collected": "ready",
+      "partial": "documents",
+      "none": "documents",
+      "unknown": "official"
+    },
+    "susp-fine-advice": {
+      "available": "official",
+      "unavailable": "official",
+      "none": "ready",
+      "unknown": "ready"
+    }
+  },
+  "dui": {
+    "dui-disposition": {
+      "suspend": "ready",
+      "revoke": "official",
+      "prior-notice": "official",
+      "investigation": "ready",
+      "unknown": "official"
+    },
+    "dui-elapsed": {
+      "none": "official",
+      "within30": "official",
+      "d31to60": "urgent",
+      "d61to90": "urgent",
+      "over90": "urgent",
+      "unknown": "urgent"
+    },
+    "dui-procedure": {
+      "no": "ready",
+      "objection": "official",
+      "objection-result": "official",
+      "appeal": "official",
+      "appeal-done": "official",
+      "unknown": "official"
+    },
+    "dui-refusal": {
+      "measured": "ready",
+      "yes": "official",
+      "not-asked": "official",
+      "unknown": "official"
+    },
+    "dui-bac": {
+      "below003": "ready",
+      "low": "ready",
+      "mid": "official",
+      "over01": "official",
+      "unknown": "documents"
+    },
+    "dui-accident": {
+      "none": "ready",
+      "property": "official",
+      "injury": "official",
+      "unknown": "official"
+    },
+    "dui-history": {
+      "none": "ready",
+      "once": "official",
+      "multi": "official",
+      "unknown": "official"
+    },
+    "dui-livelihood": {
+      "job": "documents",
+      "work": "documents",
+      "commute": "ready",
+      "no": "ready",
+      "other": "ready"
+    },
+    "dui-evidence": {
+      "ready": "ready",
+      "partial": "documents",
+      "none": "documents",
+      "unknown": "official"
+    },
+    "dui-criminal": {
+      "none": "ready",
+      "investigating": "official",
+      "trial": "official",
+      "done": "ready",
+      "unknown": "official"
+    }
+  },
+  "veterans": {
+    "vet-applicant": {
+      "self": "ready",
+      "family": "ready",
+      "other": "official"
+    },
+    "vet-event": {
+      "injury": "ready",
+      "death": "ready",
+      "other": "ready",
+      "unknown": "official"
+    },
+    "vet-stage": {
+      "before": "ready",
+      "reviewing": "ready",
+      "rejected": "official",
+      "filed": "official",
+      "accepted": "ready",
+      "other": "official"
+    },
+    "vet-elapsed": {
+      "within30": "official",
+      "d31to90": "urgent",
+      "over90": "urgent",
+      "unknown": "urgent"
+    },
+    "vet-connection": {
+      "collected": "ready",
+      "partial": "documents",
+      "not-collected": "documents",
+      "unsure": "official"
+    },
+    "vet-records": {
+      "collected": "ready",
+      "partial": "documents",
+      "no-copies": "documents",
+      "no-treatment": "ready",
+      "unknown": "official"
+    },
+    "vet-current": {
+      "yes": "ready",
+      "none": "documents",
+      "unknown": "official"
+    },
+    "vet-history": {
+      "first": "ready",
+      "once": "official",
+      "multi": "official",
+      "other": "official",
+      "unknown": "official"
+    },
+    "vet-consult": {
+      "yes": "ready",
+      "none": "official",
+      "unknown": "ready"
+    }
+  },
+  "land": {
+    "land-topic": {
+      "development": "ready",
+      "compensation": "ready",
+      "notice": "ready",
+      "contract": "ready",
+      "unknown": "ready"
+    },
+    "land-use": {
+      "build": "ready",
+      "ground": "ready",
+      "split": "ready",
+      "unknown": "ready"
+    },
+    "land-location": {
+      "parcel": "ready",
+      "map": "documents",
+      "unknown": "ready"
+    },
+    "land-compensation-paper": {
+      "inventory": "documents",
+      "offer": "documents",
+      "decision": "official",
+      "unknown": "official"
+    },
+    "land-compensation-list": {
+      "difference": "documents",
+      "compared": "ready",
+      "unknown": "documents"
+    },
+    "land-notice": {
+      "record": "ready",
+      "spoken": "documents",
+      "first": "ready",
+      "unknown": "documents"
+    },
+    "land-contract": {
+      "draft": "documents",
+      "signed": "documents",
+      "verbal": "ready",
+      "unknown": "documents"
+    },
+    "land-schedule": {
+      "due": "urgent",
+      "later": "ready",
+      "none": "ready",
+      "unknown": "official"
+    }
+  },
+  "appeal": {
+    "appeal-stage": {
+      "decision": "documents",
+      "before": "documents",
+      "waiting": "ready",
+      "spoken": "official",
+      "unknown": "ready"
+    },
+    "appeal-delivery": {
+      "record": "ready",
+      "memory": "documents",
+      "unknown": "official"
+    },
+    "appeal-reasons": {
+      "found": "ready",
+      "unclear": "documents",
+      "unknown": "official"
+    },
+    "appeal-receipt": {
+      "receipt": "ready",
+      "sent": "official",
+      "unknown": "official"
+    },
+    "appeal-contacts": {
+      "filed": "documents",
+      "spoken": "ready",
+      "none": "ready",
+      "unknown": "documents"
+    },
+    "appeal-evidence": {
+      "held": "ready",
+      "elsewhere": "documents",
+      "unknown": "documents"
+    },
+    "appeal-impact": {
+      "already": "documents",
+      "scheduled": "documents",
+      "none": "ready",
+      "unknown": "official"
+    },
+    "appeal-date": {
+      "near": "urgent",
+      "later": "ready",
+      "period": "official",
+      "unknown": "official"
+    }
+  },
+  "procurement": {
+    "procurement-topic": {
+      "production": "ready",
+      "women": "ready",
+      "registration": "ready",
+      "unknown": "documents"
+    },
+    "procurement-notice": {
+      "saved": "ready",
+      "heard": "documents",
+      "none": "ready",
+      "unknown": "ready"
+    },
+    "procurement-production": {
+      "own": "documents",
+      "partial": "documents",
+      "purchased": "official",
+      "unknown": "ready"
+    },
+    "procurement-business": {
+      "individual": "ready",
+      "company": "documents",
+      "cooperative": "documents",
+      "unknown": "ready"
+    },
+    "procurement-supply": {
+      "manufacture": "documents",
+      "goods": "ready",
+      "services": "documents",
+      "unknown": "ready"
+    },
+    "procurement-stage": {
+      "new": "ready",
+      "filed": "ready",
+      "requested": "documents",
+      "existing": "ready",
+      "unknown": "documents"
+    },
+    "procurement-changes": {
+      "changed": "documents",
+      "same": "ready",
+      "unknown": "documents"
+    },
+    "procurement-date": {
+      "near": "urgent",
+      "later": "ready",
+      "none": "ready",
+      "unknown": "official"
     }
   }
 };

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { homeFaqs } from '../data/faq';
-import { checks } from '../data/checks';
+import { CheckCards } from '../components/CheckCards';
 import { office } from '../data/office';
 import { profile } from '../data/profile';
 import { IntakeLinks } from '../components/IntakeLinks';
@@ -11,7 +11,6 @@ import { RepresentativeBadge } from '../components/RepresentativeBadge';
 import { PromiseList } from '../components/PromiseList';
 import { ProcessFeeCard } from '../components/ProcessFeeCard';
 import { ServiceAreaGrid } from '../components/ServiceAreaGrid';
-import { VisaCheckCard } from '../components/VisaCheckCard';
 
 // 비용을 시작 전에 글로 안내하는 단계는 FAQ "비용은 어떻게 되나요?"·/process 페이지의 견적서 안내와 같은 약속이다.
 const processSteps = [
@@ -92,17 +91,7 @@ export function HomePage() {
             <li>답변은 브라우저에만 저장되며, 상담 신청 때 직접 선택하신 경우에만 함께 전송됩니다</li>
           </ul>
         </div>
-        <div className="grid-3">
-          {Object.values(checks).map((def) => (
-            <article className="card action-card" key={def.domain}>
-              <h3>{def.title}</h3>
-              <p>{def.summary}</p>
-              <p className="note">{def.questions.length}개 문항 · 약 3분</p>
-              <Link className="button button--primary" to={`/check/${def.domain}`}>진단 시작 →</Link>
-            </article>
-          ))}
-          <VisaCheckCard headingLevel="h3" />
-        </div>
+        <CheckCards headingLevel="h3" />
       </section>
 
       <section className="section section--tinted" aria-labelledby="why-heading">

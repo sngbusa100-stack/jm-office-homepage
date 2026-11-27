@@ -20,9 +20,9 @@ describe('분야별 다음 단계', () => {
     expect(step.barLabel).toBe('다국어 진단센터 열기');
   });
 
-  it('진단이 없는 분야는 페이지 안 확인 목록을 가리킨다', () => {
+  it('토지 분야는 맞춤 진단으로 연결한다', () => {
     const step = nextStepFor(findService('documents')!, {});
-    expect(step.href).toBe('#preparation-review');
-    expect(step.stepLabel).toBe('상담 전 확인 목록');
+    expect(step.href).toBe('/check/land');
+    expect(step.stepLabel).toBe('내 상황 진단');
   });
 });

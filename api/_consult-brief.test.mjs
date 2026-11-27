@@ -24,12 +24,12 @@ describe('상담 준비 메모', () => {
   it('진단 답은 고객이 결과 화면에서 본 등급·안내·근거로, 급한 것부터 보여 준다', () => {
     const record = {
       topic: '음주운전 면허 구제',
-      diagnosis: { domain: 'dui', answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd60to90' }, counts: { urgent: 1 } },
+      diagnosis: { domain: 'dui', answers: { 'dui-disposition': 'suspend', 'dui-elapsed': 'd61to90' }, counts: { urgent: 1 } },
     };
     const brief = buildConsultBrief(record);
     const shown = section(brief, '고객이 셀프 진단에서 본 안내(급한 것부터)').lines;
-    expect(shown[0]).toMatch(/^\[긴급 확인\] .*60일 ~ 90일: .*\(행정심판법 제27조\)$/);
-    expect(shown[1]).toMatch(/^\[확인됨\] /);
+    expect(shown[0]).toMatch(/^\[먼저 확인할 일정\] .*61~90일 됐어요: .*\(행정심판법 제27조\)$/);
+    expect(shown[1]).toMatch(/^\[상담 때 참고할 내용\] /);
     expect(section(brief, '한눈에').lines).toContain('⏰ 기한 우선 — 근거: 셀프 진단');
     // 이미 답한 처분 종류는 다시 묻지 않고, 기한 질문이 맨 앞이다.
     const asks = section(brief, '통화·회신 때 물어볼 것').lines;

@@ -10,6 +10,8 @@ import { OfficeLocation } from '../components/OfficeLocation';
 import { VisaIntakeFields } from '../components/VisaIntakeFields';
 import { DeadlineReportField } from '../components/DeadlineReportField';
 import type { DeadlineReport } from '../data/deadlineReport';
+import { diagnosisTopicSlug } from '../../api/_diagnosis-routing.mjs';
+import { checkPath, classifyAnswers, summarize, LEVEL_LABEL } from '../domain/diagnosis';
 import { findCheck } from '../data/checks';
 import { CONSULT_TOPIC_BY_SLUG } from '../data/consultTopics';
 import { EMPTY_VISA_INTAKE, buildVisaIntakePayload, intakeWording } from '../data/visaIntake';
@@ -17,10 +19,6 @@ import type { VisaIntakeAnswers } from '../data/visaIntake';
 
 const VISA_TOPIC = '출입국 · 비자';
 const DIAGNOSIS_LANGUAGES = ['ko', 'en', 'zh', 'vi', 'ja'];
-
-const LEVEL_LABEL: Record<ResultLevel, string> = {
-  urgent: '긴급 확인', documents: '서류 보완', official: '공식 확인', ready: '확인됨',
-};
 
 const LEVEL_KEYS: ResultLevel[] = ['urgent', 'documents', 'official', 'ready'];
 
@@ -138,7 +136,11 @@ function readDiagnosis(): ConsultDiagnosis | undefined {
   try {
     const parsed = JSON.parse(raw) as ConsultDiagnosis;
     if (typeof parsed.domain === 'string' && parsed.answers && typeof parsed.answers === 'object') {
-      return parsed;
+      const definition = findCheck(parsed.domain);
+      if (!definition) return undefined;
+      const { answers } = checkPath(definition, parsed.answers);
+      const { counts } = summarize(definition, classifyAnswers(definition, answers));
+      return { ...parsed, answers, counts };
     }
   } catch {
     // 손상된 저장값은 진단 없이 접수한다.
@@ -150,7 +152,7 @@ function readDiagnosis(): ConsultDiagnosis | undefined {
 function describeDiagnosis(diagnosis: ConsultDiagnosis): { question: string; answer: string }[] {
   const definition = findCheck(diagnosis.domain);
   if (!definition) return [];
-  return definition.questions.flatMap((question) => {
+  return checkPath(definition, diagnosis.answers).questions.flatMap((question) => {
     const option = question.options.find((item) => item.id === diagnosis.answers[question.id]);
     return option ? [{ question: question.text, answer: option.label }] : [];
   });
@@ -232,7 +234,7 @@ export function ConsultPage() {
   // 진단 결과 화면에서 남긴 셀프 진단. 자동으로 보내지 않고, 같은 분야일 때
   // 화면의 '함께 보내기'를 고른 경우에만 접수에 붙인다(보고서 2-1 4번).
   const [storedDiagnosis] = useState<ConsultDiagnosis | undefined>(readDiagnosis);
-  const diagnosisTopic = storedDiagnosis ? TOPIC_SLUGS[storedDiagnosis.domain] : undefined;
+  const diagnosisTopic = storedDiagnosis ? TOPIC_SLUGS[diagnosisTopicSlug(storedDiagnosis.domain, storedDiagnosis.answers)] : undefined;
   const diagnosisItems = storedDiagnosis ? describeDiagnosis(storedDiagnosis) : [];
   const [attachChoice, setAttachChoice] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string>(presetTopic ?? diagnosisTopic ?? '');
@@ -437,7 +439,7 @@ export function ConsultPage() {
             <option value="" disabled>분야를 선택해 주세요</option>
             <option>음주운전 면허 구제</option>
             <option>영업정지 · 행정심판</option>
-            <option>인허가</option>
+            <option value="인허가">인허가 · 등록 · 변경 / 토지개발 / 공공조달 · 기업인증</option>
             <option>출입국 · 비자</option>
             <option>국가보훈</option>
             <option>토지보상 · 내용증명 · 계약서</option>

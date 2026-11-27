@@ -201,12 +201,11 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
     const section = screen.getByRole('region', { name: '3분 셀프 진단' });
     const titles = within(section).getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
     expect(titles).toEqual([
-      '인허가 신청 사전 점검', '영업정지 처분 대응 사전 점검', '음주운전 면허 구제 사전 점검',
-      '국가유공자 등록 사전 점검', '외국인 비자 사전 진단',
+      '인허가 · 등록 · 변경', '출입국 · 비자', '토지개발 · 보상', '행정심판 · 권리구제', '공공조달 · 기업인증',
     ]);
     const visa = within(section).getByRole('link', { name: /비자 진단 열기/ });
     expect(visa.getAttribute('href')).toMatch(/^https:\/\/visa\.jungmyungoffice\.com\/?\?utm_content=jm_main/);
-    expect(within(section).getAllByText(/개 문항 · 약 3분/)).toHaveLength(4);
+    expect(section.querySelectorAll('a[href^="/check/"]')).toHaveLength(7);
   });
 
   it('셀프 진단 섹션에 일반 정보·브라우저 저장 안내가 한 번만 있다', () => {
@@ -244,17 +243,15 @@ describe('홈 첫 화면 — 사무소와 대표 행정사 소개', () => {
 describe('진단 선택 화면 — 통지서 준비 안내', () => {
   it('홈에서 옮겨 온 통지서 준비 안내가 있다', () => {
     renderAt('/check');
-    const guide = screen.getByRole('complementary', { name: /통지서를 옆에 두고/ });
-    expect(within(guide).getByText('받은 날짜')).toBeInTheDocument();
-    expect(within(guide).getByText('처분·통지서')).toBeInTheDocument();
+    expect(screen.getByText(/받은 통지가 있다면 받은 날짜를 확인/)).toBeInTheDocument();
   });
 
   it('진단 선택 화면도 인허가가 먼저이고 비자 진단 카드가 있다', () => {
     renderAt('/check');
     const main = within(screen.getByRole('main'));
     const titles = main.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-    expect(titles.indexOf('인허가 신청 사전 점검')).toBeLessThan(titles.indexOf('영업정지 처분 대응 사전 점검'));
-    expect(titles).toContain('외국인 비자 사전 진단');
+    expect(titles.indexOf('인허가 · 등록 · 변경')).toBeLessThan(titles.indexOf('행정심판 · 권리구제'));
+    expect(titles).toContain('출입국 · 비자');
   });
 });
 

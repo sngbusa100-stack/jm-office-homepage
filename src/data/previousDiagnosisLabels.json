@@ -1,0 +1,171 @@
+{
+  "permit": {
+    "permit-kind": {
+      "text": "받으려는 것이 허가 · 등록 · 신고 · 승인 중 무엇인지 확인하셨나요?",
+      "options": {
+        "withlaw": "종류와 근거 조항까지 확인했다",
+        "nameonly": "이름만 알고 근거 조항은 모른다",
+        "never": "구분해 본 적 없다"
+      }
+    },
+    "permit-address": {
+      "text": "사업장 주소가 정해졌나요?",
+      "options": {
+        "na": "해당 없음 (장소 요건이 없는 인허가)"
+      }
+    },
+    "permit-zoning": {
+      "text": "그 주소의 용도지역과 건축물 용도를 확인하셨나요?",
+      "options": {
+        "ok": "둘 다 확인했고 하려는 업종이 가능하다",
+        "unsure": "확인은 했지만 가능한지 판단이 안 선다",
+        "notchecked": "확인하지 않았다",
+        "na": "해당 없음 (장소 요건이 없는 인허가)"
+      }
+    },
+    "permit-facility": {
+      "text": "시설 기준표를 받아 내 시설과 항목별로 대조해 보셨나요?",
+      "options": {
+        "matched": "항목별로 대조했고 모두 충족한다",
+        "gap": "대조했더니 부족한 항목이 있다",
+        "seenonly": "기준은 봤지만 내 시설과 대조는 안 했다",
+        "nowhere": "기준표가 어디 있는지 모른다",
+        "na": "해당 없음 (시설 기준이 없는 인허가)"
+      }
+    },
+    "permit-staff": {
+      "text": "사람에 대한 요건(자격증 · 교육 이수 · 필수 인력)을 확인하셨나요?",
+      "options": {
+        "ready": "요건을 확인했고 모두 갖췄다",
+        "pending": "요건은 알지만 아직 갖추지 못했다",
+        "noneneeded": "사람에 대한 요건이 없다",
+        "unknown": "있는지 없는지 모른다"
+      }
+    },
+    "permit-disqualification": {
+      "text": "대표자 · 법인에게 결격사유가 있는지 확인하셨나요?",
+      "options": {
+        "clear": "결격사유 조항을 보고 해당 없음을 확인했다",
+        "maybe": "해당될 수 있는 이력이 있다",
+        "notchecked": "확인하지 않았다"
+      }
+    },
+    "permit-supplement-deadline": {
+      "text": "보완 요구를 받으셨다면 기한이 얼마나 남았나요?",
+      "options": {
+        "remaining": "아직 여유가 있다",
+        "na": "보완 요구를 받은 적 없다"
+      }
+    },
+    "permit-opening": {
+      "text": "사업 개시(개업 · 가동) 예정일까지 얼마나 남았나요?",
+      "options": {
+        "over3m": "3개월 이상 남았다",
+        "m1to3": "1 ~ 3개월 남았다",
+        "within1m": "1개월 이내다"
+      }
+    }
+  },
+  "suspension": {
+    "susp-stage": {
+      "text": "처분이 어느 단계에 있나요?",
+      "options": {
+        "prenotice": "사전통지(의견제출 기간 중)"
+      }
+    },
+    "susp-opinion-deadline": {
+      "text": "의견제출 기한은 어떻게 되나요?",
+      "options": {
+        "remaining": "아직 기한이 남음",
+        "na": "해당 없음"
+      }
+    },
+    "susp-elapsed": {
+      "text": "확정 처분 통지를 받은 지 얼마나 되었나요?",
+      "options": {
+        "d30to60": "30일 ~ 60일",
+        "d60to90": "60일 ~ 90일",
+        "na": "해당 없음"
+      }
+    },
+    "susp-execution": {
+      "text": "영업정지 집행 일정은 어떻게 되나요?",
+      "options": {
+        "imminent": "시작일이 지정됨 · 임박",
+        "notyet": "아직 시작 전"
+      }
+    },
+    "susp-evidence": {
+      "text": "소명에 쓸 증빙(CCTV · 신분증 확인 기록 등)은 준비되어 있나요?",
+      "options": {
+        "ready": "있음"
+      }
+    },
+    "susp-fine": {
+      "text": "영업정지를 과징금으로 전환하는 제도를 알고 계신가요?",
+      "options": {
+        "known": "알고 있고 검토를 원함",
+        "unknown": "모름"
+      }
+    }
+  },
+  "dui": {
+    "dui-disposition": {
+      "text": "어떤 처분을 받으셨나요?",
+      "options": {
+        "pending": "아직 통지 전 · 조사 중"
+      }
+    },
+    "dui-elapsed": {
+      "text": "처분(결정) 통지서를 받은 지 얼마나 되었나요?",
+      "options": {
+        "d30to60": "30일 ~ 60일",
+        "d60to90": "60일 ~ 90일"
+      }
+    },
+    "dui-refusal": {
+      "text": "음주 측정을 거부했나요?",
+      "options": {
+        "no": "아니오"
+      }
+    }
+  },
+  "veterans": {
+    "vet-type": {
+      "text": "어떤 유형으로 신청하려 하시나요?",
+      "options": {
+        "combat": "전상 · 공상 군경",
+        "died": "순직 관련",
+        "compensation": "보훈보상대상자",
+        "unknown": "모름"
+      }
+    },
+    "vet-stage": {
+      "text": "현재 진행 단계는 어디인가요?",
+      "options": {
+        "appealing": "재심의 · 행정심판 검토 중"
+      }
+    },
+    "vet-elapsed": {
+      "text": "비해당 결정 통지를 받은 지 얼마나 되었나요?",
+      "options": {
+        "na": "해당 없음",
+        "d30to90": "30일 ~ 90일"
+      }
+    },
+    "vet-connection": {
+      "text": "공무 관련성을 입증할 자료(병상일지 · 사고경위서 등)가 있나요?",
+      "options": {
+        "yes": "있음",
+        "none": "없음"
+      }
+    },
+    "vet-records": {
+      "text": "의무기록(군 병원 · 민간 진료 기록)은 확보하셨나요?",
+      "options": {
+        "yes": "확보함",
+        "none": "없음"
+      }
+    }
+  }
+}

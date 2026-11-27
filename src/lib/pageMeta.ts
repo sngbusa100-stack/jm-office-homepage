@@ -40,7 +40,7 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
   },
   '/check': {
     title: '3분 셀프 진단 | 정명 행정사사무소',
-    description: '인허가 신청, 영업정지 처분, 음주운전 면허, 국가유공자 등록에 관해 지금 확인할 사항과 준비 서류를 정리합니다. 외국인 비자는 5개 언어 비자 진단으로 안내합니다.',
+    description: '인허가, 비자, 토지개발·보상, 공공조달, 행정심판에 필요한 준비를 확인하세요. 영업정지·음주운전 면허·국가유공자 등록은 상황별로 안내합니다.',
   },
   '/consult': {
     title: '상담 안내 | 정명 행정사사무소',
@@ -67,28 +67,31 @@ const STATIC_META: Record<string, Pick<PageMeta, 'title' | 'description'>> = {
  * 초기값: 해당 페이지와 그 내용을 담은 데이터 파일의 마지막 커밋 날짜 중 최근 것(2026-11-12).
  */
 export const PAGE_UPDATED_AT: Record<string, string> = {
-  '/': '2026-11-25',
+  '/': '2026-11-27',
   '/about': '2026-11-12',
   '/why': '2026-10-19',
   '/process': '2026-11-25',
   '/services': '2026-11-02',
-  '/check': '2026-11-02',
-  '/consult': '2026-11-25',
+  '/check': '2026-11-27',
+  '/consult': '2026-11-27',
   '/privacy': '2026-11-25',
   '/disclaimer': '2026-10-19',
   '/location': '2026-11-25',
   '/services/license': '2026-11-02',
   '/services/immigration': '2026-11-12',
-  '/services/documents': '2026-11-02',
-  '/services/land-development': '2026-11-25',
-  '/services/procurement': '2026-11-25',
-  '/services/suspension': '2026-11-02',
+  '/services/documents': '2026-11-27',
+  '/services/land-development': '2026-11-27',
+  '/services/procurement': '2026-11-27',
+  '/services/suspension': '2026-11-27',
   '/services/dui': '2026-11-02',
   '/services/veterans': '2026-11-02',
-  '/check/permit': '2026-11-02',
-  '/check/suspension': '2026-11-02',
-  '/check/dui': '2026-11-02',
-  '/check/veterans': '2026-11-02',
+  '/check/land': '2026-11-27',
+  '/check/appeal': '2026-11-27',
+  '/check/procurement': '2026-11-27',
+  '/check/permit': '2026-11-27',
+  '/check/suspension': '2026-11-27',
+  '/check/dui': '2026-11-27',
+  '/check/veterans': '2026-11-27',
 };
 
 function buildMeta(

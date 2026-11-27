@@ -458,31 +458,55 @@ th { background: var(--surface-muted); font-weight: 700; }
   background: var(--accent);
 }
 
-/* 진단 화면 간격: 제목 → 진행 막대 → 질문 카드 */
-.narrow-page > h1 + .progress { margin-top: 14px; }
-.narrow-page > .progress + .question-card { margin-top: 22px; }
-.narrow-page > .question-card + .button-row { margin-top: 20px; }
-/* legend를 float로 띄우면 fieldset 위 테두리에 걸치지 않고 카드 안쪽(패딩 안)에 놓인다 */
+.question-position {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 18px 0 6px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.question-position span { font-size: var(--fs-sm); font-weight: 400; color: var(--text-muted); }
+.narrow-page > .progress + .question-card { margin-top: 20px; }
+.narrow-page > .question-card + .button-row { margin-top: 16px; }
+.question-card { min-width: 0; padding: clamp(18px, 4vw, 32px); }
 .question-card legend {
   float: left;
   width: 100%;
   padding: 0;
+  margin-bottom: 16px;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  line-height: var(--lh-snug);
   font-weight: 700;
-  font-size: var(--fs-lg);
-  margin-bottom: 12px;
+  color: var(--primary);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .question-card legend + * { clear: both; }
-
+.question-help { margin: 0 0 18px; color: var(--text-muted); line-height: var(--lh-snug); }
 .option-row {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  margin-bottom: 8px;
+  line-height: var(--lh-snug);
   cursor: pointer;
 }
+.option-row + .option-row { margin-top: 8px; }
 .option-row:hover { background: var(--surface-muted); }
-.option-row input { margin-right: 10px; }
+.option-row:has(:checked) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+  background: var(--surface-muted);
+}
+.option-row:has(:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.option-row input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--primary); }
+.result-group h2 { margin-bottom: 12px; }
+.result-group .card + .card { margin-top: 10px; }
+.result-note { margin-top: 8px; }
 
 .center-actions {
   display: flex;
@@ -673,6 +697,11 @@ th { background: var(--surface-muted); font-weight: 700; }
 .action-card { display: flex; flex-direction: column; align-items: flex-start; }
 .action-card p { color: var(--text-muted); }
 .action-card .button { margin-top: auto; }
+.check-directory .action-card { gap: 12px; }
+.check-directory .action-card > * { margin-bottom: 0; }
+.check-links { align-self: stretch; list-style: none; margin: 0; padding: 0; }
+.check-links a { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 4px 0; }
+.check-links li + li { border-top: 1px solid var(--border); }
 
 .service-grid { align-items: stretch; }
 .service-card { position: relative; display: flex; flex-direction: column; min-height: 250px; overflow: hidden; }

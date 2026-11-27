@@ -4,10 +4,13 @@
 import { writeFileSync } from 'node:fs';
 import { checks } from '../src/data/checks';
 
+const visibility: Record<string, Record<string, Record<string, string[]>>> = {};
 const out: Record<string, Record<string, Record<string, string>>> = {};
 for (const [domain, definition] of Object.entries(checks)) {
   out[domain] = {};
+  visibility[domain] = {};
   for (const question of definition.questions) {
+    if (question.showWhen) visibility[domain][question.id] = question.showWhen;
     out[domain][question.id] = Object.fromEntries(
       question.options.map((option) => [option.id, option.level]),
     );
@@ -15,6 +18,6 @@ for (const [domain, definition] of Object.entries(checks)) {
 }
 writeFileSync(
   'api/_check-levels.mjs',
-  `// scripts/gen-check-levels.ts가 생성한 파일 — 직접 편집하지 마세요.\nexport default ${JSON.stringify(out, null, 2)};\n`,
+  `// scripts/gen-check-levels.ts가 생성한 파일 — 직접 편집하지 마세요.\nexport const visibility = ${JSON.stringify(visibility, null, 2)};\nexport default ${JSON.stringify(out, null, 2)};\n`,
 );
 console.log('api/_check-levels.mjs 갱신 완료');

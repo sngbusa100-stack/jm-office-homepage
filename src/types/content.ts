@@ -1,4 +1,4 @@
-export type CheckDomain = 'dui' | 'suspension' | 'veterans' | 'permit';
+export type CheckDomain = 'dui' | 'suspension' | 'veterans' | 'permit' | 'land' | 'procurement' | 'appeal';
 
 export type ResultLevel = 'ready' | 'documents' | 'official' | 'urgent';
 
@@ -14,6 +14,7 @@ export interface Question {
   id: string;
   text: string;
   help?: string;
+  showWhen?: Record<string, string[]>;
   options: QuestionOption[];
 }
 

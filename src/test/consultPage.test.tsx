@@ -45,7 +45,7 @@ describe('상담 페이지 (개업 전)', () => {
     renderAt('/consult');
     const textarea = screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement;
     expect(textarea.value).toContain('음주운전');
-    expect(textarea.value).toContain('긴급 확인 1');
+    expect(textarea.value).toContain('먼저 확인할 일정 1');
   });
 
   it('긴급 대안 채널(110)을 안내한다', () => {

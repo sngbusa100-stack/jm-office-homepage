@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { findService } from '../data/services';
 import { attributedExternalUrl } from '../lib/funnel';
 
-const VISA_TYPES = 'D-2 유학 · D-10 구직 · E-7 전문인력 · F-2-7 점수제 · F-5 영주 · F-6 결혼이민';
+const VISA_PURPOSES = '한국에서 공부하거나 일하고 싶을 때, 가족과 살거나 오래 머물고 싶을 때 필요한 준비를 살펴보세요.';
 const VISA_LANGUAGES = '한국어 · English · 中文 · Tiếng Việt · 日本語';
 
 /**
@@ -18,8 +18,8 @@ export function VisaCheckCard({ headingLevel }: { headingLevel: 'h2' | 'h3' }) {
 
   return (
     <article className="card action-card visa-check-card">
-      <Heading>외국인 비자 사전 진단</Heading>
-      <p>{VISA_TYPES}</p>
+      <Heading>출입국 · 비자</Heading>
+      <p>{VISA_PURPOSES}</p>
       <p className="note" lang="mul">{VISA_LANGUAGES}</p>
       <p className="note">6개 비자 · 5개 언어 · 정명 비자 진단센터(별도 사이트)</p>
       <a className="button button--primary" href={href}>비자 진단 열기 →</a>

@@ -74,12 +74,12 @@ export function VisaIntakeFields({ answers, onChange, disabled, fromDiagnosis }:
     <section className="visa-intake" aria-labelledby="visa-intake-title">
       <h3 id="visa-intake-title">비자 상담에 필요한 질문</h3>
       <p className="note">
-        상황을 정확히 이해하려고 여쭙니다. 모르시면 &lsquo;잘 모르겠음&rsquo;을 고르셔도 됩니다.
+        비자를 받을 분을 기준으로 골라 주세요. 확실하지 않으면 &lsquo;잘 모르겠음&rsquo;을 고르셔도 됩니다.
         외국인등록번호·여권번호는 묻지 않습니다.
       </p>
 
       <RadioGroup
-        legend="누구의 일로 문의하시나요?"
+        legend="누구의 비자를 문의하시나요?"
         name="requester"
         options={REQUESTER_OPTIONS}
         value={answers.requester}
@@ -105,7 +105,7 @@ export function VisaIntakeFields({ answers, onChange, disabled, fromDiagnosis }:
       )}
       {answers.requester === 'company' && (
         <RadioGroup
-          legend="이번에 처리할 직원은 몇 명인가요?"
+          legend="비자를 문의할 직원은 몇 명인가요?"
           name="staffCount"
           options={STAFF_COUNT_OPTIONS}
           value={answers.staffCount}
@@ -122,6 +122,7 @@ export function VisaIntakeFields({ answers, onChange, disabled, fromDiagnosis }:
           legend={words.stay}
           name="stayStatus"
           options={STAY_STATUS_OPTIONS}
+          hint="두 달은 사무소에서 상담 준비를 위해 나눈 기준입니다."
           value={answers.stayStatus}
           onSelect={(value) => onChange({ stayStatus: value })}
           disabled={disabled}

@@ -7,13 +7,13 @@ export type DeadlineReport = 'soon' | 'later' | 'unknown' | 'none';
 export type UrgentReason = 'diagnosis' | 'visaIntake' | 'visaDiagnosis' | 'selfReported';
 
 /** 화면에서는 뒤에 '(선택)'을 붙인다. */
-export const DEADLINE_REPORT_QUESTION = '받으신 처분서·통지서에 적힌 기한이 있나요?';
+export const DEADLINE_REPORT_QUESTION = '기관에서 받은 문서에 언제까지 답하거나 제출하라고 적혀 있나요?';
 
 export const DEADLINE_REPORT_OPTIONS: { value: DeadlineReport; label: string }[] = [
   { value: 'soon', label: '2주 안이거나 이미 지났습니다' },
   { value: 'later', label: '있지만 2주 넘게 남았습니다' },
   { value: 'unknown', label: '기한이 있는지, 언제인지 모릅니다' },
-  { value: 'none', label: '받은 통지서가 없습니다' },
+  { value: 'none', label: '문서를 받지 않았거나 문서에 기한이 없습니다' },
 ];
 
 /** /admin 배지 설명과 로컬 대기함 표시에 쓰는 긴급 근거 이름. */

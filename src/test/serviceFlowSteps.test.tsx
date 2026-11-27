@@ -37,9 +37,9 @@ describe('업무분야 4단계 진행 표시', () => {
     expect(screen.getByText(/다국어 진단센터로 이동합니다/)).toBeInTheDocument();
   });
 
-  it('진단이 없는 분야는 페이지 안의 확인 목록을 가리킨다', () => {
+  it('토지 분야는 맞춤 진단으로 연결한다', () => {
     renderFor('documents');
-    expect(screen.getByRole('link', { name: /상담 전 확인 목록/ })).toHaveAttribute('href', '#preparation-review');
+    expect(screen.getByRole('link', { name: /내 상황 진단/ })).toHaveAttribute('href', '/check/land');
   });
 
   it('현재 단계를 접근성 속성으로 알린다', () => {
@@ -69,11 +69,11 @@ describe('분야 상세의 단계 안내', () => {
     expect(document.querySelector('#preparation-review')).not.toBeNull();
   });
 
-  it('진단이 없는 분야의 주 버튼은 확인 목록으로 간다', () => {
+  it('토지 분야의 주 버튼은 토지 진단으로 간다', () => {
     renderPage('documents');
-    const links = screen.getAllByRole('link', { name: /상담 전 확인 목록 보기/ });
+    const links = screen.getAllByRole('link', { name: /내 상황 셀프 진단하기/ });
     expect(links).toHaveLength(2);
-    links.forEach((link) => expect(link).toHaveAttribute('href', '#preparation-review'));
+    links.forEach((link) => expect(link).toHaveAttribute('href', '/check/land'));
   });
 
   it('상단에는 주 행동 하나만, 하단에는 둘을 둔다', () => {

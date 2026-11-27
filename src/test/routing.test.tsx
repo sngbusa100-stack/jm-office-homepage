@@ -35,7 +35,7 @@ describe('라우팅', () => {
 
   it('인허가 진단 경로가 열린다', () => {
     renderAt('/check/permit');
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('인허가 신청 사전 점검');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('인허가 신청·변경 사전 점검');
   });
 
   it('없는 주소는 404와 복구 경로를 보여준다', () => {

@@ -1,7 +1,7 @@
 import { findService, services, type Service } from './services';
 
 export interface ServiceArea {
-  id: string;
+  id: 'permit' | 'visa' | 'land' | 'remedy' | 'procurement';
   name: string;
   short: string;
   /** 이 분야에 속한 업무 상세 페이지(services.ts slug). 2026-11-25부터 5개 분야 모두 하나 이상 있다(시험으로 고정) */
