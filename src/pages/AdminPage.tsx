@@ -746,7 +746,7 @@ export function AdminPage() {
 
       <section aria-labelledby="stats">
         <h2 id="stats">접수 통계</h2>
-        <div className="grid-3">
+        <div className="grid-2">
           <article className="card">
             <h3>전체</h3>
             <p className="admin-stat">{stats.total}건</p>

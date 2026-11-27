@@ -46,10 +46,9 @@ main:focus { outline: none; }
 .card h2, .card h3 { margin-bottom: 10px; }
 .card p + .button, .card p + .text-link { margin-top: 18px; }
 
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-/* 768px에서 곧바로 1열이 되면 태블릿에서 3열이 눌려 카드 글자가 좁아진다. */
-@media (max-width: 1024px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+/* 업무분야·셀프 진단의 다섯 카드는 좁은 화면에서 세 열에서 한 열로 전환한다. */
 @media (max-width: 768px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
 
 .level-urgent { border-left: 4px solid var(--danger); }
@@ -380,8 +379,25 @@ nav#global-nav a.active {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   counter-reset: process;
 }
-@media (min-width: 769px) {
-  .process-grid--three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 홀수 단계는 한 열에서 세 열로, 네 단계는 한 열에서 두 열과 네 열로 전환한다. */
+:is(.process-grid, .process-list):where(:has(> :first-child)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 456px) {
+  :is(.process-grid, .process-list):where(:has(> :nth-child(even):last-child)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 680px) {
+  .process-grid.process-grid--three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .process-list:has(> :is(:nth-child(3), :nth-child(5)):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 896px) {
+  :is(.process-grid, .process-list):has(> :nth-child(4):last-child) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 .process-grid > *, .process-list > * {
   counter-increment: process;
@@ -865,7 +881,7 @@ th { background: var(--surface-muted); font-weight: 700; }
    텍스트 요소만 780px로 제한한다 — Range API 실측으로 줄당 53~56자
    (제한 전에는 약 80자였다).
    카드 그리드(quick-check-grid, preparation-grid, related-link-grid)와
-   process-list(auto-fit 그리드), flow-steps는 제외해 전체 폭을 유지한다. */
+   process-list와 flow-steps는 제외해 전체 폭을 유지한다. */
 .service-landing > section > p,
 .service-landing > .card > p,
 .service-landing > aside > p,
