@@ -51,6 +51,10 @@ describe('접수 연동 계약 (api/_inquiry-contract.json)', () => {
     expect(Object.values(contract.topics).filter((r) => (r as { route: string }).route === 'case')).toHaveLength(2);
   });
 
+  it('일반 행정구제 진단은 사건 전환 분야지만 사건 유형은 정하지 않는다(행정사가 통지를 보고 고름)', () => {
+    expect(contract.diagnosisRoutes).toEqual({ appeal: { route: 'case' } });
+  });
+
   it('연동기 GET은 저장하지 않는 회신 초안·긴급 근거·상담 준비 메모를 함께 돌려준다', () => {
     expect(contract.connectorGetExtras).toEqual(['replyDraft', 'urgentReasons', 'consultBrief']);
     expect(contract.recordFields).not.toContain('consultBrief');

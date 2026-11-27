@@ -1,4 +1,5 @@
 export declare const TOPIC_ROUTES: Record<string, { route: 'case' | 'reply'; caseType?: string }>;
+export declare const DIAGNOSIS_ROUTES: Record<string, { route: 'case' | 'reply'; caseType?: string }>;
 export declare const REPLY_TEMPLATES: { topic: string; intro: string }[];
 export declare function planReply(record: unknown): {
   template: { topic: string; intro: string };

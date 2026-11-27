@@ -20,6 +20,16 @@ export const TOPIC_ROUTES = {
   '토지보상 · 내용증명 · 계약서': { route: 'reply' },
 };
 
+/**
+ * 셀프 진단 분야 → 처리 경로. 진단을 마치고 들어온 접수는 상담 분야보다 이 경로를 먼저 본다.
+ * caseType이 없으면 사건으로 진행할 때 행정사가 받은 통지를 보고 로컬 사건 유형을 고른다
+ * (일반 행정구제 진단은 거절·취소·환수 등 처분이 사건마다 달라 하나로 정할 수 없다, 2026-11-27 주인님 결정).
+ * 연동 계약 api/_inquiry-contract.json diagnosisRoutes에 실린다.
+ */
+export const DIAGNOSIS_ROUTES = {
+  appeal: { route: 'case' },
+};
+
 const UNANSWERED = ['unknown', 'unsure', ''];
 const DATED_VISA_STAGES = ['supplement', 'denied', 'departure-notice'];
 /** 접수 화면의 '누구의 일' 선택지는 고객 1인칭이라 회신에서는 사무소 표현으로 바꾼다. */

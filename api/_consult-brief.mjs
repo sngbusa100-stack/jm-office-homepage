@@ -90,7 +90,7 @@ export function buildConsultBrief(record) {
   // 1. 한눈에
   const serviceName = info && info.service !== topic ? ` (업무 안내: ${info.service})` : '';
   const summary = [`분야: ${generalAppeal ? '일반 행정심판' : topic || '미지정'}${serviceName}`,
-    generalAppeal ? '처리 경로: 받은 통지와 신청 내용을 보고 사건 유형 확인' : routeLine(topic)];
+    generalAppeal ? '처리 경로: 회신 뒤 행정심판 사건으로 전환할 수 있는 분야(로컬 사건 유형은 받은 통지를 보고 직접 선택)' : routeLine(topic)];
   const reasons = urgentReasons(record);
   if (reasons.length > 0) {
     summary.push(`⏰ 기한 우선 — 근거: ${reasons.map((r) => LABELS.brief.urgentReasons[r] ?? r).join(' · ')}`);

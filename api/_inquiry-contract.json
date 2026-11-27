@@ -104,6 +104,11 @@
       "route": "reply"
     }
   },
+  "diagnosisRoutes": {
+    "appeal": {
+      "route": "case"
+    }
+  },
   "connectorGetExtras": [
     "replyDraft",
     "urgentReasons",
