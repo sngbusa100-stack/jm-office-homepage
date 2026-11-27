@@ -110,7 +110,8 @@ export const STAGE_OPTIONS: IntakeOption[] = [
 
 export const DATED_STAGES = ['supplement', 'denied', 'departure-notice'];
 
-// 비자 진단 violationStatus(none/past/current/unsure)와 같은 값. '상담 때 말씀하겠음'은 빈 값으로 보낸다.
+// 값은 비자 진단 violationStatus(none/past/current/unsure)와 같지만 묻는 사실이 달라 진단 답을 이어받지 않는다.
+// '상담 때 말씀하겠음'은 빈 값으로 보낸다.
 export const VIOLATION_OPTIONS: IntakeOption[] = [
   { value: 'none', label: '없음' },
   { value: 'past', label: '예전에 있었고 끝남' },

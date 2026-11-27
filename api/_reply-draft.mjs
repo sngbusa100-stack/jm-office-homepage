@@ -318,7 +318,14 @@ export const SPECIFIC_TEMPLATES = {
     topic: '인허가', domain: 'procurement', serviceSlug: 'procurement',
     intro: '공공조달 참여에 필요한 확인·등록을 문의 주셨습니다.',
     items: [
-      { ask: '준비하는 확인이나 등록의 이름', from: [['procurement-topic', '준비할 업무']] },
+      {
+        ask: '준비하는 확인이나 등록의 이름',
+        from: [['procurement-topic', '준비할 업무', {
+          production: '직접생산확인',
+          women: '여성기업확인',
+          registration: '나라장터 입찰참가자격 등록',
+        }]],
+      },
       { ask: '참여할 공고가 있다면 공고 제목이나 번호' },
       { ask: '공고나 보완 요청에 적힌 마감 날짜와 시각', deadline: true },
     ],

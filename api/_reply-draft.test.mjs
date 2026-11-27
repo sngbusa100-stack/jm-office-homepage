@@ -372,6 +372,14 @@ describe('되짚기 문구는 사무소 말투다(2026-11-27)', () => {
     expect(text).toContain('- 현재 상황: 거절·취소·환수 등 결정 통지를 받음');
     expect(text).not.toContain('받았어요');
   });
+
+  it('공공조달 진단 답은 고객 말투 보기 대신 제도명으로 되짚는다(2026-11-28)', () => {
+    const { text } = buildReplyDraft(record('인허가', {
+      diagnosis: { domain: 'procurement', answers: { 'procurement-topic': 'production' } },
+    }));
+    expect(text).toContain('- 준비할 업무: 직접생산확인');
+    expect(text).not.toContain('받고 싶어요');
+  });
 });
 
 describe('문항 판이 다른 옛 접수 기록(2026-11-27)', () => {

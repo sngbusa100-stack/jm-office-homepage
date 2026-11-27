@@ -15,10 +15,11 @@ export function CheckCards({ headingLevel }: { headingLevel: 'h2' | 'h3' }) {
               <Heading>{area.name}</Heading>
               <p>받은 통지가 있다면 받은 날짜를 확인하고, 아래에서 해당하는 일을 고르세요.</p>
               <ul className="check-links">
-                {([['suspension', '영업정지·과징금'], ['dui', '운전면허 취소·정지'], ['veterans', '국가보훈 등록·결정'], ['appeal', '그 밖의 행정기관 결정·통지']] as const).map(([domain, label]) => (
+                {([['suspension', '영업정지·과징금'], ['dui', '음주운전으로 인한 면허 취소·정지'], ['veterans', '국가보훈 등록·결정'], ['appeal', '그 밖의 행정기관 결정·통지']] as const).map(([domain, label]) => (
                   <li key={domain}><Link to={`/check/${domain}`}>{label}<span aria-hidden="true"> →</span></Link></li>
                 ))}
               </ul>
+              <p className="note">벌점 등 음주운전이 아닌 사유의 면허 처분은 “그 밖의 행정기관 결정·통지”로 들어가세요.</p>
             </article>
           );
         }

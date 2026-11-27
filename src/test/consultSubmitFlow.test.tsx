@@ -377,6 +377,29 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(body).not.toHaveProperty('sourcePath');
   });
 
+  it('함께 보내기를 해제하고 분야를 바꿨다 돌아와도 진단 요약이 상담 내용으로 가지 않고, 고객 글은 그대로 간다', async () => {
+    sessionStorage.setItem('consult:diagnosis', JSON.stringify(DUI_DIAGNOSIS));
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, id: 'JM-OWNTEXT' }) });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage('/consult?topic=dui');
+
+    const textarea = screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement;
+    expect(textarea.value).toBe('');
+    expect(screen.getByText('진단 결과: 먼저 확인할 일정 1, 담당 기관에 물어볼 내용 1, 상담 때 참고할 내용 1')).toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기/ }));
+    await user.type(textarea, '처분 통지서를 어제 받았어요.');
+    await user.selectOptions(screen.getByLabelText('분야'), '인허가');
+    await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
+    expect(textarea.value).toBe('처분 통지서를 어제 받았어요.');
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/JM-OWNTEXT/);
+    const body = consultBody(fetchMock);
+    expect(body.message).toBe('처분 통지서를 어제 받았어요.');
+    expect(body).not.toHaveProperty('diagnosis');
+  });
+
   it('상담 분야가 진단 분야와 다르면 함께 보내기를 끄고 이유를 안내하며 보내지 않는다', async () => {
     sessionStorage.setItem('consult:diagnosis', JSON.stringify(DUI_DIAGNOSIS));
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, id: 'JM-OTHER' }) });
@@ -438,8 +461,12 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
 
     expect(await screen.findByText(/진단 결과가 상담 화면에 안전하게 연결/)).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /셀프 진단 답변 \d+개 함께 보내기/ })).toBeNull();
-    expect((screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement).value).toContain('E-7');
+    expect(screen.getByText(/안전하게 연결되었습니다 — E-7 · 현재 답변상 추가 표시 없음/)).toBeInTheDocument();
+    // 상담 내용에는 비자 안내 페이지에서 고른 코드만 보이는 첫 줄로 두고, 진단 요약은 넣지 않는다.
+    expect((screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement).value).toBe('[비자 선택] E-7\n\n');
     expect(screen.getByLabelText('분야')).toBeDisabled();
+    // 위반 이력은 진단 답(violationStatus)이 있어도 상담 질문으로 다시 묻는다.
+    expect(screen.getByText(/체류기간을 넘긴 적이 있거나, 출입국 기관에서 출국명령·과태료·범칙금 통지를 받은 적이 있나요\?/)).toBeInTheDocument();
 
     await user.type(screen.getByLabelText(/성함/), '홍길동');
     await user.type(screen.getByLabelText(/연락처/), '01012345678');

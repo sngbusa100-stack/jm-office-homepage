@@ -42,4 +42,16 @@ describe('업무 분야 5개(명함 기준) — 기존 상세 페이지는 그�
     expect(within(permit).getByRole('link', { name: /인허가 대리/ })).toHaveAttribute('href', '/services/license');
     expect(permit.textContent).toContain('비영리법인 설립 허가');
   });
+
+  it('행정심판 분야의 면허 입구는 음주운전 사유로 좁히고, 다른 사유는 일반 행정심판으로 안내한다(2026-11-28)', () => {
+    render(
+      <MemoryRouter initialEntries={['/check']}>
+        <AppRouter />
+      </MemoryRouter>,
+    );
+    const remedy = screen.getByRole('heading', { name: '행정심판 · 권리구제' }).closest('article') as HTMLElement;
+    expect(within(remedy).getByRole('link', { name: /음주운전으로 인한 면허 취소·정지/ })).toHaveAttribute('href', '/check/dui');
+    expect(within(remedy).getByRole('link', { name: /그 밖의 행정기관 결정·통지/ })).toHaveAttribute('href', '/check/appeal');
+    expect(remedy.textContent).toContain('음주운전이 아닌 사유의 면허 처분은');
+  });
 });

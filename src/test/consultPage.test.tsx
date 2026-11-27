@@ -39,31 +39,23 @@ describe('상담 페이지 (개업 전)', () => {
     expect(screen.getByRole('button', { name: /상담 신청하기/ })).toBeEnabled();
   });
 
-  it('진단 요약이 있으면 상담 내용에 미리 채운다', () => {
-    sessionStorage.setItem('consult:summary', JSON.stringify({
-      domain: 'dui', title: '음주운전 면허 구제 사전 점검',
-      counts: { urgent: 1, documents: 2, official: 0, ready: 3 },
-    }));
+  it('진단 요약은 상담 내용에 넣지 않고 함께 보내기 옆에 읽기 전용으로 보여 준다', () => {
     sessionStorage.setItem('consult:diagnosis', JSON.stringify({
       domain: 'dui', form: diagnosisForm(checks.dui), answers: { 'dui-disposition': 'revoke' }, counts: { ready: 1 },
     }));
     renderAt('/consult');
     const textarea = screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement;
-    expect(textarea.value).toContain('음주운전');
-    expect(textarea.value).toContain('먼저 확인할 일정 1');
+    expect(textarea.value).toBe('');
+    expect(screen.getByText(/^진단 결과: /)).toBeInTheDocument();
   });
 
-  it('함께 남긴 진단이 문항을 고치기 전 판이면 요약도 채우지 않는다', () => {
-    sessionStorage.setItem('consult:summary', JSON.stringify({
-      domain: 'dui', title: '음주운전 면허 구제 사전 점검',
-      counts: { urgent: 1, documents: 0, official: 0, ready: 0 },
-    }));
+  it('함께 남긴 진단이 문항을 고치기 전 판이면 요약도 함께 보내기도 보여 주지 않는다', () => {
     sessionStorage.setItem('consult:diagnosis', JSON.stringify({
       domain: 'dui', form: 'old', answers: { 'dui-disposition': 'revoke' }, counts: { ready: 1 },
     }));
     renderAt('/consult');
-    const textarea = screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement;
-    expect(textarea.value).not.toContain('셀프 진단 요약');
+    expect(screen.queryByText(/^진단 결과: /)).toBeNull();
+    expect(screen.queryByRole('checkbox', { name: /셀프 진단 답변 \d+개 함께 보내기/ })).toBeNull();
     sessionStorage.clear();
   });
 

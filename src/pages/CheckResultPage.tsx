@@ -49,8 +49,7 @@ export function CheckResultPage() {
     counts: summary.counts,
   });
 
-  function saveSummaryForConsult() {
-    safeSessionSet('consult:summary', JSON.stringify(summary));
+  function saveDiagnosisForConsult() {
     safeSessionSet('consult:diagnosis', diagnosisPayload);
   }
 
@@ -89,7 +88,7 @@ export function CheckResultPage() {
       </p>
 
       <div className="button-row">
-        <Link className="button button--accent" to={`/consult?topic=${diagnosisTopicSlug(definition.domain, answers)}`} onClick={saveSummaryForConsult}>
+        <Link className="button button--accent" to={`/consult?topic=${diagnosisTopicSlug(definition.domain, answers)}`} onClick={saveDiagnosisForConsult}>
           상담 안내 보기 →
         </Link>
         <Link className="button button--ghost" to={`/check/${definition.domain}`}>다시 진단하기</Link>

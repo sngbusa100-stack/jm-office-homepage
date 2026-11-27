@@ -101,13 +101,20 @@ describe('비자 접수 필수 질문 검증', () => {
     expect(first.value).toMatchObject({ nationality: '베트남', targetMonth: '2027-03' });
   });
 
-  it('비자 진단 값이 있으면 체류 상태·위반 이력은 진단 값을 쓰고, 목적은 처음·연장·변경만 허용한다', () => {
+  it('비자 진단 값이 있으면 체류 상태는 진단 값을 쓰고, 목적은 처음·연장·변경만 허용한다', () => {
     const result = sanitizeVisaIntake(
       { ...base, stayStatus: 'valid', violation: 'none', goal: 'extend' },
       { visaDiagnosis: e7Diagnosis },
     );
-    expect(result.value).toMatchObject({ stayStatus: 'near-expiry', stayStatusFrom: 'visaDiagnosis', violation: 'past', deadlineFirst: true });
+    expect(result.value).toMatchObject({ stayStatus: 'near-expiry', stayStatusFrom: 'visaDiagnosis', deadlineFirst: true });
     expect(sanitizeVisaIntake({ ...base, goal: 'permanent' }, { visaDiagnosis: e7Diagnosis }).errors).toContain('goal');
+  });
+
+  it('위반 이력은 비자 진단 답(통지·조사 질문)을 이어받지 않고 상담 화면의 답만 쓴다', () => {
+    const answered = sanitizeVisaIntake({ ...base, violation: 'none', goal: 'extend' }, { visaDiagnosis: e7Diagnosis });
+    expect(answered.value.violation).toBe('none');
+    const skipped = sanitizeVisaIntake({ ...base, goal: 'extend' }, { visaDiagnosis: e7Diagnosis });
+    expect(skipped.value).not.toHaveProperty('violation');
   });
 });
 

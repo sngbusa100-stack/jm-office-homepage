@@ -136,7 +136,7 @@ describe('출입국·비자 상담 접수 질문', () => {
     expect(screen.getByText(/외국인종합안내센터 1345\(해외 \+82-2-1345\)/)).toBeInTheDocument();
   });
 
-  it('비자 진단에서 넘어오면 체류 상태·위반 이력은 다시 묻지 않고 목적은 네 가지만, 언어는 진단 언어로 고른다', async () => {
+  it('비자 진단에서 넘어오면 체류 상태는 다시 묻지 않고(위반 이력은 다시 묻는다) 목적은 네 가지만, 언어는 진단 언어로 고른다', async () => {
     mockFetch({
       schemaVersion: 1,
       visaSlug: 'e7',
@@ -149,7 +149,7 @@ describe('출입국·비자 상담 접수 질문', () => {
     renderPage('/consult?topic=visa&visa=e7&handoff=abcdefghijklmnopqrstuvwx');
     expect(await screen.findByText(/체류 상태는 비자 진단에서 답하신 내용을 사용합니다/)).toBeInTheDocument();
     expect(screen.queryByLabelText('지금 한국 밖에 있어요')).not.toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: /출국명령·과태료·범칙금/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /출국명령·과태료·범칙금/ })).toBeInTheDocument();
     expect(screen.queryByLabelText('영주(F-5) 또는 귀화')).not.toBeInTheDocument();
     await waitFor(() => expect((screen.getByLabelText(/어떤 언어로 연락받기/) as HTMLSelectElement).value).toBe('vi'));
   });

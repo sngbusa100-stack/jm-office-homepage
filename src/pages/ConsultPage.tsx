@@ -118,15 +118,15 @@ function readStoredVisaDiagnosis(token: string): VisaConsultDiagnosis | undefine
   return undefined;
 }
 
+/** 비자 진단 연결 안내에 붙일 한 줄 요약. 상담 내용(고객이 쓰는 글)에는 넣지 않는다. */
 function visaSummary(diagnosis: VisaConsultDiagnosis): string {
-  const code = visaCode(diagnosis.visaSlug);
   const level = {
     checked: '현재 답변상 추가 표시 없음',
     'needs-documents': '서류 보완 항목 있음',
     'official-check': '공식 확인 항목 있음',
     urgent: '긴급 확인 항목 있음',
   }[diagnosis.level];
-  return `[비자 사전진단 요약] ${code} · ${level}\n\n추가로 궁금한 내용: `;
+  return `${visaCode(diagnosis.visaSlug)} · ${level}`;
 }
 
 /** 진단 결과 페이지에서 저장해 둔 진단 상세를 읽는다. 없거나 손상되면 무시한다. */
@@ -159,19 +159,12 @@ function describeDiagnosis(diagnosis: ConsultDiagnosis): { question: string; ans
   });
 }
 
-function buildPrefill(): string {
-  const raw = safeSessionGet('consult:summary');
-  // 요약은 함께 남긴 진단이 지금 문항 판일 때만 쓴다.
-  if (!raw || !readDiagnosis()) return '';
-  try {
-    const summary = JSON.parse(raw) as { title: string; counts: Record<ResultLevel, number> };
-    const parts = LEVEL_KEYS
-      .filter((level) => summary.counts[level] > 0)
-      .map((level) => `${LEVEL_LABEL[level]} ${summary.counts[level]}`);
-    return `[셀프 진단 요약] ${summary.title} — ${parts.join(', ')}\n\n추가로 궁금한 내용: `;
-  } catch {
-    return '';
-  }
+/** 진단 등급별 개수 요약. 함께 보내기 옆에 읽기 전용으로 보여 주고, 상담 내용에는 넣지 않는다. */
+function diagnosisCountsText(counts: ConsultDiagnosis['counts']): string {
+  return LEVEL_KEYS
+    .filter((level) => (counts?.[level] ?? 0) > 0)
+    .map((level) => `${LEVEL_LABEL[level]} ${counts?.[level]}`)
+    .join(', ');
 }
 
 /** 접수번호 복사 버튼. clipboard가 없거나 실패하면 아무 표시도 하지 않는다. */
@@ -215,15 +208,13 @@ export function ConsultPage() {
   const funnelDomain = visaFunnelDomain
     ?? TOPIC_FUNNEL[topicSlug as keyof typeof TOPIC_FUNNEL]
     ?? 'home';
-  const [message, setMessage] = useState(() => (
-    buildPrefill()
-    || (visaSlug ? `[비자 선택] ${visaCode(visaSlug)}\n\n추가로 궁금한 내용: ` : '')
-  ));
+  // 상담 내용은 고객이 쓰는 글이다. 진단 요약은 넣지 않고(첨부를 고른 경우에만 진단으로 간다),
+  // 비자 안내 페이지에서 온 경우에만 그 비자 코드를 보이는 첫 줄로 적어 둔다(고객이 지울 수 있다).
+  const [message, setMessage] = useState(() => (visaSlug ? `[비자 선택] ${visaCode(visaSlug)}\n\n` : ''));
   const [handoffState, setHandoffState] = useState<VisaHandoffState>({
     token: handoffToken,
     status: validHandoffToken ? 'loading' : 'idle',
   });
-  const autoVisaPrefill = useRef('');
   const handoffStatus = handoffState.token === handoffToken
     ? handoffState.status
     : validHandoffToken ? 'loading' : 'idle';
@@ -238,6 +229,7 @@ export function ConsultPage() {
   const [storedDiagnosis] = useState<ConsultDiagnosis | undefined>(readDiagnosis);
   const diagnosisTopic = storedDiagnosis ? TOPIC_SLUGS[diagnosisTopicSlug(storedDiagnosis.domain, storedDiagnosis.answers)] : undefined;
   const diagnosisItems = storedDiagnosis ? describeDiagnosis(storedDiagnosis) : [];
+  const diagnosisCounts = storedDiagnosis ? diagnosisCountsText(storedDiagnosis.counts) : '';
   const [attachChoice, setAttachChoice] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string>(presetTopic ?? diagnosisTopic ?? '');
   const [topicMissing, setTopicMissing] = useState(false);
@@ -254,7 +246,6 @@ export function ConsultPage() {
   // 업무 페이지의 '기한이 급하면 상담부터'(법정 기한이 있는 분야만)로 들어오면 긴급 안내를 폼 위에 둔다.
   const urgentEntry = searchParams.get('priority') === 'urgent';
   const diagnosisStay = typeof visaDiagnosis?.answers.stayStatus === 'string' ? visaDiagnosis.answers.stayStatus : '';
-  const diagnosisViolation = typeof visaDiagnosis?.answers.violationStatus === 'string' ? visaDiagnosis.answers.violationStatus : '';
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<SubmitErrorKind>('outage');
@@ -278,15 +269,6 @@ export function ConsultPage() {
   }, [funnelDomain]);
 
   useEffect(() => {
-    if (autoVisaPrefill.current) {
-      const previousPrefill = autoVisaPrefill.current;
-      autoVisaPrefill.current = '';
-      setMessage((current) => (
-        current === previousPrefill
-          ? (visaSlug ? `[비자 선택] ${visaCode(visaSlug)}\n\n추가로 궁금한 내용: ` : buildPrefill())
-          : current
-      ));
-    }
     if (!validHandoffToken) {
       removeStorage('sessionStorage', 'consult:visaDiagnosis');
       setHandoffState({ token: handoffToken, status: 'idle' });
@@ -294,9 +276,6 @@ export function ConsultPage() {
     }
     const cached = readStoredVisaDiagnosis(handoffToken);
     if (cached) {
-      const prefill = visaSummary(cached);
-      autoVisaPrefill.current = prefill;
-      setMessage((current) => current.startsWith('[비자 선택]') || !current ? prefill : current);
       setHandoffState({ token: handoffToken, status: 'loaded', value: cached });
       return;
     }
@@ -313,14 +292,11 @@ export function ConsultPage() {
         const value = result.value;
         safeSessionSet('consult:visaDiagnosis', JSON.stringify({ token: handoffToken, value }));
         if (active) {
-          const prefill = visaSummary(value);
-          autoVisaPrefill.current = prefill;
-          setMessage((current) => current.startsWith('[비자 선택]') || !current ? prefill : current);
           setHandoffState({ token: handoffToken, status: 'loaded', value });
         }
       });
     return () => { active = false; };
-  }, [handoffToken, validHandoffToken, visaSlug]);
+  }, [handoffToken, validHandoffToken]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -369,7 +345,6 @@ export function ConsultPage() {
       });
       // 접수 완료된 개인 데이터와 제출 키를 브라우저 세션에서 즉시 정리한다.
       removeStorage('sessionStorage', 'consult:diagnosis');
-      removeStorage('sessionStorage', 'consult:summary');
       removeStorage('sessionStorage', 'consult:utm');
       removeStorage('sessionStorage', 'consult:attribution');
       removeStorage('sessionStorage', 'consult:submission');
@@ -415,8 +390,10 @@ export function ConsultPage() {
       <form className="card consult-form" onSubmit={handleSubmit}>
         <h2>상담 신청</h2>
         {handoffStatus === 'loading' && <p className="note" role="status">비자 진단 결과를 안전하게 불러오는 중입니다.</p>}
-        {handoffStatus === 'loaded' && (
-          <p className="note" role="status">동의하신 비자 진단 결과가 상담 화면에 안전하게 연결되었습니다.</p>
+        {handoffStatus === 'loaded' && visaDiagnosis && (
+          <p className="note" role="status">
+            동의하신 비자 진단 결과가 상담 화면에 안전하게 연결되었습니다 — {visaSummary(visaDiagnosis)}
+          </p>
         )}
         {handoffStatus === 'expired' && (
           <p className="note" role="alert">진단 결과 연결이 만료되었거나 이미 사용되었습니다. 아래에 내용을 직접 적어 일반 상담을 신청할 수 있습니다.</p>
@@ -454,7 +431,7 @@ export function ConsultPage() {
             answers={visaIntake}
             onChange={(patch) => setVisaIntake((current) => ({ ...current, ...patch }))}
             disabled={!formEnabled}
-            fromDiagnosis={visaDiagnosis ? { stayStatus: diagnosisStay, violation: diagnosisViolation } : null}
+            fromDiagnosis={visaDiagnosis ? { stayStatus: diagnosisStay } : null}
           />
         )}
         {asksDeadline && (
@@ -492,6 +469,7 @@ export function ConsultPage() {
                 ? '고르시면 아래 답변이 상담 내용과 함께 전송되어 상담 준비에 쓰입니다. 고르지 않아도 상담을 받으실 수 있습니다.'
                 : `진단 분야(${diagnosisTopic})와 상담 분야가 달라 함께 보내지 않습니다.`}
             </p>
+            {diagnosisCounts && <p className="note">진단 결과: {diagnosisCounts}</p>}
             <details>
               <summary>보낼 답변 보기</summary>
               <ul>
