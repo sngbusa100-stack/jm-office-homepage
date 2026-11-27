@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findForbidden } from '../scripts/forbidden-phrases.mjs';
-import { REPLY_TEMPLATES, TOPIC_ROUTES, buildReplyDraft } from './_reply-draft.mjs';
+import LABELS from './_reply-labels.mjs';
+import { REPLY_TEMPLATES, SPECIFIC_TEMPLATES, TOPIC_ROUTES, buildReplyDraft } from './_reply-draft.mjs';
 import { TOPICS } from './_validate.mjs';
 
 function record(topic, overrides = {}) {
@@ -93,7 +94,7 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
     }));
     expect(text).toContain('접수 때 알려 주신 내용(서류로 확인하기 전입니다)');
     expect(text).toContain('- 혈중알코올농도 구간: 0.08% 이상 ~ 0.1% 이하');
-    expect(text).toContain('- 최근 5년 음주운전 이력: 그 5년 동안에는 없었어요');
+    expect(text).toContain('- 최근 5년 음주운전 이력: 없음');
     const qs = questions(text);
     expect(qs.some((q) => q.includes('혈중알코올농도'))).toBe(false);
     expect(qs.some((q) => q.includes('음주운전 이력'))).toBe(false);
@@ -150,7 +151,7 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
       diagnosis: { domain: 'dui', answers: { 'dui-procedure': 'objection-result' }, counts: {} },
     })).text;
     expect(questions(result).some((q) => q.includes(ask) && q.includes('행정심판을 이미 청구하셨는지'))).toBe(true);
-    expect(result).toContain('- 이의신청·행정심판 진행 여부: 경찰에서 이의신청 결과를 받았어요');
+    expect(result).toContain('- 이의신청·행정심판 진행 여부: 이의신청 결과를 받음');
     const pending = buildReplyDraft(record('음주운전 면허 구제', {
       diagnosis: { domain: 'dui', answers: { 'dui-procedure': 'objection' }, counts: {} },
     })).text;
@@ -333,5 +334,42 @@ describe('출입국·비자', () => {
     expect(text).toContain('- 문서에 적힌 마감일: 2026-10-29');
     expect(text).toContain('날짜부터 먼저 여쭙습니다');
     expect(questions(text)[0]).toContain('안내문');
+  });
+});
+
+describe('되짚기 문구는 사무소 말투다(2026-11-27)', () => {
+  const templates = [...REPLY_TEMPLATES.filter((t) => t.domain), ...Object.values(SPECIFIC_TEMPLATES)];
+  const pairs = templates.flatMap((t) =>
+    t.items.flatMap((item) => [...(item.from ?? []), ...(item.recapOnly ?? [])].map((pair) => [t.domain, ...pair])),
+  );
+
+  it('되짚는 문항과 값별 표현은 지금 진단에 있는 문항·보기만 가리킨다', () => {
+    for (const [domain, id, , wording] of pairs) {
+      const options = LABELS.diagnosis[domain]?.[id]?.options;
+      expect(options, `${domain}/${id}`).toBeTruthy();
+      for (const value of Object.keys(wording ?? {})) {
+        // 통지 경과 기간 표현은 세 진단이 함께 쓰므로 그 진단에 없는 값이 섞여 있다.
+        if (id.endsWith('-elapsed')) continue;
+        expect(options, `${domain}/${id}/${value}`).toHaveProperty(value);
+      }
+    }
+  });
+
+  it('고객이 고른 보기를 고객 말투("~했어요", "제 일") 그대로 되짚지 않는다', () => {
+    for (const [domain, id, label, wording] of pairs) {
+      for (const [value, optionLabel] of Object.entries(LABELS.diagnosis[domain][id].options)) {
+        if (['unknown', 'unsure', 'na'].includes(value)) continue;
+        const text = `${label}: ${wording?.[value] ?? optionLabel}`;
+        expect(text, `${domain}/${id}/${value}`).not.toMatch(/(?<!필|중|수)요$|: 제 /);
+      }
+    }
+  });
+
+  it('행정구제 진단 답은 사무소 말투로 되짚는다', () => {
+    const { text } = buildReplyDraft(record('영업정지 · 행정심판', {
+      diagnosis: { domain: 'appeal', answers: { 'appeal-stage': 'decision' } },
+    }));
+    expect(text).toContain('- 현재 상황: 거절·취소·환수 등 결정 통지를 받음');
+    expect(text).not.toContain('받았어요');
   });
 });

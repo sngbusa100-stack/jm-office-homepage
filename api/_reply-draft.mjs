@@ -30,11 +30,22 @@ const REQUESTER_WORDING = {
   other: '그 밖의 분(지인 등)',
 };
 
+/** 통지를 받은 뒤 지난 기간(음주운전·영업정지·보훈 진단이 같은 보기를 쓴다). */
+const ELAPSED_WORDING = {
+  none: '아직 받지 않음',
+  within30: '받은 지 30일 이내',
+  d31to60: '받은 지 31~60일',
+  d61to90: '받은 지 61~90일',
+  d31to90: '받은 지 31~90일',
+  over90: '받은 지 90일 넘음',
+};
+
 /*
  * 질문 항목
  * - ask: 묻는 문장
  * - from: [진단 문항 id, 되짚기 라벨, (선택) 값별 표현] 목록. 답한 문항은 되짚고, 모두 답했으면 질문을 뺀다.
- *   '모름'이면 다시 묻는다.
+ *   '모름'이면 다시 묻는다. 진단 보기는 고객 말투("~했어요")라 되짚을 때는 값별 표현(사무소 말투)을 쓴다.
+ *   보기가 이미 명사형이면 표현을 생략한다(테스트가 고객 말투가 남았는지 확인한다).
  * - recapOnly: 질문과 상관없이 답이 있으면 되짚는다(정확한 날짜처럼 다시 물어야 하는 항목에 쓴다).
  * - deadline: 기한 질문. 긴급 건이면 맨 앞에 둔다.
  * - when(answers): 이 조건일 때만 묻는다.
@@ -48,7 +59,7 @@ export const REPLY_TEMPLATES = [
       {
         ask: "처분 통지서를 받으신 정확한 날짜(아직 받지 않으셨다면 '아직'이라고 적어 주십시오)",
         deadline: true,
-        recapOnly: [['dui-elapsed', '통지서를 받은 지']],
+        recapOnly: [['dui-elapsed', '결정 통지서 수령', ELAPSED_WORDING]],
       },
       {
         // 결과 통보일부터 90일 특례 — 결과 전에 행정심판을 먼저 청구했으면 대상이 아니다(도로교통법 제94조 제3항).
@@ -56,14 +67,40 @@ export const REPLY_TEMPLATES = [
         deadline: true,
         when: (a) => a['dui-procedure'] === 'objection-result',
       },
-      { ask: '받으신 처분이 면허 정지인지 취소인지', from: [['dui-disposition', '처분 종류']] },
+      {
+        ask: '받으신 처분이 면허 정지인지 취소인지',
+        from: [['dui-disposition', '받은 안내', {
+          suspend: '면허정지 결정 통지를 받음',
+          revoke: '면허취소 결정 통지를 받음',
+          'prior-notice': '처분 전 의견제출 안내를 받음',
+          investigation: '조사 중이며 면허 처분 안내는 아직 없음',
+        }]],
+      },
       { ask: '단속 일시와 장소' },
       { ask: '측정된 혈중알코올농도 수치(채혈 측정 여부 포함)', from: [['dui-bac', '혈중알코올농도 구간']] },
-      { ask: '최근 5년 안의 음주운전 이력', from: [['dui-history', '최근 5년 음주운전 이력']] },
-      { ask: '운전이 생계에 필요한 사정(직업, 업무상 운전 필요성)', from: [['dui-livelihood', '운전의 생계 필요성']] },
+      {
+        ask: '최근 5년 안의 음주운전 이력',
+        from: [['dui-history', '최근 5년 음주운전 이력', { none: '없음', once: '1회', multi: '2회 이상' }]],
+      },
+      {
+        ask: '운전이 생계에 필요한 사정(직업, 업무상 운전 필요성)',
+        from: [['dui-livelihood', '운전의 생계 필요성', {
+          job: '운전이 직업(화물·버스·택시 등)',
+          work: '직업은 아니지만 업무에 꼭 필요',
+          commute: '주로 출퇴근·일상생활에 사용',
+          no: '평소 꼭 필요하지는 않음',
+          other: '그 밖의 용도',
+        }]],
+      },
       {
         ask: '이의신청·행정심판을 이미 진행하고 계신지',
-        from: [['dui-procedure', '이의신청·행정심판 진행 여부', { no: '아직 진행하지 않음' }]],
+        from: [['dui-procedure', '이의신청·행정심판 진행 여부', {
+          no: '아직 진행하지 않음',
+          objection: '경찰에 이의신청, 결과 대기 중',
+          'objection-result': '이의신청 결과를 받음',
+          appeal: '행정심판 청구, 결과 대기 중',
+          'appeal-done': '행정심판 결과를 받음',
+        }]],
       },
     ],
   },
@@ -76,24 +113,52 @@ export const REPLY_TEMPLATES = [
       {
         ask: '처분 통지서(또는 사전통지서)를 받으신 날짜',
         deadline: true,
-        recapOnly: [['susp-elapsed', '확정 처분 통지를 받은 지']],
+        recapOnly: [['susp-elapsed', '확정 처분 통지 수령', ELAPSED_WORDING]],
       },
       {
         ask: '사전통지서에 적힌 의견제출 기한',
         deadline: true,
         when: (a) => ['prenotice', 'prior-notice'].includes(a['susp-stage']),
-        recapOnly: [['susp-opinion-deadline', '의견제출 기한']],
+        recapOnly: [['susp-opinion-deadline', '의견제출 기한', {
+          'four-plus': '4일 이상 남음',
+          soon: '오늘 마감이거나 1~3일 남음',
+          passed: '기한이 지남',
+        }]],
       },
       {
         ask: '사전통지를 받으신 단계라면, 사전통지서에 적힌 의견제출 기한',
         deadline: true,
         when: (a) => !a['susp-stage'],
       },
-      { ask: '처분 단계(사전통지를 받은 단계인지, 처분이 확정됐는지)', from: [['susp-stage', '처분 단계']] },
+      {
+        ask: '처분 단계(사전통지를 받은 단계인지, 처분이 확정됐는지)',
+        from: [['susp-stage', '처분 단계', {
+          'prior-notice': '사전통지(의견제출 안내)를 받음',
+          confirmed: '영업정지 최종 처분서를 받음',
+          investigating: '점검·조사만 받음',
+          none: '아직 점검·통지를 받은 적 없음',
+        }]],
+      },
       { ask: '처분 내용(정지 기간 등)' },
-      { ask: '처분 사유(위반 내용)', from: [['susp-reason', '처분 사유']] },
+      {
+        ask: '처분 사유(위반 내용)',
+        from: [['susp-reason', '처분 사유', {
+          youth: '청소년에게 술·유해물 제공',
+          hygiene: '위생·시설 상태 지적',
+          unlicensed: '허가를 받지 않았거나 변경 신고를 하지 않았다는 내용',
+          other: '그 밖의 사유',
+        }]],
+      },
       { ask: '위반이 문제 된 당시 경위' },
-      { ask: '업종과 영업 형태', from: [['susp-business', '업종']] },
+      {
+        ask: '업종과 영업 형태',
+        from: [['susp-business', '업종', {
+          restaurant: '음식점·주점',
+          karaoke: '노래연습장·게임장',
+          academy: '학원·교습소',
+          other: '그 밖의 업종',
+        }]],
+      },
       { ask: '이의신청·행정심판 등 이미 진행한 절차' },
       { ask: '영업 중단 시 예상되는 피해(직원 수, 매출 등)' },
     ],
@@ -162,13 +227,32 @@ export const REPLY_TEMPLATES = [
         ask: '비해당 결정 통지를 받으신 날짜',
         deadline: true,
         when: (a) => a['vet-stage'] === 'rejected',
-        recapOnly: [['vet-elapsed', '비해당 결정 통지를 받은 지']],
+        recapOnly: [['vet-elapsed', '비해당 결정 통지 수령', ELAPSED_WORDING]],
       },
-      { ask: '신청 대상자와의 관계(본인 또는 유족)', from: [['vet-applicant', '신청인']] },
+      {
+        ask: '신청 대상자와의 관계(본인 또는 유족)',
+        from: [['vet-applicant', '신청인', { self: '본인', family: '가족', other: '그 밖의 관계' }]],
+      },
       { ask: '복무 기간과 소속(군별, 부대)' },
       { ask: '부상·질병의 발생 경위와 시기' },
-      { ask: '진단서, 병상일지 등 의무기록 확보 여부', from: [['vet-records', '의무기록']] },
-      { ask: '기존 보훈 신청·심사 이력', from: [['vet-history', '과거 등록 신청']] },
+      {
+        ask: '진단서, 병상일지 등 의무기록 확보 여부',
+        from: [['vet-records', '의무기록', {
+          collected: '찾으려던 진료기록을 모두 확보',
+          partial: '일부만 확보(빠진 병원이나 기간 있음)',
+          'no-copies': '진료는 받았으나 기록 사본 없음',
+          'no-treatment': '당시 진료받은 적 없음',
+        }]],
+      },
+      {
+        ask: '기존 보훈 신청·심사 이력',
+        from: [['vet-history', '과거 등록 신청', {
+          first: '이번이 처음',
+          once: '예전에 비해당 결정 1회',
+          multi: '예전에 비해당 결정 2회 이상',
+          other: '예전 신청 있음(위 경우와 다름)',
+        }]],
+      },
     ],
   },
   {
@@ -184,12 +268,19 @@ export const REPLY_TEMPLATES = [
 ];
 
 // 상담 접수 분야를 공유해도 고객에게 묻는 내용은 실제로 마친 진단에 맞춘다.
-const SPECIFIC_TEMPLATES = {
+export const SPECIFIC_TEMPLATES = {
   development: {
     topic: '인허가', domain: 'land', serviceSlug: 'land-development',
     intro: '토지 이용 계획에 관해 문의 주셨습니다.',
     items: [
-      { ask: '그 땅에서 하려는 일', from: [['land-use', '토지 이용 계획']] },
+      {
+        ask: '그 땅에서 하려는 일',
+        from: [['land-use', '토지 이용 계획', {
+          build: '주택·창고 등 건물·시설 신축',
+          ground: '흙 메우기 또는 주차장·야적장 등으로 사용',
+          split: '여러 필지로 분할',
+        }]],
+      },
       { ask: '후보지의 위치와 현재 사용 모습' },
       { ask: '받은 안내가 있다면 문서 제목과 기재된 기한', deadline: true },
     ],
@@ -198,7 +289,15 @@ const SPECIFIC_TEMPLATES = {
     topic: '토지보상 · 내용증명 · 계약서', domain: 'land',
     intro: '토지보상이나 문서 준비에 관해 문의 주셨습니다.',
     items: [
-      { ask: '가장 먼저 준비하려는 일', from: [['land-topic', '준비할 일']] },
+      {
+        ask: '가장 먼저 준비하려는 일',
+        from: [['land-topic', '준비할 일', {
+          development: '토지 매입·용도 변경·분할 검토',
+          compensation: '토지·건물 보상 안내를 받음',
+          notice: '상대방에게 내용증명 발송 예정',
+          contract: '계약서 작성·검토',
+        }]],
+      },
       { ask: '가장 최근 보상 안내에 적힌 문서 제목', when: (a) => a['land-topic'] === 'compensation', from: [['land-compensation-paper', '보상 관련 문서']] },
       { ask: '내용증명으로 상대방에게 요청하려는 일', when: (a) => a['land-topic'] === 'notice' },
       { ask: '계약서에서 확인하고 싶은 부분', when: (a) => a['land-topic'] === 'contract' },
@@ -218,7 +317,15 @@ const SPECIFIC_TEMPLATES = {
     topic: '영업정지 · 행정심판', domain: 'appeal',
     intro: '기관의 결정이나 신청 처리에 관해 문의 주셨습니다.',
     items: [
-      { ask: '최근 받은 안내나 신청 후 진행 상황', from: [['appeal-stage', '현재 상황']] },
+      {
+        ask: '최근 받은 안내나 신청 후 진행 상황',
+        from: [['appeal-stage', '현재 상황', {
+          decision: '거절·취소·환수 등 결정 통지를 받음',
+          before: '결정 전 의견·추가 자료 제출 안내를 받음',
+          waiting: '신청 후 아직 답을 받지 못함',
+          spoken: '전화·방문으로만 설명을 들음',
+        }]],
+      },
       { ask: '신청을 받거나 안내를 보낸 기관과 문서 제목' },
       { ask: '신청일이나 통지를 받은 날짜, 문서에 적힌 기한', deadline: true },
     ],
