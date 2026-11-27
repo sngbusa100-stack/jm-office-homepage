@@ -101,11 +101,11 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
 
   it('여러 문항을 묶은 질문은 답한 부분을 되짚고, 하나라도 모르면 질문은 남긴다', () => {
     const { text } = buildReplyDraft(record('인허가', {
-      diagnosis: { domain: 'permit', answers: { 'permit-facility': 'gap', 'permit-staff': 'unknown' }, counts: {} },
+      diagnosis: { domain: 'permit', answers: { 'permit-facility-advice': 'pending', 'permit-personnel-advice': 'unknown' }, counts: {} },
     }));
-    expect(text).toContain('- 시설 기준 대조: 대조 결과 부족한 항목 있음');
-    expect(text).not.toContain('자격·인력 요건: 있는지 없는지 모른다');
-    expect(questions(text).some((q) => q.includes('시설 기준과 자격·인력 요건'))).toBe(true);
+    expect(text).toContain('- 시설 관련 안내: 안내받은 작업이 남아 있음');
+    expect(text).not.toContain('- 교육·자격·직원 서류:');
+    expect(questions(text).some((q) => q.includes('시설과 교육·자격·직원 서류'))).toBe(true);
   });
 
   it('되짚는 말은 행정사가 고객에게 쓰는 표현으로 바꾼다', () => {
@@ -122,9 +122,9 @@ describe('이미 받은 답은 다시 묻지 않는다(GP-05)', () => {
     const { text } = buildReplyDraft(record('인허가', {
       diagnosis: { domain: 'permit', answers: { 'permit-address': 'contracted', 'permit-opening': 'undecided' }, counts: {} },
     }));
-    expect(text).toContain('- 사업장 확보: 임대차·매매 계약 완료');
-    expect(text).toContain('- 개업 예정 시기: 아직 정하지 않음');
-    expect(text).not.toContain('계약을 했다');
+    expect(text).toContain('- 사업장 확보: 이번에 쓸 장소를 새로 계약함');
+    expect(text).toContain('- 시작·변경 희망 시기: 아직 정하지 않음');
+    expect(text).not.toContain('새로 계약했어요');
   });
 
   it('선택지 목록에 없는 옛 값은 답하지 않은 것으로 보고 다시 묻는다', () => {

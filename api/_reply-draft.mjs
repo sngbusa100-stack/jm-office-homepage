@@ -112,33 +112,37 @@ export const REPLY_TEMPLATES = [
         ask: '사업장 확보 여부(임대차 계약 등)',
         from: [['permit-address', '사업장 확보', {
           candidate: '후보지만 정함(계약 전)',
-          contracted: '임대차·매매 계약 완료',
-          owned: '자가 부동산(장소 확정)',
-          notyet: '아직 정하지 않음',
+          contracted: '이번에 쓸 장소를 새로 계약함',
+          owned: '원래 소유한 장소를 사용',
+          notyet: '아직 후보지 없음',
+          'no-location-change': '장소는 그대로, 등록사항만 변경',
+          'no-site-advised': '장소가 필요 없다는 안내를 받음',
         }]],
       },
       {
-        ask: '시설 기준과 자격·인력 요건 준비 상황',
+        ask: '시설과 교육·자격·직원 서류에 관해 받은 안내',
         from: [
-          ['permit-facility', '시설 기준 대조', {
-            matched: '항목별 대조 완료, 모두 충족',
-            gap: '대조 결과 부족한 항목 있음',
-            seenonly: '기준은 확인, 시설과 대조 전',
-            nowhere: '기준표 미확인',
+          ['permit-facility-advice', '시설 관련 안내', {
+            pending: '안내받은 작업이 남아 있음',
+            done: '안내받은 작업을 마침',
+            'not-needed': '시설을 손볼 필요가 없다는 안내를 받음',
+            none: '아직 안내를 받지 않음',
+            na: '이번 신청은 시설과 관계없음',
           }],
-          ['permit-staff', '자격·인력 요건', {
-            ready: '요건 확인, 모두 갖춤',
-            pending: '요건은 확인, 아직 갖추지 못함',
-            noneneeded: '사람에 대한 요건 없음',
+          ['permit-personnel-advice', '교육·자격·직원 서류', {
+            collected: '요청받은 서류를 모두 모음',
+            pending: '요청받았고 준비할 서류가 남음',
+            'not-needed': '필요 없다는 안내를 받음',
+            none: '아직 요청받은 적 없음',
           }],
         ],
       },
       {
-        ask: '희망하는 개업(운영 시작) 시기',
-        from: [['permit-opening', '개업 예정 시기', {
-          over3m: '3개월 이상 남음',
-          m1to3: '1~3개월 남음',
-          within1m: '1개월 이내',
+        ask: '사업 시작(또는 변경) 희망 시기',
+        from: [['permit-opening', '시작·변경 희망 시기', {
+          already: '이미 시작했거나 변경함',
+          month: '1개월 이내',
+          later: '1개월 이후',
           undecided: '아직 정하지 않음',
         }]],
       },
