@@ -86,7 +86,8 @@ export function validateConsultPayload(body) {
   const message = typeof data.message === 'string' ? data.message.trim() : '';
   const consent = data.consent === true;
   const honeypot = typeof data.company === 'string' ? data.company.trim() : '';
-  const visaDiagnosis = sanitizeVisaHandoff(data.visaDiagnosis);
+  const requester = typeof data.visaIntake?.requester === 'string' ? data.visaIntake.requester.trim() : '';
+  const visaDiagnosis = requester === 'self' ? sanitizeVisaHandoff(data.visaDiagnosis) : null;
   // 셀프 진단은 상담 분야와 같은 분야일 때만 담는다. 다른 분야의 예전 진단이나
   // 비자 진단과 함께 온 메인 진단은 긴급 판정을 바꾸므로 버린다(접수는 막지 않음).
   const rawDiagnosis = sanitizeDiagnosis(data.diagnosis);
@@ -94,7 +95,9 @@ export function validateConsultPayload(body) {
     ? rawDiagnosis
     : null;
   const rawSourcePath = typeof data.sourcePath === 'string' ? data.sourcePath.trim().slice(0, 120) : '';
-  const sourcePath = !diagnosis && rawSourcePath.startsWith('/check/') ? '' : rawSourcePath;
+  const missingDiagnosisSource = (!diagnosis && rawSourcePath.startsWith('/check/'))
+    || (!visaDiagnosis && rawSourcePath.startsWith('/result?visa='));
+  const sourcePath = missingDiagnosisSource ? '' : rawSourcePath;
   const utmSource = typeof data.utmSource === 'string' ? data.utmSource.trim().slice(0, 80) : '';
   const attribution = sanitizeAttribution(data.attribution);
   // 멱등성 키 — 응답 유실 후 재제출을 같은 접수로 묶는다. 형식이 틀리면 무시(선택 값).

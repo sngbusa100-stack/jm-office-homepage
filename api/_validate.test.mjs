@@ -129,6 +129,24 @@ describe('상담 접수 검증', () => {
     });
   });
 
+  it.each(['family-sponsor', 'company'])('대리 신청(%s)은 접수 대상자의 체류 답만 사용한다', (requester) => {
+    const result = validateConsultPayload({
+      ...valid,
+      topic: '출입국 · 비자',
+      sourcePath: '/result?visa=e7',
+      visaDiagnosis: {
+        schemaVersion: 1, visaSlug: 'e7', language: 'ko', consent: true,
+        answers: { stayStatus: 'expired', stayHistory: 'current', e7Occupation: 'confirmed', e7Contract: 'ready', e7Wage: 'meets' },
+      },
+      visaIntake: { requester, subjectNotified: true, stayStatus: 'overseas', goal: 'permanent', stage: 'not-applied', language: 'ko' },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.value).not.toHaveProperty('visaDiagnosis');
+    expect(result.value).not.toHaveProperty('sourcePath');
+    expect(result.value.visaIntake).toMatchObject({ stayStatus: 'overseas', deadlineFirst: false });
+    expect(result.value.visaIntake).not.toHaveProperty('violation');
+  });
+
   it('비자 진단이 첨부되면 출입국·비자 분야만 허용한다', () => {
     const visaDiagnosis = {
       schemaVersion: 1,
@@ -147,6 +165,7 @@ describe('상담 접수 검증', () => {
       ...valid,
       topic: '음주운전 면허 구제',
       visaDiagnosis,
+      visaIntake: { requester: 'self' },
     });
     expect(mismatched.ok).toBe(false);
     expect(mismatched.errors).toContain('topic');

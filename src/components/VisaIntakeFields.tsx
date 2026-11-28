@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   CURRENT_STATUS_OPTIONS,
   DATED_STAGES,
+  EMPTY_VISA_INTAKE,
   GOAL_OPTIONS,
   GOALS_WITH_VISA_DIAGNOSIS,
   LANGUAGE_OPTIONS,
@@ -86,7 +87,9 @@ export function VisaIntakeFields({ answers, onChange, disabled, fromDiagnosis }:
         name="requester"
         options={REQUESTER_OPTIONS}
         value={answers.requester}
-        onSelect={(requester) => onChange({ requester })}
+        onSelect={(requester) => onChange(answers.requester && answers.requester !== requester
+          ? { ...EMPTY_VISA_INTAKE, requester, language: answers.language, languageOther: answers.languageOther }
+          : { requester })}
         disabled={disabled}
       />
       {proxy && (

@@ -245,8 +245,9 @@ export function ConsultPage() {
   const asksDeadline = Boolean(topic) && topic !== VISA_TOPIC;
   // 업무 페이지의 '기한이 급하면 상담부터'(법정 기한이 있는 분야만)로 들어오면 긴급 안내를 폼 위에 둔다.
   const urgentEntry = searchParams.get('priority') === 'urgent';
-  const diagnosisHistory = visaDiagnosis?.answers.stayHistory;
-  const diagnosisStay = typeof visaDiagnosis?.answers.stayStatus === 'string' ? visaDiagnosis.answers.stayStatus : '';
+  const personalVisaDiagnosis = visaIntake.requester === 'self' ? visaDiagnosis : undefined;
+  const proxyVisaRequest = Boolean(visaIntake.requester && visaIntake.requester !== 'self');
+  const diagnosisStay = personalVisaDiagnosis?.answers.stayStatus ?? '';
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<SubmitErrorKind>('outage');
@@ -325,9 +326,9 @@ export function ConsultPage() {
       consent: form.get('consent') === 'on',
       company: String(form.get('company') ?? ''),
       ...(diagnosis ? { diagnosis, sourcePath: `/check/${diagnosis.domain}/result` } : {}),
-      ...(visaDiagnosis ? {
-        visaDiagnosis,
-        sourcePath: `/result?visa=${encodeURIComponent(visaDiagnosis.visaSlug)}`,
+      ...(personalVisaDiagnosis ? {
+        visaDiagnosis: personalVisaDiagnosis,
+        sourcePath: `/result?visa=${encodeURIComponent(personalVisaDiagnosis.visaSlug)}`,
       } : {}),
       ...(topic === VISA_TOPIC ? { visaIntake: buildVisaIntakePayload(visaIntake, diagnosisStay) } : {}),
       ...(asksDeadline && deadlineReport ? { deadlineReport } : {}),
@@ -393,7 +394,9 @@ export function ConsultPage() {
         {handoffStatus === 'loading' && <p className="note" role="status">비자 진단 결과를 안전하게 불러오는 중입니다.</p>}
         {handoffStatus === 'loaded' && visaDiagnosis && (
           <p className="note" role="status">
-            동의하신 비자 진단 결과가 상담 화면에 안전하게 연결되었습니다 — {visaSummary(visaDiagnosis)}
+            {proxyVisaRequest
+              ? '대신 신청하는 경우에는 비자를 받을 분을 기준으로 아래 질문에 답해 주세요.'
+              : <>동의하신 비자 진단 결과가 상담 화면에 안전하게 연결되었습니다.{personalVisaDiagnosis && ` — ${visaSummary(personalVisaDiagnosis)}`}</>}
           </p>
         )}
         {handoffStatus === 'expired' && (
@@ -432,7 +435,7 @@ export function ConsultPage() {
             answers={visaIntake}
             onChange={(patch) => setVisaIntake((current) => ({ ...current, ...patch }))}
             disabled={!formEnabled}
-            fromDiagnosis={visaDiagnosis ? { stayStatus: diagnosisStay, stayHistory: diagnosisHistory } : null}
+            fromDiagnosis={personalVisaDiagnosis?.answers ?? null}
           />
         )}
         {asksDeadline && (

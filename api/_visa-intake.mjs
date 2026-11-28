@@ -46,7 +46,7 @@ function validMonth(value) {
 
 /**
  * 비자 접수 질문을 허용값으로 정리한다.
- * - 진단에서 넘어온 stayStatus가 있으면 그 값을 쓰고 화면 입력은 무시한다.
+ * - 본인 신청에서만 진단의 stayStatus를 사용한다.
  *   이력 문항은 같은 뜻인 stayHistory에서만 이어받는다. deferred는 빈 응답으로 둔다.
  * - 날짜·코드·자유 입력은 형식과 길이를 제한해 다른 개인정보가 섞이지 않게 한다.
  * - deadlineFirst: 만료·임박, 보완·불허·출국 안내, 해결 안 된 위반이 있으면 기한 우선 확인 대상.
@@ -56,10 +56,10 @@ export function sanitizeVisaIntake(input, { visaDiagnosis } = {}) {
   const data = typeof input === 'object' && input !== null ? input : {};
   const errors = [];
   const V = VISA_INTAKE_VALUES;
-  const diagnosisAnswers = visaDiagnosis?.answers ?? {};
-
   const requester = oneOf(pick(data, 'requester'), V.requester);
   if (!requester) errors.push('requester');
+  const personalDiagnosis = requester === 'self' ? visaDiagnosis : undefined;
+  const diagnosisAnswers = personalDiagnosis?.answers ?? {};
   const subjectNotified = data.subjectNotified === true;
   if (requester && requester !== 'self' && !subjectNotified) errors.push('subjectNotified');
   const staffCount = requester === 'company' ? oneOf(pick(data, 'staffCount'), V.staffCount) : '';
@@ -85,7 +85,7 @@ export function sanitizeVisaIntake(input, { visaDiagnosis } = {}) {
     }
   }
 
-  const goalList = visaDiagnosis ? GOALS_WITH_VISA_DIAGNOSIS : V.goal;
+  const goalList = personalDiagnosis ? GOALS_WITH_VISA_DIAGNOSIS : V.goal;
   const goal = oneOf(pick(data, 'goal'), goalList);
   if (!goal) errors.push('goal');
   const rawDesired = pick(data, 'desiredStatusCode').toUpperCase();
@@ -111,7 +111,7 @@ export function sanitizeVisaIntake(input, { visaDiagnosis } = {}) {
     if (!(deadlineDate === 'none' || deadlineDate === 'unsure' || validDate(deadlineDate))) errors.push('deadlineDate');
   }
 
-  const history = requester === 'self' ? diagnosisAnswers.stayHistory : undefined;
+  const history = diagnosisAnswers.stayHistory;
   const violation = history === 'deferred' ? ''
     : oneOf(history ?? '', V.violation) || oneOf(pick(data, 'violation'), V.violation);
 

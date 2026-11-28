@@ -49,7 +49,7 @@ const DUI_DIAGNOSIS = {
 
 async function fillContact(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText(/성함/), '홍길동');
-  await user.type(screen.getByLabelText(/연락처/), '01012345678');
+  await user.type(screen.getByRole('textbox', { name: /^연락처/ }), '01012345678');
   await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
 }
 
@@ -466,7 +466,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
 
     expect(await screen.findByText(/진단 결과가 상담 화면에 안전하게 연결/)).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /셀프 진단 답변 \d+개 함께 보내기/ })).toBeNull();
-    expect(screen.getByText(/안전하게 연결되었습니다 — E-7 · 현재 답변상 추가 표시 없음/)).toBeInTheDocument();
+    expect(screen.queryByText(/E-7 · 현재 답변상 추가 표시 없음/)).toBeNull();
     // 상담 내용에는 비자 안내 페이지에서 고른 코드만 보이는 첫 줄로 두고, 진단 요약은 넣지 않는다.
     expect((screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement).value).toBe('[비자 선택] E-7\n\n');
     expect(screen.getByLabelText('분야')).toBeDisabled();
@@ -474,6 +474,7 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     await user.type(screen.getByLabelText(/연락처/), '01012345678');
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
     await answerVisaIntake(user);
+    expect(screen.getByText(/E-7 · 현재 답변상 추가 표시 없음/)).toBeInTheDocument();
     const historyQuestion = screen.queryByText(/체류기간을 넘긴 적이 있거나, 출입국 기관에서 출국명령·과태료·범칙금 통지를 받은 적이 있나요\?/);
     if (historyKey === 'stayHistory') {
       expect(historyQuestion).toBeNull();
@@ -490,6 +491,37 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     expect(body).not.toHaveProperty('diagnosis');
     expect(body.sourcePath).toBe('/result?visa=e7');
     expect(sessionStorage.getItem('consult:visaDiagnosis')).toBeNull();
+  });
+
+  it('비자 진단 후 가족 대리 신청을 고르면 대상자의 새 답만 보낸다', async () => {
+    const visaDiagnosis = {
+      schemaVersion: 1, visaSlug: 'e7', language: 'ko', consent: true, level: 'urgent', questionCount: 5,
+      answers: { stayStatus: 'expired', stayHistory: 'current', e7Occupation: 'confirmed', e7Contract: 'ready', e7Wage: 'meets' },
+    };
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => ({
+      ok: true, json: async () => url === '/api/visa-handoff' ? { ok: true, visaDiagnosis } : { ok: true, id: 'JM-PROXY' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    renderPage('/consult?topic=visa&visa=e7&handoff=abcdefghijklmnopqrstuvwx');
+    await screen.findByText(/진단 결과가 상담 화면에 안전하게 연결/);
+    expect(screen.queryByText(/E-7 · 긴급 확인 항목 있음/)).toBeNull();
+    await user.click(screen.getByLabelText('제 비자를 상담하고 싶어요'));
+    expect(screen.queryByLabelText('지금 한국 밖에 있어요')).toBeNull();
+    expect(screen.getByText(/E-7 · 긴급 확인 항목 있음/)).toBeInTheDocument();
+    await user.click(screen.getByLabelText('배우자나 가족의 비자를 문의해요'));
+    expect(screen.queryByText(/E-7 · 긴급 확인 항목 있음/)).toBeNull();
+    await user.click(screen.getByLabelText('지금 한국 밖에 있어요'));
+    await user.click(screen.getByLabelText(/이 상담 신청 사실을 알렸습니다/));
+    await user.click(screen.getByLabelText('가족을 초청하거나 함께 지내기'));
+    await user.click(screen.getByLabelText('아직 신청 전'));
+    await fillContact(user);
+    await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
+    await screen.findByText(/JM-PROXY/);
+    const body = consultBody(fetchMock);
+    expect(body.visaIntake).toMatchObject({ requester: 'family-sponsor', stayStatus: 'overseas' });
+    expect(body).not.toHaveProperty('visaDiagnosis');
+    expect(body).not.toHaveProperty('sourcePath');
   });
 
   it('비자 진단을 불러오는 동안은 제출을 막고 로딩 완료 후 진단을 포함한다', async () => {

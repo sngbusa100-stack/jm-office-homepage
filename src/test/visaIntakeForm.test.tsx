@@ -147,6 +147,7 @@ describe('출입국·비자 상담 접수 질문', () => {
       consent: true,
     });
     renderPage('/consult?topic=visa&visa=e7&handoff=abcdefghijklmnopqrstuvwx');
+    await userEvent.setup().click(await screen.findByLabelText('제 비자를 상담하고 싶어요'));
     expect(await screen.findByText(/체류 상태는 비자 진단에서 답하신 내용을 사용합니다/)).toBeInTheDocument();
     expect(screen.queryByLabelText('지금 한국 밖에 있어요')).not.toBeInTheDocument();
     expect(screen.getByRole('group', { name: /출국명령·과태료·범칙금/ })).toBeInTheDocument();
