@@ -21,9 +21,9 @@ interface Props {
   disabled: boolean;
   /**
    * 비자 진단에서 넘어온 체류 상태가 있으면 그 질문은 다시 묻지 않는다.
-   * 위반 이력은 비자 진단 질문(통지·조사)과 묻는 사실이 달라 늘 여기서 다시 묻는다.
+   * 같은 문항인 stayHistory만 다시 묻지 않는다.
    */
-  fromDiagnosis: { stayStatus?: string } | null;
+  fromDiagnosis: { stayStatus?: string; stayHistory?: string } | null;
 }
 
 function RadioGroup({
@@ -298,16 +298,20 @@ export function VisaIntakeFields({ answers, onChange, disabled, fromDiagnosis }:
         </p>
       )}
 
-      <RadioGroup
-        legend={words.violation}
-        name="violation"
-        options={VIOLATION_OPTIONS}
-        value={answers.violation}
-        onSelect={(violation) => onChange({ violation })}
-        disabled={disabled}
-        required={false}
-        hint="자세한 내용이나 형사재판·벌금형 같은 내용은 여기에 적지 마세요. 답하지 않아도 상담을 받으실 수 있어요."
-      />
+      {answers.requester === 'self' && fromDiagnosis?.stayHistory ? (
+        <p className="note">체류기간 초과나 출입국 통지에 대해서는 비자 진단에서 고르신 답을 사용합니다.</p>
+      ) : (
+        <RadioGroup
+          legend={words.violation}
+          name="violation"
+          options={VIOLATION_OPTIONS}
+          value={answers.violation}
+          onSelect={(violation) => onChange({ violation })}
+          disabled={disabled}
+          required={false}
+          hint="자세한 내용이나 형사재판·벌금형 같은 내용은 여기에 적지 마세요. 답하지 않아도 상담을 받으실 수 있어요."
+        />
+      )}
 
       <label>{words.language}
         <select

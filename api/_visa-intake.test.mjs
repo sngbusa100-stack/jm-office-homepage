@@ -35,6 +35,19 @@ const e7Diagnosis = {
 };
 
 describe('비자 접수 필수 질문 검증', () => {
+  it('같은 뜻의 새 이력 답만 이어받고, 상담에서 말하기 선택은 이력으로 단정하지 않는다', () => {
+    const withHistory = (stayHistory) => sanitizeVisaIntake({ ...base, violation: 'none' }, {
+      visaDiagnosis: { answers: { stayStatus: 'valid', stayHistory } },
+    }).value;
+    expect(withHistory('current')).toMatchObject({ violation: 'current', deadlineFirst: true });
+    expect(withHistory('deferred')).not.toHaveProperty('violation');
+    expect(withHistory('deferred').deadlineFirst).toBe(false);
+    const proxy = sanitizeVisaIntake({ ...base, requester: 'family-sponsor', subjectNotified: true, violation: 'past' }, {
+      visaDiagnosis: { answers: { stayStatus: 'valid', stayHistory: 'none' } },
+    });
+    expect(proxy.value).toMatchObject({ violation: 'past' });
+  });
+
   it('국내 본인 문의의 필수 답만으로 통과하고 기한 우선 표시는 꺼진다', () => {
     const result = sanitizeVisaIntake(base);
     expect(result.ok).toBe(true);

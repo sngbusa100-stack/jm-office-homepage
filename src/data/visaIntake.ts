@@ -110,7 +110,7 @@ export const STAGE_OPTIONS: IntakeOption[] = [
 
 export const DATED_STAGES = ['supplement', 'denied', 'departure-notice'];
 
-// 값은 비자 진단 violationStatus(none/past/current/unsure)와 같지만 묻는 사실이 달라 진단 답을 이어받지 않는다.
+// 새 비자 진단의 stayHistory만 같은 뜻으로 이어받는다.
 // '상담 때 말씀하겠음'은 빈 값으로 보낸다.
 export const VIOLATION_OPTIONS: IntakeOption[] = [
   { value: 'none', label: '없음' },
@@ -143,7 +143,7 @@ export function intakeWording(requester: string) {
     goal: company ? '직원이 한국에서 무엇을 하려고 하나요?' : family ? '가족이 한국에서 무엇을 하려고 하나요?' : '무엇을 하려고 하시나요?',
     target: company ? '언제부터 근무해야 하나요?' : family ? '언제부터 함께 지내려고 하시나요?' : '언제까지 한국에 와야 하나요?',
     stage: `${proxy ? '(비자를 받을 분이) ' : ''}이미 신청했거나 출입국 기관에서 받은 연락·문서가 있나요?`,
-    violation: `${proxy ? '(비자를 받을 분이) ' : ''}체류기간을 넘긴 적이 있거나, 출입국 기관에서 출국명령·과태료·범칙금 통지를 받은 적이 있나요?`,
+    violation: `${proxy ? '(비자를 받을 분이) ' : ''}한국에서 체류기간을 넘긴 적이 있거나, 출입국 기관에서 출국명령·과태료·범칙금 통지를 받은 적이 있나요?`,
     language: proxy ? '신청하시는 분께 어떤 언어로 연락드릴까요? (보통 한국어)' : '어떤 언어로 연락받기 편하신가요?',
     nationality: proxy ? '비자를 받을 분의 국적은 어디인가요?' : '국적은 어디인가요?',
     messageExample: company

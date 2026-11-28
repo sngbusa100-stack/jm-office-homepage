@@ -1,60 +1,12 @@
+import contract from './_visa-handoff-contract.json' with { type: 'json' };
+
 const SCHEMA_VERSION = 1;
 const HANDOFF_PREFIX = 'visa-handoff:';
 const HANDOFF_TTL_SECONDS = 30 * 60;
 
-const COMMON = {
-  stayStatus: ['overseas', 'valid', 'near-expiry', 'expired', 'unsure'],
-  violationStatus: ['none', 'past', 'current', 'unsure'],
-};
+export const VISA_QUESTION_OPTIONS = contract.questions;
 
-const TAX = {
-  taxStatus: ['clear', 'issue', 'unsure'],
-};
-
-export const VISA_QUESTION_OPTIONS = {
-  d2: {
-    ...COMMON,
-    d2Admission: ['confirmed', 'pending', 'missing', 'unsure'],
-    d2Program: ['confirmed', 'program-known', 'unsure'],
-    d2Finance: ['ready', 'partial', 'missing', 'unsure'],
-  },
-  d10: {
-    ...COMMON,
-    d10Path: ['job-search', 'startup', 'unsure'],
-    d10Qualification: ['confirmed', 'partial', 'missing', 'unsure'],
-    d10Plan: ['ready', 'partial', 'missing', 'unsure'],
-  },
-  e7: {
-    ...COMMON,
-    e7Occupation: ['confirmed', 'unsure', 'unknown'],
-    e7Contract: ['ready', 'partial', 'missing', 'unsure'],
-    e7Wage: ['amount-known', 'meets', 'below', 'unsure'],
-  },
-  f27: {
-    ...COMMON,
-    ...TAX,
-    f27CurrentStatus: ['confirmed', 'advised-outside', 'unsure', 'unknown'],
-    f27Points: ['confirmed', 'partial', 'not-checked', 'unsure'],
-    f27Income: ['confirmed', 'partial', 'missing', 'unsure'],
-  },
-  f5: {
-    ...COMMON,
-    ...TAX,
-    f5Track: ['confirmed', 'unsure', 'unknown'],
-    f5Stay: ['confirmed', 'dates-known', 'not-checked', 'unsure'],
-    f5Livelihood: ['ready', 'partial', 'missing', 'unsure'],
-    f5Integration: ['confirmed', 'partial', 'not-checked', 'unsure'],
-  },
-  f6: {
-    ...COMMON,
-    ...TAX,
-    f6Marriage: ['registered', 'preparing', 'not-started', 'unsure'],
-    f6Household: ['2', '3', '4', '5', '6', '7', '8plus', 'unsure'],
-    f6Income: ['needs-calculation', 'meets', 'below', 'unsure'],
-    f6Communication: ['ready', 'partial', 'missing', 'unsure'],
-    f6Housing: ['ready', 'partial', 'missing', 'unsure'],
-  },
-};
+const LEGACY_HISTORY = ['none', 'past', 'current', 'unsure'];
 
 const NEEDS_DOCUMENTS = new Set([
   'pending',
@@ -108,7 +60,12 @@ export function sanitizeVisaHandoff(input) {
   const visaSlug = typeof input.visaSlug === 'string' ? input.visaSlug : '';
   const definitions = VISA_QUESTION_OPTIONS[visaSlug];
   if (!definitions || typeof input.answers !== 'object' || input.answers === null) return null;
-  const expectedQuestionIds = Object.keys(definitions);
+  // 이미 열린 화면·발급된 토큰의 옛 문항도 처리하되 그 답의 의미를 바꾸지 않는다.
+  const options = Object.hasOwn(input.answers, 'violationStatus') && !Object.hasOwn(input.answers, 'stayHistory')
+    ? Object.fromEntries(Object.entries(definitions).map(([key, values]) =>
+      key === 'stayHistory' ? ['violationStatus', LEGACY_HISTORY] : [key, values]))
+    : definitions;
+  const expectedQuestionIds = Object.keys(options);
   const providedQuestionIds = Object.keys(input.answers);
   if (
     providedQuestionIds.length !== expectedQuestionIds.length
@@ -118,7 +75,7 @@ export function sanitizeVisaHandoff(input) {
   const answers = {};
   for (const questionId of expectedQuestionIds) {
     const answer = input.answers[questionId];
-    if (typeof answer !== 'string' || !definitions[questionId].includes(answer)) return null;
+    if (typeof answer !== 'string' || !options[questionId].includes(answer)) return null;
     answers[questionId] = answer;
   }
 

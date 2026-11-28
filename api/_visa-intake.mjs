@@ -47,8 +47,7 @@ function validMonth(value) {
 /**
  * 비자 접수 질문을 허용값으로 정리한다.
  * - 진단에서 넘어온 stayStatus가 있으면 그 값을 쓰고 화면 입력은 무시한다.
- *   violationStatus는 진단 질문(통지·조사)이 상담 질문(체류기간 초과·출국명령·과태료·범칙금)과
- *   묻는 사실이 달라 이어받지 않고 화면 답만 쓴다.
+ *   이력 문항은 같은 뜻인 stayHistory에서만 이어받는다. deferred는 빈 응답으로 둔다.
  * - 날짜·코드·자유 입력은 형식과 길이를 제한해 다른 개인정보가 섞이지 않게 한다.
  * - deadlineFirst: 만료·임박, 보완·불허·출국 안내, 해결 안 된 위반이 있으면 기한 우선 확인 대상.
  * @returns {{ok:true, value:object} | {ok:false, errors:string[]}}
@@ -112,7 +111,9 @@ export function sanitizeVisaIntake(input, { visaDiagnosis } = {}) {
     if (!(deadlineDate === 'none' || deadlineDate === 'unsure' || validDate(deadlineDate))) errors.push('deadlineDate');
   }
 
-  const violation = oneOf(pick(data, 'violation'), V.violation);
+  const history = requester === 'self' ? diagnosisAnswers.stayHistory : undefined;
+  const violation = history === 'deferred' ? ''
+    : oneOf(history ?? '', V.violation) || oneOf(pick(data, 'violation'), V.violation);
 
   const language = oneOf(pick(data, 'language'), V.language);
   if (!language) errors.push('language');

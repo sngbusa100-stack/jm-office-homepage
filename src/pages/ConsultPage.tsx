@@ -121,7 +121,7 @@ function readStoredVisaDiagnosis(token: string): VisaConsultDiagnosis | undefine
 /** 비자 진단 연결 안내에 붙일 한 줄 요약. 상담 내용(고객이 쓰는 글)에는 넣지 않는다. */
 function visaSummary(diagnosis: VisaConsultDiagnosis): string {
   const level = {
-    checked: '현재 답변상 추가 표시 없음',
+    checked: diagnosis.answers.stayHistory === 'deferred' ? '상담에서 확인할 항목 있음' : '현재 답변상 추가 표시 없음',
     'needs-documents': '서류 보완 항목 있음',
     'official-check': '공식 확인 항목 있음',
     urgent: '긴급 확인 항목 있음',
@@ -230,7 +230,7 @@ export function ConsultPage() {
   const diagnosisTopic = storedDiagnosis ? TOPIC_SLUGS[diagnosisTopicSlug(storedDiagnosis.domain, storedDiagnosis.answers)] : undefined;
   const diagnosisItems = storedDiagnosis ? describeDiagnosis(storedDiagnosis) : [];
   const diagnosisCounts = storedDiagnosis ? diagnosisCountsText(storedDiagnosis.counts) : '';
-  const [attachChoice, setAttachChoice] = useState(true);
+  const [attachChoice, setAttachChoice] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string>(presetTopic ?? diagnosisTopic ?? '');
   const [topicMissing, setTopicMissing] = useState(false);
   const topic = visaDiagnosis ? VISA_TOPIC : selectedTopic;
@@ -245,6 +245,7 @@ export function ConsultPage() {
   const asksDeadline = Boolean(topic) && topic !== VISA_TOPIC;
   // 업무 페이지의 '기한이 급하면 상담부터'(법정 기한이 있는 분야만)로 들어오면 긴급 안내를 폼 위에 둔다.
   const urgentEntry = searchParams.get('priority') === 'urgent';
+  const diagnosisHistory = visaDiagnosis?.answers.stayHistory;
   const diagnosisStay = typeof visaDiagnosis?.answers.stayStatus === 'string' ? visaDiagnosis.answers.stayStatus : '';
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [inquiryId, setInquiryId] = useState<string | null>(null);
@@ -431,7 +432,7 @@ export function ConsultPage() {
             answers={visaIntake}
             onChange={(patch) => setVisaIntake((current) => ({ ...current, ...patch }))}
             disabled={!formEnabled}
-            fromDiagnosis={visaDiagnosis ? { stayStatus: diagnosisStay } : null}
+            fromDiagnosis={visaDiagnosis ? { stayStatus: diagnosisStay, stayHistory: diagnosisHistory } : null}
           />
         )}
         {asksDeadline && (

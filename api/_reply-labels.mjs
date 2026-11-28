@@ -551,9 +551,9 @@ export default {
       "procurement-topic": {
         "text": "어떤 일을 준비하고 계세요?",
         "options": {
-          "production": "우리 공장에서 만든 제품이라는 확인을 받고 싶어요(직접생산확인)",
+          "production": "우리 사업장에서 제품을 직접 만든다는 확인을 받고 싶어요(직접생산확인)",
           "women": "여성기업 확인서를 발급받고 싶어요(여성기업확인)",
-          "registration": "나라장터 입찰에 처음 참여하려고 해요(입찰참가자격 등록)",
+          "registration": "나라장터에서 입찰에 참여할 수 있도록 등록하거나 등록 정보를 바꾸고 싶어요(입찰참가자격 등록)",
           "unknown": "무엇부터 해야 할지 모르겠어요"
         }
       },
@@ -2769,7 +2769,7 @@ export default {
       },
       "procurement": {
         "title": "공공조달·기업인증 사전 점검",
-        "form": "1cqef75",
+        "form": "1bjjepl",
         "questions": [
           {
             "id": "procurement-topic",

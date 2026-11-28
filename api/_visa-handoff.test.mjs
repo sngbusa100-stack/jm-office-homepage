@@ -45,6 +45,14 @@ describe('비자 진단 일회성 전달', () => {
     }).level).toBe('urgent');
   });
 
+  it('새 이력 응답과 이전 응답을 각각 검증하고 두 문항이 섞인 제출은 거부한다', () => {
+    const { violationStatus, ...answers } = completeE7.answers;
+    expect(sanitizeVisaHandoff({ ...completeE7, answers: { ...answers, stayHistory: 'deferred' } }))
+      .toMatchObject({ answers: { stayHistory: 'deferred' }, level: 'checked' });
+    expect(sanitizeVisaHandoff(completeE7).answers).not.toHaveProperty('stayHistory');
+    expect(sanitizeVisaHandoff({ ...completeE7, answers: { ...completeE7.answers, stayHistory: 'none' } })).toBeNull();
+  });
+
   it('동의가 없거나 문항 누락·임의 문자열이 있으면 거부한다', () => {
     expect(sanitizeVisaHandoff({ ...completeE7, consent: false })).toBeNull();
     expect(sanitizeVisaHandoff({

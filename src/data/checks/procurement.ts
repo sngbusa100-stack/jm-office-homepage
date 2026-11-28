@@ -10,9 +10,9 @@ export const procurement: CheckDefinition = {
       id: 'procurement-topic',
       text: '어떤 일을 준비하고 계세요?',
       options: [
-        { id: 'production', label: '우리 공장에서 만든 제품이라는 확인을 받고 싶어요(직접생산확인)', level: 'ready', note: '신청할 제품 이름과 실제로 만드는 장소를 적어 두세요.' },
+        { id: 'production', label: '우리 사업장에서 제품을 직접 만든다는 확인을 받고 싶어요(직접생산확인)', level: 'ready', note: '신청할 제품 이름과 실제로 만드는 장소를 적어 두세요.' },
         { id: 'women', label: '여성기업 확인서를 발급받고 싶어요(여성기업확인)', level: 'ready', note: '사업자등록증에서 사업자 이름과 대표자 표기를 확인하세요.' },
-        { id: 'registration', label: '나라장터 입찰에 처음 참여하려고 해요(입찰참가자격 등록)', level: 'ready', note: '공급할 물품이나 제공할 용역·공사의 이름을 적어 두세요.' },
+        { id: 'registration', label: '나라장터에서 입찰에 참여할 수 있도록 등록하거나 등록 정보를 바꾸고 싶어요(입찰참가자격 등록)', level: 'ready', note: '공급할 물품이나 제공할 용역·공사의 이름을 적어 두세요.' },
         { id: 'unknown', label: '무엇부터 해야 할지 모르겠어요', level: 'documents', note: '공고나 거래처 요청에서 준비해 달라는 서류 이름을 그대로 적어 두세요.' },
       ],
     },

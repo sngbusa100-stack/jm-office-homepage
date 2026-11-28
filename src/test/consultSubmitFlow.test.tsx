@@ -348,7 +348,8 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     renderPage('/consult?topic=dui');
 
     const attach = screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기\(선택\)/ });
-    expect(attach).toBeChecked();
+    expect(attach).not.toBeChecked();
+    await user.click(attach);
     expect(screen.getByText('보낼 답변 보기')).toBeInTheDocument();
     expect(screen.getByText(/경찰에서 면허에 관해 어떤 안내를 받으셨나요\?/)).toBeInTheDocument();
     expect(screen.getByText(/면허취소 결정 통지/)).toBeInTheDocument();
@@ -368,7 +369,9 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     const user = userEvent.setup();
     renderPage('/consult?topic=dui');
 
-    await user.click(screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기/ }));
+    const attach = screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기/ });
+    await user.click(attach);
+    await user.click(attach);
     await fillContact(user);
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
     await screen.findByText(/JM-NODIAG/);
@@ -387,7 +390,9 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     const textarea = screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement;
     expect(textarea.value).toBe('');
     expect(screen.getByText('진단 결과: 먼저 확인할 일정 1, 담당 기관에 물어볼 내용 1, 상담 때 참고할 내용 1')).toBeInTheDocument();
-    await user.click(screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기/ }));
+    const attach = screen.getByRole('checkbox', { name: /셀프 진단 답변 3개 함께 보내기/ });
+    await user.click(attach);
+    await user.click(attach);
     await user.type(textarea, '처분 통지서를 어제 받았어요.');
     await user.selectOptions(screen.getByLabelText('분야'), '인허가');
     await user.selectOptions(screen.getByLabelText('분야'), '음주운전 면허 구제');
@@ -430,14 +435,14 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     });
   });
 
-  it('동의 후 발급된 비자 진단 토큰을 한 번 가져와 상담 접수에 포함한다', async () => {
+  it.each(['violationStatus', 'stayHistory'])('동의 후 발급된 비자 진단 토큰을 상담 접수에 포함한다 (%s)', async (historyKey) => {
     const visaDiagnosis = {
       schemaVersion: 1,
       visaSlug: 'e7',
       language: 'ko',
       answers: {
         stayStatus: 'valid',
-        violationStatus: 'none',
+        [historyKey]: 'none',
         e7Occupation: 'confirmed',
         e7Contract: 'ready',
         e7Wage: 'meets',
@@ -465,13 +470,17 @@ describe('상담 폼 제출 (개업 후 상태 모킹)', () => {
     // 상담 내용에는 비자 안내 페이지에서 고른 코드만 보이는 첫 줄로 두고, 진단 요약은 넣지 않는다.
     expect((screen.getByLabelText(/상담 내용/) as HTMLTextAreaElement).value).toBe('[비자 선택] E-7\n\n');
     expect(screen.getByLabelText('분야')).toBeDisabled();
-    // 위반 이력은 진단 답(violationStatus)이 있어도 상담 질문으로 다시 묻는다.
-    expect(screen.getByText(/체류기간을 넘긴 적이 있거나, 출입국 기관에서 출국명령·과태료·범칙금 통지를 받은 적이 있나요\?/)).toBeInTheDocument();
-
     await user.type(screen.getByLabelText(/성함/), '홍길동');
     await user.type(screen.getByLabelText(/연락처/), '01012345678');
     await user.click(screen.getByLabelText(/개인정보 수집·이용에 동의/));
     await answerVisaIntake(user);
+    const historyQuestion = screen.queryByText(/체류기간을 넘긴 적이 있거나, 출입국 기관에서 출국명령·과태료·범칙금 통지를 받은 적이 있나요\?/);
+    if (historyKey === 'stayHistory') {
+      expect(historyQuestion).toBeNull();
+      expect(screen.getByText(/진단에서 고르신 답을 사용합니다/)).toBeInTheDocument();
+    } else {
+      expect(historyQuestion).toBeInTheDocument();
+    }
     await user.click(screen.getByRole('button', { name: /상담 신청하기/ }));
 
     expect(await screen.findByText(/JM-20260725-E7AA/)).toBeInTheDocument();

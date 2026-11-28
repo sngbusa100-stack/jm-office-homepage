@@ -1,6 +1,7 @@
 const QUESTION_LABELS: Record<string, string> = {
   stayStatus: '현재 체류 상태',
-  violationStatus: '출입국 위반·처분 이력',
+  violationStatus: '출입국 관련 통지·조사 이력',
+  stayHistory: '체류기간 초과·출입국 통지 이력',
   taxStatus: '세금·건강보험료 납부 상태',
   d2Admission: 'D-2 입학·재학 증빙',
   d2Program: 'D-2 세부 유형',
@@ -34,6 +35,7 @@ const ANSWER_LABELS: Record<string, string> = {
   none: '확인된 이력 없음',
   past: '과거 이력 있음',
   current: '현재 미해결 문제 있음',
+  deferred: '상담 때 답변 예정',
   clear: '완납 확인',
   issue: '미납 또는 확인 문제 있음',
   confirmed: '확인 완료',
